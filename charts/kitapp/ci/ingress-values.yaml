@@ -1,0 +1,18 @@
+applicationPort:
+  name: http
+  port: 8000
+
+service:
+  enabled: true
+  port: 8000
+
+ingress:
+  routes:
+    app:
+      httpRoute:
+        hostnames:
+          - app.local
+        rules:
+          - backendRefs:
+              - name: my-app
+                port: 8000

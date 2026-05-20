@@ -1,0 +1,166 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+## Usage
+
+This chart deploys a generic Kubernetes `Deployment` with a `Service` and optional PVC mount.
+
+### Required values
+
+- `image.repository` must be set
+- `image.tag` must be set
+- `applicationPort.name` must be set
+- one of `applicationPort.port` or `servicePort.port` must be set
+
+### Example values
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: ghcr.io/your-org/your-app
+  tag: "1.0.0"
+
+env:
+  - name: APP_ENV
+    value: production
+
+applicationPort:
+  name: http
+  port: 8000
+  protocol: TCP
+
+servicePort:
+  port: 8000
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+metrics:
+  enabled: true
+  port: 9090
+  path: /metrics
+  labels:
+    release: kube-prometheus-stack
+```
+
+When `metrics.enabled=true`, the metrics port name is always `metrics`.
+
+### Additional application ports
+
+Use `additionalApplicationPorts` to expose extra named ports on both the container and Service.
+
+```yaml
+applicationPort:
+  name: http
+  port: 8000
+
+additionalApplicationPorts:
+  - name: grpc
+    port: 9095
+    protocol: TCP
+```
+
+### Expose via Gateway API (`ingress`)
+
+```yaml
+ingress:
+  routes:
+    app:
+      httpRoute:
+        hostnames:
+          - my-app.example.com
+        rules:
+          - backendRefs:
+              - name: my-app
+                port: 8000
+```
+
+### OAuth2 proxy injector integration
+
+Enable `oauth2` to add the injector opt-in label and required annotations automatically.
+
+### OAuth2 required metadata (auto-injected)
+
+- label: `oauth2-proxy.kitkube.dk/inject: "true"`
+- annotations:
+  - `oauth2-proxy.kitkube.dk/configmap`
+  - `oauth2-proxy.kitkube.dk/secret`
+
+```yaml
+oauth2:
+  enabled: true
+  secretRef: my-app-oauth2-proxy-envs
+  clientId: portal
+  issuerUrl: https://issuer.example.com/realms/portal
+```
+
+See [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
+
+### Advanced injector overrides
+
+Use `oauth2.overrides.annotations` for advanced injector settings without expanding chart API:
+
+```yaml
+oauth2:
+  enabled: true
+  secretRef: my-app-oauth2-proxy-envs
+  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.9.0
+  upstream: http://127.0.0.1:8000
+  clientId: portal
+  issuerUrl: https://issuer.example.com/realms/portal
+  config:
+    email_domains:
+      - example.com
+    allowed_groups:
+      - admins
+    skip_auth_routes:
+      - ^/healthz$
+  overrides:
+    annotations:
+      oauth2-proxy.kitkube.dk/sidecar.requests.cpu: 50m
+      oauth2-proxy.kitkube.dk/sidecar.requests.memory: 64Mi
+```
+
+See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
+
+### Gateway-routes backend to oauth2-proxy port 4180
+
+When `oauth2.enabled=true`, the Service always includes `oauth2-proxy:4180`, so Gateway API backendRefs can route directly to the proxy:
+
+ingress:
+  routes:
+    app:
+      httpRoute:
+        hostnames:
+          - my-app.example.com
+        rules:
+          - backendRefs:
+              - name: my-app
+                port: 4180
+```
+
+{{ template "helm-docs.versionFooter" . }}

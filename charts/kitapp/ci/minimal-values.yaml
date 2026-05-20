@@ -1,0 +1,7 @@
+image:
+  repository: nginx
+  tag: "1.27"
+
+applicationPort:
+  name: http
+  port: 8000

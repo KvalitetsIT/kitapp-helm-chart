@@ -1,0 +1,24 @@
+apiVersion: v2
+type: application
+name: kitapp
+version: 0.1.0
+appVersion: 0.1.0
+description: Small generic Helm chart for deploying a Kubernetes application as a Deployment.
+
+home: https://github.com/KvalitetsIT
+icon: https://raw.githubusercontent.com/KvalitetsIT/kitapp-helm-chart/main/docs/icon.png
+sources:
+  - https://github.com/KvalitetsIT/kitapp-helm-chart
+  - https://github.com/KvalitetsIT/kitapp-helm-chart/tree/main/charts/kitapp
+maintainers:
+  - name: KvalitetsIT
+    email: kithosting@kvalitetsit.dk
+    url: https://github.com/KvalitetsIT/helm-repo
+dependencies:
+  - name: templates
+    version: 2.1.1
+    repository: https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/
+  - name: gateway-routes
+    alias: ingress
+    version: 0.0.5
+    repository: https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/

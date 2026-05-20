@@ -1,0 +1,85 @@
+{{- if not .Values.image.repository -}}
+{{- fail "values.image.repository is required" -}}
+{{- end -}}
+{{- if not .Values.image.tag -}}
+{{- fail "values.image.tag is required" -}}
+{{- end -}}
+{{- if not .Values.applicationPort.name -}}
+{{- fail "values.applicationPort.name is required" -}}
+{{- end -}}
+{{- if and (empty .Values.applicationPort.port) (empty .Values.servicePort.port) -}}
+{{- fail "one of values.applicationPort.port or values.servicePort.port must be set" -}}
+{{- end -}}
+{{- if and (not (empty .Values.applicationPort.port)) (le (.Values.applicationPort.port | int) 0) -}}
+{{- fail "values.applicationPort.port must be greater than 0 when set" -}}
+{{- end -}}
+{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) -}}
+{{- fail "values.persistence.existingClaim is required when persistence.enabled=true" -}}
+{{- end -}}
+{{- if and (not (empty .Values.servicePort.port)) (le (.Values.servicePort.port | int) 0) -}}
+{{- fail "values.servicePort.port must be greater than 0 when set" -}}
+{{- end -}}
+{{- if and .Values.metrics.enabled (not (empty .Values.metrics.port)) (le (.Values.metrics.port | int) 0) -}}
+{{- fail "values.metrics.port must be greater than 0 when set" -}}
+{{- end -}}
+{{- $appPortNames := dict -}}
+{{- $_ := set $appPortNames .Values.applicationPort.name true -}}
+{{- range .Values.additionalApplicationPorts }}
+{{- if not .name -}}
+{{- fail "each entry in values.additionalApplicationPorts requires a name" -}}
+{{- end -}}
+{{- if le (.port | int) 0 -}}
+{{- fail "each entry in values.additionalApplicationPorts requires port > 0" -}}
+{{- end -}}
+{{- if hasKey $appPortNames .name -}}
+{{- fail (printf "duplicate port name detected: %s" .name) -}}
+{{- end -}}
+{{- $_ := set $appPortNames .name true -}}
+{{- end -}}
+{{- $servicePortNames := dict -}}
+{{- range $n, $_ := $appPortNames }}
+{{- $_ = set $servicePortNames $n true -}}
+{{- end -}}
+{{- if and (not (empty .Values.servicePort.name)) (hasKey $servicePortNames .Values.servicePort.name) -}}
+{{- fail (printf "primary service port name '%s' conflicts with existing port names" .Values.servicePort.name) -}}
+{{- end -}}
+{{- if not (empty .Values.servicePort.name) -}}
+{{- $_ = set $servicePortNames .Values.servicePort.name true -}}
+{{- end -}}
+{{- range .Values.additionalServicePorts }}
+{{- if not .name -}}
+{{- fail "each entry in values.additionalServicePorts requires a name" -}}
+{{- end -}}
+{{- if le (.port | int) 0 -}}
+{{- fail "each entry in values.additionalServicePorts requires port > 0" -}}
+{{- end -}}
+{{- if hasKey $servicePortNames .name -}}
+{{- fail (printf "duplicate service port name detected: %s" .name) -}}
+{{- end -}}
+{{- $_ := set $servicePortNames .name true -}}
+{{- end -}}
+{{- if and .Values.metrics.enabled (hasKey $servicePortNames "metrics") -}}
+{{- fail "metrics port name 'metrics' conflicts with existing service port names" -}}
+{{- end -}}
+{{- if and .Values.oauth2.enabled (hasKey $servicePortNames "oauth2-proxy") -}}
+{{- fail "reserved oauth2 service port name 'oauth2-proxy' conflicts with service port names" -}}
+{{- end -}}
+{{- $envNames := dict -}}
+{{- range .Values.env }}
+{{- if not .name -}}
+{{- fail "each entry in values.env requires a name" -}}
+{{- end -}}
+{{- if hasKey $envNames .name -}}
+{{- fail (printf "duplicate env name detected: %s" .name) -}}
+{{- end -}}
+{{- $_ := set $envNames .name true -}}
+{{- end -}}
+{{- range .Values.additionalEnvs }}
+{{- if not .name -}}
+{{- fail "each entry in values.additionalEnvs requires a name" -}}
+{{- end -}}
+{{- if hasKey $envNames .name -}}
+{{- fail (printf "duplicate env name detected across env/additionalEnvs: %s" .name) -}}
+{{- end -}}
+{{- $_ := set $envNames .name true -}}
+{{- end -}}

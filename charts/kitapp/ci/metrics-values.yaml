@@ -1,0 +1,9 @@
+applicationPort:
+  port: 80
+
+metrics:
+  enabled: true
+  port: 9090
+  path: /metrics
+  labels:
+    release: kube-prometheus-stack

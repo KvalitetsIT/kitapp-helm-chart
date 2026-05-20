@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+{{ $resolvedAppPort := 0 }}
+{{- if not (empty .Values.applicationPort.port) }}
+{{- $resolvedAppPort = (.Values.applicationPort.port | int) }}
+{{- else if not (empty .Values.servicePort.port) }}
+{{- $resolvedAppPort = (.Values.servicePort.port | int) }}
+{{- end }}
+{{- $metricsPort := $resolvedAppPort }}
+{{- if not (empty .Values.metrics.port) }}
+{{- $metricsPort = (.Values.metrics.port | int) }}
+{{- end }}
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+spec:
+  strategy:
+    type: {{ .Values.strategy.type }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kitapp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kitapp.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.oauth2.enabled }}
+        oauth2-proxy.kitkube.dk/inject: "true"
+      {{- end }}
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.oauth2.enabled }}
+        {{- include "kitapp.oauth2.injectorAnnotations" . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "kitapp.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ include "kitapp.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: {{ .Values.applicationPort.name }}
+              containerPort: {{ $resolvedAppPort }}
+              protocol: {{ .Values.applicationPort.protocol }}
+            {{- range .Values.additionalApplicationPorts }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+              protocol: {{ .protocol | default "TCP" }}
+            {{- end }}
+            {{- if .Values.metrics.enabled }}
+            - name: metrics
+              containerPort: {{ $metricsPort }}
+              protocol: TCP
+            {{- end }}
+          {{- $allEnvs := concat (.Values.env | default (list)) (.Values.additionalEnvs | default (list)) }}
+          {{- with $allEnvs }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if and .Values.persistence.enabled .Values.persistence.mountPath }}
+          volumeMounts:
+            - name: app-data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+      {{- if and .Values.persistence.enabled .Values.persistence.existingClaim }}
+      volumes:
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+      {{- end }}

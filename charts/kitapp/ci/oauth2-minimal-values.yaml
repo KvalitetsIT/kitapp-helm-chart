@@ -1,0 +1,27 @@
+image:
+  repository: ghcr.io/your-org/your-app
+  tag: "1.0.0"
+
+applicationPort:
+  name: http
+  port: 8000
+
+servicePort:
+  port: 8000
+
+oauth2:
+  enabled: true
+  secretRef: my-app-oauth2-proxy-envs
+  clientId: portal
+  issuerUrl: https://issuer.example.com/realms/portal
+
+ingress:
+  routes:
+    app:
+      httpRoute:
+        hostnames:
+          - my-app.example.com
+        rules:
+          - backendRefs:
+              - name: my-app
+                port: 4180

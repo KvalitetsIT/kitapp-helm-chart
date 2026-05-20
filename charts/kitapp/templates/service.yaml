@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+{{ $resolvedAppPort := 0 }}
+{{- if not (empty .Values.applicationPort.port) }}
+{{- $resolvedAppPort = (.Values.applicationPort.port | int) }}
+{{- else if not (empty .Values.servicePort.port) }}
+{{- $resolvedAppPort = (.Values.servicePort.port | int) }}
+{{- end }}
+{{- $metricsPort := $resolvedAppPort }}
+{{- if not (empty .Values.metrics.port) }}
+{{- $metricsPort = (.Values.metrics.port | int) }}
+{{- end }}
+{{- $primaryServicePortName := .Values.applicationPort.name -}}
+{{- if not (empty .Values.servicePort.name) -}}
+{{- $primaryServicePortName = .Values.servicePort.name -}}
+{{- end -}}
+{{- $primaryServiceProtocol := .Values.applicationPort.protocol -}}
+{{- if not (empty .Values.servicePort.protocol) -}}
+{{- $primaryServiceProtocol = .Values.servicePort.protocol -}}
+{{- end -}}
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $primaryServicePort := $resolvedAppPort -}}
+  {{- if not (empty .Values.servicePort.port) -}}
+  {{- $primaryServicePort = (.Values.servicePort.port | int) -}}
+  {{- end }}
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "kitapp.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: {{ $primaryServicePortName }}
+      port: {{ $primaryServicePort }}
+      targetPort: {{ .Values.applicationPort.name }}
+      protocol: {{ $primaryServiceProtocol }}
+    {{- range .Values.additionalApplicationPorts }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .name }}
+      protocol: {{ .protocol | default "TCP" }}
+    {{- end }}
+    {{- range .Values.additionalServicePorts }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort | default .port }}
+      protocol: {{ .protocol | default "TCP" }}
+    {{- end }}
+    {{- if .Values.oauth2.enabled }}
+    - name: oauth2-proxy
+      port: 4180
+      targetPort: 4180
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.metrics.enabled }}
+    - name: metrics
+      port: {{ $metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+    {{- end }}
