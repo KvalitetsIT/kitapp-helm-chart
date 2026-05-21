@@ -4,11 +4,13 @@ Generic application Helm chart for deploying a Kubernetes `Deployment`.
 
 Chart path: [`charts/kitapp`](charts/kitapp)
 
-## Quick start
+## About
 
-```sh
-helm install my-app ./charts/kitapp
-```
+This repository contains the generic `kitapp` chart and supporting examples used for validation.
+
+For chart configuration, values reference, and usage details, see:
+
+- [`charts/kitapp/README.md`](charts/kitapp/README.md)
 
 ## Example values
 
@@ -17,7 +19,7 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/your-org/your-app
-  tag: "1.0.0"
+  tag: "1.31.0"
 
 applicationPort:
   name: http
@@ -64,5 +66,6 @@ ingress:
 
 - [`charts/kitapp/ci/deployment-values.yaml`](charts/kitapp/ci/deployment-values.yaml)
 - [`charts/kitapp/ci/ingress-values.yaml`](charts/kitapp/ci/ingress-values.yaml)
+- [`charts/kitapp/ci/metrics-values.yaml`](charts/kitapp/ci/metrics-values.yaml)
 - [`charts/kitapp/ci/oauth2-minimal-values.yaml`](charts/kitapp/ci/oauth2-minimal-values.yaml)
 - [`charts/kitapp/ci/oauth2-advanced-values.yaml`](charts/kitapp/ci/oauth2-advanced-values.yaml)

@@ -170,7 +170,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/your-org/your-app
-  tag: "1.0.0"
+  tag: "1.31.0"
 
 env:
   - name: APP_ENV
@@ -267,7 +267,7 @@ Use `oauth2.overrides.annotations` for advanced injector settings without expand
 oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
-  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.9.0
+  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
   upstream: http://127.0.0.1:8000
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal

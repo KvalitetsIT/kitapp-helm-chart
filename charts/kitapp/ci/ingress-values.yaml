@@ -6,10 +6,6 @@ applicationPort:
   name: http
   port: 8000
 
-service:
-  enabled: true
-  port: 8000
-
 ingress:
   routes:
     app:
