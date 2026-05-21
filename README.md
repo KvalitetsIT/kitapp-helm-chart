@@ -27,7 +27,8 @@ applicationPort:
 service:
   type: ClusterIP
 
-servicePort: 8080
+servicePort:
+  port: 8080
 
 livenessProbe:
   httpGet:
