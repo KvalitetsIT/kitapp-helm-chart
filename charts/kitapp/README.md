@@ -139,10 +139,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| persistence | object | see values.yaml | Mount an existing PVC into the pod. |
-| persistence.enabled | bool | false | Enable mounting an existing PersistentVolumeClaim. |
-| persistence.existingClaim | string | "" | Existing PersistentVolumeClaim name (required when persistence.enabled=true). |
-| persistence.mountPath | string | /data | Container mount path for the existing PVC. |
+| volumeMounts | list | [] | Raw container volume mounts. Typical PVC mount example: - name: app-data   mountPath: /data |
+| volumes | list | [] | Raw pod volumes. Typical PVC volume example: - name: app-data   persistentVolumeClaim:     claimName: my-existing-pvc |
 
 ### Dependencies
 
@@ -154,7 +152,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 ## Usage
 
-This chart deploys a generic Kubernetes `Deployment` with a `Service` and optional PVC mount.
+This chart deploys a generic Kubernetes `Deployment` with a `Service` and optional raw `volumes`/`volumeMounts`.
 
 ### Required values
 

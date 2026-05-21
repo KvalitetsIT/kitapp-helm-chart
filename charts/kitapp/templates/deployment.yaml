@@ -96,14 +96,11 @@ spec:
           startupProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if and .Values.persistence.enabled .Values.persistence.mountPath }}
+          {{- with .Values.volumeMounts }}
           volumeMounts:
-            - name: app-data
-              mountPath: {{ .Values.persistence.mountPath }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if and .Values.persistence.enabled .Values.persistence.existingClaim }}
+      {{- with .Values.volumes }}
       volumes:
-        - name: app-data
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}

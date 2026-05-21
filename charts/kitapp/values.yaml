@@ -265,22 +265,22 @@ service:
   # @section -- Service
   annotations: {}
 
-# -- Mount an existing PVC into the pod.
-# @default -- see values.yaml
+# -- Raw container volume mounts.
+# Typical PVC mount example:
+# - name: app-data
+#   mountPath: /data
+# @default -- []
 # @section -- Persistence
-persistence:
-  # -- Enable mounting an existing PersistentVolumeClaim.
-  # @default -- false
-  # @section -- Persistence
-  enabled: false
-  # -- Existing PersistentVolumeClaim name (required when persistence.enabled=true).
-  # @default -- ""
-  # @section -- Persistence
-  existingClaim: ""
-  # -- Container mount path for the existing PVC.
-  # @default -- /data
-  # @section -- Persistence
-  mountPath: /data
+volumeMounts: []
+
+# -- Raw pod volumes.
+# Typical PVC volume example:
+# - name: app-data
+#   persistentVolumeClaim:
+#     claimName: my-existing-pvc
+# @default -- []
+# @section -- Persistence
+volumes: []
 
 # -- Values passed to the KvalitetsIT templates dependency chart.
 # @default -- {}

@@ -1,0 +1,15 @@
+image:
+  repository: nginx
+  tag: "1.31.0"
+
+applicationPort:
+  port: 80
+
+volumeMounts:
+  - name: app-data
+    mountPath: /data
+
+volumes:
+  - name: app-data
+    persistentVolumeClaim:
+      claimName: my-existing-pvc
