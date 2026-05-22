@@ -126,6 +126,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | serviceAccount.create | bool | true | Create a dedicated ServiceAccount. |
 | serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
 | serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
+| podSecurityContext | object | {} | Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup). |
+| containerSecurityContext | object | {} | Security context applied to the application container. |
 
 ### Service
 
@@ -234,6 +236,25 @@ gateway:
           - backendRefs:
               - name: my-app
                 port: 8000
+```
+
+### Security context
+
+Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `containerSecurityContext` for container-level hardening:
+
+```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 ```
 
 ### OAuth2 proxy injector integration

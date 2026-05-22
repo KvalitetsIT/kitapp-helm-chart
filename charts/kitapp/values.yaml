@@ -252,6 +252,16 @@ serviceAccount:
   # @section -- Security
   annotations: {}
 
+# -- Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup).
+# @default -- {}
+# @section -- Security
+podSecurityContext: {}
+
+# -- Security context applied to the application container.
+# @default -- {}
+# @section -- Security
+containerSecurityContext: {}
+
 # -- Service settings for exposing the application.
 # @default -- see values.yaml
 # @section -- Service
