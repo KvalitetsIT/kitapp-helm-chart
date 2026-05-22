@@ -7,45 +7,46 @@ metadata:
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}
 data:
+  # oauth2-proxy.cfg is TOML. Scalar types (string, bool, int, string array) share
+  # identical syntax with JSON, so toJson produces valid TOML for all supported value types.
   oauth2-proxy.cfg: |
-{{- $defaults := dict
-      "http_address" "0.0.0.0:4180"
-      "insecure_oidc_allow_unverified_email" true
-      "pass_authorization_header" true
-      "pass_access_token" true
-      "pass_user_headers" true
-      "session_store_type" "cookie"
-      "skip_provider_button" true
-      "set_xauthrequest" true
-      "skip_jwt_bearer_tokens" true
-      "skip_auth_preflight" true
-      "oidc_extra_audiences" (list "portal")
-      "errors_to_info_log" true
-      "provider" "oidc"
-      "email_domains" (list "*")
-      "reverse_proxy" true
-      "cookie_secure" true
-      "cookie_httponly" true
-      "cookie_samesite" "lax"
-      "code_challenge_method" "S256"
-      "standard_logging" true
-      "auth_logging" true
-      "request_logging" true
-  -}}
-{{- $derived := dict
-      "client_id" .Values.oauth2.clientId
-      "cookie_name" .Values.oauth2.clientId
-      "oidc_issuer_url" .Values.oauth2.issuerUrl
-      "upstreams" (list .Values.oauth2.upstream) -}}
-{{- $gatewayCfg := dict -}}
-{{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) -}}
-{{- $gatewayCfg = dict
-      "redirect_url" (printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames))
-      "cookie_domains" (list (first .Values.gateway.hostnames))
-      "whitelist_domains" (list (first .Values.gateway.hostnames)) -}}
-{{- end -}}
-{{- $cfg := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.config | default dict) $derived $gatewayCfg -}}
-{{- range $k := keys $cfg | sortAlpha }}
-    {{ $k }} = {{ get $cfg $k | toJson }}
-{{- end }}
+    http_address = "0.0.0.0:4180"
+    provider = "oidc"
+    client_id = {{ .Values.oauth2.clientId | quote }}
+    cookie_name = {{ .Values.oauth2.clientId | quote }}
+    oidc_issuer_url = {{ .Values.oauth2.issuerUrl | quote }}
+    upstreams = {{ list .Values.oauth2.upstream | toJson }}
+    email_domains = {{ .Values.oauth2.config.emailDomains | toJson }}
+    {{- with .Values.oauth2.config.allowedGroups }}
+    allowed_groups = {{ . | toJson }}
+    {{- end }}
+    {{- with .Values.oauth2.config.skipAuthRoutes }}
+    skip_auth_routes = {{ . | toJson }}
+    {{- end }}
+    {{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) }}
+    redirect_url = {{ printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames) | quote }}
+    cookie_domains = {{ list (first .Values.gateway.hostnames) | toJson }}
+    whitelist_domains = {{ list (first .Values.gateway.hostnames) | toJson }}
+    {{- end }}
+    insecure_oidc_allow_unverified_email = true
+    pass_authorization_header = true
+    pass_access_token = true
+    pass_user_headers = true
+    session_store_type = "cookie"
+    skip_provider_button = true
+    set_xauthrequest = true
+    skip_jwt_bearer_tokens = true
+    skip_auth_preflight = true
+    errors_to_info_log = true
+    reverse_proxy = true
+    cookie_secure = true
+    cookie_httponly = true
+    cookie_samesite = "lax"
+    code_challenge_method = "S256"
+    standard_logging = true
+    auth_logging = true
+    request_logging = true
+    {{- range $k, $v := .Values.oauth2.rawConfig }}
+    {{ $k }} = {{ $v | toJson }}
+    {{- end }}
 {{- end }}

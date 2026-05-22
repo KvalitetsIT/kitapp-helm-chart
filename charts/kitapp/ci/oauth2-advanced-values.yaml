@@ -17,15 +17,11 @@ oauth2:
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal
   config:
-    http_address: 0.0.0.0:4180
-    oidc_extra_audiences:
-      - portal
-      - admin
-    email_domains:
+    emailDomains:
       - example.com
-    allowed_groups:
+    allowedGroups:
       - admins
-    skip_auth_routes:
+    skipAuthRoutes:
       - ^/healthz$
   sidecar:
     requests:

@@ -162,12 +162,28 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   issuerUrl: ""
-  # -- oauth2-proxy.cfg override values map.
-  # Defaults are defined in the oauth2 configmap template; values set here override those defaults.
-  # Values are appended after defaults, so duplicate keys override earlier ones.
+  # -- Structured oauth2-proxy config for commonly configured keys.
+  # @default -- see values.yaml
+  # @section -- OAuth2
+  config:
+    # -- Email domains allowed to authenticate. Use ["*"] to allow any domain.
+    # @default -- ["*"]
+    # @section -- OAuth2
+    emailDomains:
+      - "*"
+    # -- Groups allowed to authenticate. Empty means no group restriction.
+    # @default -- []
+    # @section -- OAuth2
+    allowedGroups: []
+    # -- URL path patterns that bypass authentication.
+    # @default -- []
+    # @section -- OAuth2
+    skipAuthRoutes: []
+  # -- Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg.
+  # Use for any oauth2-proxy setting not covered by the structured keys above.
   # @default -- {}
   # @section -- OAuth2
-  config: {}
+  rawConfig: {}
   # -- Existing Secret name referenced by injector annotation (required when oauth2.enabled=true).
   # @default -- ""
   # @section -- OAuth2
