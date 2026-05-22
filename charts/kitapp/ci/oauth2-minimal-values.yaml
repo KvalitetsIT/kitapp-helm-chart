@@ -16,12 +16,10 @@ oauth2:
   issuerUrl: https://issuer.example.com/realms/portal
 
 gateway:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - my-app.example.com
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 4180
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  clusterIssuer: letsencrypt-prod-istio

@@ -1,0 +1,22 @@
+{{- if .Values.gateway.enabled }}
+{{- range $policyName, $policy := .Values.gateway.authorizationPolicies }}
+{{- if $policy }}
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ printf "%s-%s" (include "kitapp.fullname" $) $policyName | quote }}
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "kitapp.labels" $ | nindent 4 }}
+spec:
+  targetRefs:
+    - name: {{ include "kitapp.fullname" $ | quote }}
+      kind: Service
+      group: ""
+  action: {{ $policy.action | default "ALLOW" | quote }}
+  rules:
+    {{- toYaml $policy.rules | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

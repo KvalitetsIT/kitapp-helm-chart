@@ -84,19 +84,90 @@ additionalApplicationPorts:
     protocol: TCP
 ```
 
-### Expose via Gateway API (`gateway`)
+### Expose via Gateway API
+
+Enable `gateway` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
+The backend is automatically wired to the chart's own Service. When `oauth2.enabled=true`,
+the backend port defaults to `4180` and `redirect_url` is injected into the oauth2-proxy config.
 
 ```yaml
 gateway:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - my-app.example.com
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 8000
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  clusterIssuer: letsencrypt-prod-istio
+```
+
+To skip ListenerSet creation and attach directly to an existing Gateway listener:
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+    sectionName: https-my-app
+```
+
+### Authorization policies
+
+Use `gateway.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  authorizationPolicies:
+    block-metrics:
+      action: DENY
+      rules:
+        - to:
+            - operation:
+                paths: [/metrics]
+    ip-allowlist:
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                remoteIpBlocks: ["10.0.0.0/8"]
+    mesh-only:
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                principals: ["cluster.local/ns/frontend/sa/frontend"]
+```
+
+### JWT / RequestAuthentication (Keycloak)
+
+Use `gateway.requestAuthentications` to create Istio `RequestAuthentication` resources
+that validate JWTs from an OIDC provider such as Keycloak.
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  requestAuthentications:
+    keycloak:
+      jwtRules:
+        - issuer: https://keycloak.example.com/realms/myrealm
+          jwksUri: https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs
+          audiences:
+            - my-app
+          forwardOriginalToken: false
 ```
 
 ### Security context
@@ -166,21 +237,26 @@ oauth2:
 
 See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
 
-### Gateway-routes backend to oauth2-proxy port 4180
+### Gateway + OAuth2 combined
 
-When `oauth2.enabled=true`, the Service always includes `oauth2-proxy:4180`, so Gateway API backendRefs can route directly to the proxy:
+When both `gateway.enabled=true` and `oauth2.enabled=true`, the chart automatically:
+- Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
+- Injects `redirect_url = https://<first-hostname>/oauth2/callback` into the oauth2-proxy ConfigMap
 
 ```yaml
 gateway:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - my-app.example.com
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 4180
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+
+oauth2:
+  enabled: true
+  secretRef: my-app-oauth2-proxy-envs
+  clientId: portal
+  issuerUrl: https://keycloak.example.com/realms/myrealm
 ```
 
 {{ template "helm-docs.versionFooter" . }}

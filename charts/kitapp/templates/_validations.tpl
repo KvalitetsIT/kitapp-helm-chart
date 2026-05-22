@@ -74,6 +74,17 @@
 {{- end -}}
 {{- end -}}
 
+{{- define "kitapp.validate.gateway" -}}
+{{- if .Values.gateway.enabled -}}
+{{- if empty .Values.gateway.hostnames -}}
+{{- fail "values.gateway.hostnames is required when gateway.enabled=true" -}}
+{{- end -}}
+{{- if not .Values.gateway.gateway.name -}}
+{{- fail "values.gateway.gateway.name is required when gateway.enabled=true" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "kitapp.validate.oauth2" -}}
 {{- if and .Values.oauth2.enabled (not .Values.oauth2.clientId) -}}
 {{- fail "values.oauth2.clientId is required when oauth2.enabled=true" -}}

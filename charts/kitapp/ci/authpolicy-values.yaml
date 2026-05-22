@@ -1,0 +1,46 @@
+image:
+  repository: nginx
+  tag: "1.31.0"
+
+applicationPort:
+  name: http
+  port: 8000
+
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  clusterIssuer: letsencrypt-prod-istio
+  authorizationPolicies:
+    block-metrics:
+      action: DENY
+      rules:
+        - to:
+            - operation:
+                paths:
+                  - /metrics
+    ip-allowlist:
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                remoteIpBlocks:
+                  - "10.0.0.0/8"
+    mesh-only:
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                principals:
+                  - "cluster.local/ns/frontend/sa/frontend"
+  requestAuthentications:
+    keycloak:
+      jwtRules:
+        - issuer: https://keycloak.example.com/realms/myrealm
+          jwksUri: https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs
+          audiences:
+            - my-app
+          forwardOriginalToken: false

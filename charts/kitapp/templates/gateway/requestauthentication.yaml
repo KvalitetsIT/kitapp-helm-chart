@@ -1,0 +1,21 @@
+{{- if .Values.gateway.enabled }}
+{{- range $authName, $auth := .Values.gateway.requestAuthentications }}
+{{- if $auth }}
+---
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata:
+  name: {{ printf "%s-%s" (include "kitapp.fullname" $) $authName | quote }}
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "kitapp.labels" $ | nindent 4 }}
+spec:
+  targetRefs:
+    - name: {{ include "kitapp.fullname" $ | quote }}
+      kind: Service
+      group: ""
+  jwtRules:
+    {{- toYaml $auth.jwtRules | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

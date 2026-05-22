@@ -7,12 +7,10 @@ applicationPort:
   port: 8000
 
 gateway:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - app.local
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 8000
+  enabled: true
+  hostnames:
+    - app.local
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  clusterIssuer: letsencrypt-prod-istio
