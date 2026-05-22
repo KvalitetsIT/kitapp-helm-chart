@@ -7,8 +7,6 @@ metadata:
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}
 data:
-  # oauth2-proxy.cfg is TOML. Scalar types (string, bool, int, string array) share
-  # identical syntax with JSON, so toJson produces valid TOML for all supported value types.
   oauth2-proxy.cfg: |
     # Server
     http_address = "0.0.0.0:4180"

@@ -19,7 +19,6 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/ | gateway(gateway-routes) | 0.0.5 |
 | https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/ | templates | 2.1.1 |
 
 ## Values
@@ -93,7 +92,11 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.upstream | string | http://127.0.0.1:8080 | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. |
 | oauth2.clientId | string | "" | Reusable oauth2-proxy client id used by generated oauth2-proxy.cfg (`client_id`, `cookie_name`). |
 | oauth2.issuerUrl | string | "" | Reusable oauth2-proxy issuer URL used by generated oauth2-proxy.cfg (`oidc_issuer_url`). |
-| oauth2.config | object | {} | oauth2-proxy.cfg override values map. Defaults are defined in the oauth2 configmap template; values set here override those defaults. Values are appended after defaults, so duplicate keys override earlier ones. |
+| oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
+| oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
+| oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |
+| oauth2.config.skipAuthRoutes | list | [] | URL path patterns that bypass authentication. |
+| oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
 | oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation (required when oauth2.enabled=true). |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
@@ -149,8 +152,23 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | templates | object | {} | Values passed to the KvalitetsIT templates dependency chart. |
-| gateway | object | see values.yaml | Values passed to the aliased gateway dependency chart (gateway-routes). Configure Gateway API routes under gateway.routes. |
-| gateway.routes | object | {} | Route definitions passed to gateway-routes. |
+
+### Gateway
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| gateway | object | see values.yaml | Gateway API integration settings. |
+| gateway.enabled | bool | false | Enable Gateway API resources (HTTPRoute, ListenerSet, and optional policies). |
+| gateway.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
+| gateway.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
+| gateway.gateway | object | see values.yaml | Gateway attachment settings. |
+| gateway.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
+| gateway.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
+| gateway.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the HTTPRoute directly to this Gateway listener section. |
+| gateway.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. |
+| gateway.rules | list | [] | Explicit HTTPRoute rules. If empty, a catch-all rule to the app Service is generated. |
+| gateway.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
+| gateway.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
 
 ## Usage
 
@@ -223,19 +241,90 @@ additionalApplicationPorts:
     protocol: TCP
 ```
 
-### Expose via Gateway API (`gateway`)
+### Expose via Gateway API
+
+Enable `gateway` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
+The backend is automatically wired to the chart's own Service. When `oauth2.enabled=true`,
+the backend port defaults to `4180` and `redirect_url` is injected into the oauth2-proxy config.
 
 ```yaml
 gateway:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - my-app.example.com
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 8000
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  clusterIssuer: letsencrypt-prod-istio
+```
+
+To skip ListenerSet creation and attach directly to an existing Gateway listener:
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+    sectionName: https-my-app
+```
+
+### Authorization policies
+
+Use `gateway.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  authorizationPolicies:
+    block-metrics:
+      action: DENY
+      rules:
+        - to:
+            - operation:
+                paths: [/metrics]
+    ip-allowlist:
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                remoteIpBlocks: ["10.0.0.0/8"]
+    mesh-only:
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                principals: ["cluster.local/ns/frontend/sa/frontend"]
+```
+
+### JWT / RequestAuthentication (Keycloak)
+
+Use `gateway.requestAuthentications` to create Istio `RequestAuthentication` resources
+that validate JWTs from an OIDC provider such as Keycloak.
+
+```yaml
+gateway:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  requestAuthentications:
+    keycloak:
+      jwtRules:
+        - issuer: https://keycloak.example.com/realms/myrealm
+          jwksUri: https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs
+          audiences:
+            - my-app
+          forwardOriginalToken: false
 ```
 
 ### Security context
@@ -291,11 +380,11 @@ oauth2:
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal
   config:
-    email_domains:
+    emailDomains:
       - example.com
-    allowed_groups:
+    allowedGroups:
       - admins
-    skip_auth_routes:
+    skipAuthRoutes:
       - ^/healthz$
   overrides:
     annotations:
@@ -305,21 +394,26 @@ oauth2:
 
 See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
 
-### Gateway-routes backend to oauth2-proxy port 4180
+### Gateway + OAuth2 combined
 
-When `oauth2.enabled=true`, the Service always includes `oauth2-proxy:4180`, so Gateway API backendRefs can route directly to the proxy:
+When both `gateway.enabled=true` and `oauth2.enabled=true`, the chart automatically:
+- Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
+- Injects `redirect_url = https://<first-hostname>/oauth2/callback` into the oauth2-proxy ConfigMap
 
 ```yaml
 gateway:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - my-app.example.com
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 4180
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+
+oauth2:
+  enabled: true
+  secretRef: my-app-oauth2-proxy-envs
+  clientId: portal
+  issuerUrl: https://keycloak.example.com/realms/myrealm
 ```
 
 ----------------------------------------------
