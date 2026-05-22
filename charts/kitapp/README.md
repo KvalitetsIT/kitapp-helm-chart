@@ -19,7 +19,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/ | ingress(gateway-routes) | 0.0.5 |
+| https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/ | gateway(gateway-routes) | 0.0.5 |
 | https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/ | templates | 2.1.1 |
 
 ## Values
@@ -147,8 +147,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | templates | object | {} | Values passed to the KvalitetsIT templates dependency chart. |
-| ingress | object | see values.yaml | Values passed to the aliased ingress dependency chart (gateway-routes). Configure Gateway API routes under ingress.routes. |
-| ingress.routes | object | {} | Route definitions passed to gateway-routes. |
+| gateway | object | see values.yaml | Values passed to the aliased gateway dependency chart (gateway-routes). Configure Gateway API routes under gateway.routes. |
+| gateway.routes | object | {} | Route definitions passed to gateway-routes. |
 
 ## Usage
 
@@ -221,10 +221,10 @@ additionalApplicationPorts:
     protocol: TCP
 ```
 
-### Expose via Gateway API (`ingress`)
+### Expose via Gateway API (`gateway`)
 
 ```yaml
-ingress:
+gateway:
   routes:
     app:
       httpRoute:
@@ -288,7 +288,8 @@ See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
 
 When `oauth2.enabled=true`, the Service always includes `oauth2-proxy:4180`, so Gateway API backendRefs can route directly to the proxy:
 
-ingress:
+```yaml
+gateway:
   routes:
     app:
       httpRoute:

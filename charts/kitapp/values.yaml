@@ -287,11 +287,11 @@ volumes: []
 # @section -- Dependencies
 templates: {}
 
-# -- Values passed to the aliased ingress dependency chart (gateway-routes).
-# Configure Gateway API routes under ingress.routes.
+# -- Values passed to the aliased gateway dependency chart (gateway-routes).
+# Configure Gateway API routes under gateway.routes.
 # @default -- see values.yaml
 # @section -- Dependencies
-ingress:
+gateway:
   # -- Route definitions passed to gateway-routes.
   # @default -- {}
   # @section -- Dependencies

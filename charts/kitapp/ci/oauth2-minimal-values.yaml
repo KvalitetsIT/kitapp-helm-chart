@@ -15,7 +15,7 @@ oauth2:
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal
 
-ingress:
+gateway:
   routes:
     app:
       httpRoute:

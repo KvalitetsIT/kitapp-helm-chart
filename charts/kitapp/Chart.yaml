@@ -19,6 +19,6 @@ dependencies:
     version: 2.1.1
     repository: https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/
   - name: gateway-routes
-    alias: ingress
+    alias: gateway
     version: 0.0.5
     repository: https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/

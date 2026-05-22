@@ -84,10 +84,10 @@ additionalApplicationPorts:
     protocol: TCP
 ```
 
-### Expose via Gateway API (`ingress`)
+### Expose via Gateway API (`gateway`)
 
 ```yaml
-ingress:
+gateway:
   routes:
     app:
       httpRoute:
@@ -151,7 +151,8 @@ See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
 
 When `oauth2.enabled=true`, the Service always includes `oauth2-proxy:4180`, so Gateway API backendRefs can route directly to the proxy:
 
-ingress:
+```yaml
+gateway:
   routes:
     app:
       httpRoute:

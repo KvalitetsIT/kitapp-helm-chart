@@ -3,3 +3,4 @@
 {{- include "kitapp.validate.portNumbers" . -}}
 {{- include "kitapp.validate.portNames" . -}}
 {{- include "kitapp.validate.envNames" . -}}
+{{- include "kitapp.validate.oauth2" . -}}

@@ -38,7 +38,7 @@ oauth2:
     configMap: oidc-provider-ca
     key: ca.crt
 
-ingress:
+gateway:
   routes:
     app:
       httpRoute:
