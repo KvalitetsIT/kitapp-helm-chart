@@ -32,16 +32,16 @@ data:
       "auth_logging" true
       "request_logging" true
   -}}
-{{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) -}}
-{{- $_ := set $defaults "redirect_url" (printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames)) -}}
-{{- $_ := set $defaults "cookie_domains" (list (first .Values.gateway.hostnames)) -}}
-{{- $_ := set $defaults "whitelist_domains" (list (first .Values.gateway.hostnames)) -}}
-{{- end -}}
 {{- $cfg := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.config | default dict) -}}
 {{- $_ := set $cfg "client_id" .Values.oauth2.clientId -}}
 {{- $_ := set $cfg "cookie_name" .Values.oauth2.clientId -}}
 {{- $_ := set $cfg "oidc_issuer_url" .Values.oauth2.issuerUrl -}}
 {{- $_ := set $cfg "upstreams" (list .Values.oauth2.upstream) -}}
+{{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) -}}
+{{- $_ := set $cfg "redirect_url" (printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames)) -}}
+{{- $_ := set $cfg "cookie_domains" (list (first .Values.gateway.hostnames)) -}}
+{{- $_ := set $cfg "whitelist_domains" (list (first .Values.gateway.hostnames)) -}}
+{{- end -}}
 {{- range $k := keys $cfg | sortAlpha }}
     {{ $k }} = {{ get $cfg $k | toJson }}
 {{- end }}
