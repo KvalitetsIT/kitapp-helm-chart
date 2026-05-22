@@ -41,13 +41,13 @@ data:
     session_store_type = "cookie"
     code_challenge_method = "S256"
     {{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) }}
-    cookie_domains = {{ list (first .Values.gateway.hostnames) | toJson }}
+    cookie_domains = {{ .Values.gateway.hostnames | toJson }}
     {{- end }}
     {{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) }}
 
     # Redirect
     redirect_url = {{ printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames) | quote }}
-    whitelist_domains = {{ list (first .Values.gateway.hostnames) | toJson }}
+    whitelist_domains = {{ .Values.gateway.hostnames | toJson }}
     {{- end }}
 
     # Headers
