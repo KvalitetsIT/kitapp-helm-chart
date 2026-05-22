@@ -34,6 +34,8 @@ data:
   -}}
 {{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) -}}
 {{- $_ := set $defaults "redirect_url" (printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames)) -}}
+{{- $_ := set $defaults "cookie_domains" (list (first .Values.gateway.hostnames)) -}}
+{{- $_ := set $defaults "whitelist_domains" (list (first .Values.gateway.hostnames)) -}}
 {{- end -}}
 {{- $cfg := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.config | default dict) -}}
 {{- $_ := set $cfg "client_id" .Values.oauth2.clientId -}}
