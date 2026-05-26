@@ -10,6 +10,7 @@ kind: Deployment
 {{- if not (empty .Values.metrics.port) }}
 {{- $metricsPort = (.Values.metrics.port | int) }}
 {{- end }}
+{{- $allVolumes := include "kitapp.allVolumes" . | fromYamlArray }}
 metadata:
   name: {{ include "kitapp.fullname" . }}
   namespace: {{ .Release.Namespace }}
@@ -104,11 +105,15 @@ spec:
           startupProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
+          {{- with $allVolumes }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
+            {{- range . }}
+            {{- include "kitapp.volumeMount" . | nindent 12 }}
+            {{- end }}
           {{- end }}
-      {{- with .Values.volumes }}
+      {{- with $allVolumes }}
       volumes:
-        {{- toYaml . | nindent 8 }}
+        {{- range . }}
+        {{- include "kitapp.podVolume" (dict "volume" . "context" (dict "volume" . "Values" $.Values "Chart" $.Chart "Release" $.Release)) | nindent 8 }}
+        {{- end }}
       {{- end }}

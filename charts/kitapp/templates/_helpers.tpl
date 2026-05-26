@@ -29,3 +29,37 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "kitapp.volumeClaimName" -}}
+{{- $defaultClaimName := printf "%s-%s" (include "kitapp.fullname" .) .volume.name -}}
+{{- default $defaultClaimName .volume.volumeSpec.persistentVolumeClaim.claimName -}}
+{{- end -}}
+
+{{- define "kitapp.allVolumes" -}}
+{{- toYaml (concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list))) -}}
+{{- end -}}
+
+{{- define "kitapp.volumeMount" -}}
+- name: {{ .name }}
+  mountPath: {{ .mountPath }}
+  {{- if .readOnly }}
+  readOnly: true
+  {{- end }}
+  {{- if .subPath }}
+  subPath: {{ .subPath }}
+  {{- end }}
+{{- end -}}
+
+{{- define "kitapp.podVolume" -}}
+- name: {{ .volume.name }}
+  {{- if .volume.volumeSpec.persistentVolumeClaim }}
+  persistentVolumeClaim:
+    {{- if .volume.volumeSpec.persistentVolumeClaim.existingClaim }}
+    claimName: {{ .volume.volumeSpec.persistentVolumeClaim.existingClaim }}
+    {{- else }}
+    claimName: {{ include "kitapp.volumeClaimName" .context }}
+    {{- end }}
+  {{- else }}
+  {{- toYaml .volume.volumeSpec | nindent 2 }}
+  {{- end }}
+{{- end -}}

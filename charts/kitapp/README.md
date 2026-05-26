@@ -144,8 +144,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| volumeMounts | list | [] | Raw container volume mounts. Typical PVC mount example: - name: app-data   mountPath: /data |
-| volumes | list | [] | Raw pod volumes. Typical PVC volume example: - name: app-data   persistentVolumeClaim:     claimName: my-existing-pvc |
+| volumes | list | [] | Structured volume definitions. Each entry defines both the container mount and the pod volume source. |
+| extraVolumes | list | [] | Additional structured volume definitions appended after `volumes`. Use to share common volumes in base values and extend per environment overlays. |
 
 ### Dependencies
 
@@ -172,7 +172,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 ## Usage
 
-This chart deploys a generic Kubernetes `Deployment` with a `Service` and optional raw `volumes`/`volumeMounts`.
+This chart deploys a generic Kubernetes `Deployment` with a `Service` and optional structured `volumes`.
 
 ### Required values
 
@@ -225,6 +225,47 @@ metrics:
 ```
 
 When `metrics.enabled=true`, the metrics port name is always `metrics`.
+
+### Volumes and PVCs
+
+Use a single `volumes` list where each item defines both mount options and a `volumeSpec` source.
+
+```yaml
+volumes:
+  - name: app-config
+    mountPath: /app/config
+    readOnly: true
+    volumeSpec:
+      configMap:
+        name: my-config
+```
+
+Use `extraVolumes` with the same structure to append environment-specific entries on top of shared base `volumes`.
+
+Mount an external PVC:
+
+```yaml
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        existingClaim: my-existing-pvc
+```
+
+Create and mount a PVC from the chart:
+
+```yaml
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        create: true
+        size: 8Gi
+        storageClass: nfs
+        accessMode: ReadWriteMany
+```
 
 ### Additional application ports
 

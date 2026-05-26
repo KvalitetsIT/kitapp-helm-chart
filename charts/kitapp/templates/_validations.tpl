@@ -118,3 +118,24 @@
 {{- $_ := set $envNames .name true -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "kitapp.validate.volumes" -}}
+{{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) -}}
+{{- range $idx, $volume := $allVolumes }}
+{{- if not $volume.name -}}
+{{- fail (printf "merged volumes[%d].name is required (volumes + extraVolumes)" $idx) -}}
+{{- end -}}
+{{- if not $volume.mountPath -}}
+{{- fail (printf "merged volumes[%d].mountPath is required (volumes + extraVolumes)" $idx) -}}
+{{- end -}}
+{{- if not $volume.volumeSpec -}}
+{{- fail (printf "merged volumes[%d].volumeSpec is required (volumes + extraVolumes)" $idx) -}}
+{{- end -}}
+{{- if $volume.volumeSpec.persistentVolumeClaim -}}
+{{- $pvc := $volume.volumeSpec.persistentVolumeClaim -}}
+{{- if and (not $pvc.existingClaim) (ne (default true $pvc.create) false) (not $pvc.size) -}}
+{{- fail (printf "merged volumes[%d].volumeSpec.persistentVolumeClaim.size is required when creating a PVC (volumes + extraVolumes)" $idx) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

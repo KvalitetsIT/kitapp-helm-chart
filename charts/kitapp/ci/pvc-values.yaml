@@ -5,11 +5,19 @@ image:
 applicationPort:
   port: 80
 
-volumeMounts:
-  - name: app-data
-    mountPath: /data
-
 volumes:
   - name: app-data
-    persistentVolumeClaim:
-      claimName: my-existing-pvc
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        existingClaim: my-existing-pvc
+  - name: app-cache
+    mountPath: /cache
+    volumeSpec:
+      emptyDir: {}
+  - name: app-data-created
+    mountPath: /created
+    volumeSpec:
+      persistentVolumeClaim:
+        create: true
+        size: 1Gi

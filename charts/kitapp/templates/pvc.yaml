@@ -1,0 +1,24 @@
+{{- $allVolumes := include "kitapp.allVolumes" . | fromYamlArray }}
+{{- range $allVolumes }}
+{{- if .volumeSpec.persistentVolumeClaim }}
+{{- if and (not .volumeSpec.persistentVolumeClaim.existingClaim) (ne (default true .volumeSpec.persistentVolumeClaim.create) false) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kitapp.volumeClaimName" (dict "volume" . "Values" $.Values "Chart" $.Chart "Release" $.Release) }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" $ | nindent 4 }}
+spec:
+  {{- with .volumeSpec.persistentVolumeClaim.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  accessModes:
+    - {{ default "ReadWriteMany" .volumeSpec.persistentVolumeClaim.accessMode }}
+  resources:
+    requests:
+      storage: {{ .volumeSpec.persistentVolumeClaim.size }}
+---
+{{- end }}
+{{- end }}
+{{- end }}

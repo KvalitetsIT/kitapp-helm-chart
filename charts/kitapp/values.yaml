@@ -291,22 +291,43 @@ service:
   # @section -- Service
   annotations: {}
 
-# -- Raw container volume mounts.
-# Typical PVC mount example:
-# - name: app-data
-#   mountPath: /data
-# @default -- []
-# @section -- Persistence
-volumeMounts: []
-
-# -- Raw pod volumes.
-# Typical PVC volume example:
-# - name: app-data
-#   persistentVolumeClaim:
-#     claimName: my-existing-pvc
+# -- Structured volume definitions.
+# Each entry defines both the container mount and the pod volume source.
 # @default -- []
 # @section -- Persistence
 volumes: []
+# Typical examples:
+# - name: config
+#   mountPath: /app/config
+#   readOnly: true
+#   volumeSpec:
+#     configMap:
+#       name: my-config
+#
+# - name: app-data
+#   mountPath: /data
+#   volumeSpec:
+#     persistentVolumeClaim:
+#       # Use existingClaim to mount an external PVC without creating one.
+#       existingClaim: my-existing-pvc
+#
+# - name: app-data
+#   mountPath: /data
+#   volumeSpec:
+#     persistentVolumeClaim:
+#       # create defaults to true when existingClaim is not set.
+#       create: true
+#       # Optional override for generated claim name (<release>-<volume-name>).
+#       claimName: ""
+#       accessMode: ReadWriteMany
+#       storageClass: nfs
+#       size: 8Gi
+
+# -- Additional structured volume definitions appended after `volumes`.
+# Use to share common volumes in base values and extend per environment overlays.
+# @default -- []
+# @section -- Persistence
+extraVolumes: []
 
 # -- Values passed to the KvalitetsIT templates dependency chart.
 # @default -- {}
