@@ -1,0 +1,61 @@
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: "1.31.0"
+
+env:
+  - name: EXAMPLE
+    value: hello
+
+extraEnvs:
+  - name: LOG_LEVEL
+    value: debug
+
+applicationPort:
+  name: http
+  port: 8000
+  protocol: TCP
+
+additionalApplicationPorts:
+  - name: grpc
+    port: 9095
+    protocol: TCP
+
+servicePort:
+  port: 8000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10

@@ -300,4 +300,49 @@ oauth2:
   issuerUrl: https://keycloak.example.com/realms/myrealm
 ```
 
+### CI examples (from files)
+
+These snippets are injected directly from `ci/*.yaml` so docs stay in sync with tested examples.
+Only unique, high-signal examples are included here to avoid duplication.
+
+<details>
+<summary><code>ci/minimal-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/minimal-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/pvc-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/pvc-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/authpolicy-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/authpolicy-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/oauth2-advanced-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/advanced-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/advanced-values.yaml" | trim }}
+```
+</details>
+
 {{ template "helm-docs.versionFooter" . }}
