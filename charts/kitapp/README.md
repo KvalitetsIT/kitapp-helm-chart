@@ -70,8 +70,9 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | command | list | [] | Optional container command override. |
 | args | list | [] | Optional container args override. |
 | env | list | [] | Environment variables for the container. |
-| additionalEnvs | list | [] | Additional environment variables appended after `env`. Useful for overlay values files to extend env without replacing shared base entries. |
+| extraEnvs | list | [] | Additional environment variables appended after `env`. Useful for overlay values files to extend env without replacing shared base entries. |
 | envFrom | list | [] | Environment variable sources (ConfigMapRef/SecretRef) for the container. |
+| extraEnvFrom | list | [] | Additional environment variable sources appended after `envFrom`. Useful for overlay values files to extend envFrom without replacing shared base entries. |
 | resources | object | {} | Container resource requests and limits. |
 
 ### Health

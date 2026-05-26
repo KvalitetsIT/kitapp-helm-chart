@@ -80,12 +80,13 @@ spec:
               containerPort: {{ $metricsPort }}
               protocol: TCP
             {{- end }}
-          {{- $allEnvs := concat (.Values.env | default (list)) (.Values.additionalEnvs | default (list)) }}
+          {{- $allEnvs := concat (.Values.env | default (list)) (.Values.extraEnvs | default (list)) }}
           {{- with $allEnvs }}
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.envFrom }}
+          {{- $allEnvFrom := concat (.Values.envFrom | default (list)) (.Values.extraEnvFrom | default (list)) }}
+          {{- with $allEnvFrom }}
           envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}

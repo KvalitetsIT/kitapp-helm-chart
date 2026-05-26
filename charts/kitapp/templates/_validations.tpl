@@ -1,141 +1,181 @@
 {{- define "kitapp.validate.requiredImage" -}}
-{{- if not .Values.image.repository -}}
-{{- fail "values.image.repository is required" -}}
-{{- end -}}
-{{- if not .Values.image.tag -}}
-{{- fail "values.image.tag is required" -}}
-{{- end -}}
+  {{- if not .Values.image.repository -}}
+    {{- fail "values.image.repository is required" -}}
+  {{- end -}}
+  {{- if not .Values.image.tag -}}
+    {{- fail "values.image.tag is required" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.requiredApplicationPort" -}}
-{{- if not .Values.applicationPort.name -}}
-{{- fail "values.applicationPort.name is required" -}}
-{{- end -}}
-{{- if and (empty .Values.applicationPort.port) (empty .Values.servicePort.port) -}}
-{{- fail "one of values.applicationPort.port or values.servicePort.port must be set" -}}
-{{- end -}}
+  {{- if not .Values.applicationPort.name -}}
+    {{- fail "values.applicationPort.name is required" -}}
+  {{- end -}}
+  {{- if and (empty .Values.applicationPort.port) (empty .Values.servicePort.port) -}}
+    {{- fail "one of values.applicationPort.port or values.servicePort.port must be set" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.portNumbers" -}}
-{{- if and (not (empty .Values.applicationPort.port)) (le (.Values.applicationPort.port | int) 0) -}}
-{{- fail "values.applicationPort.port must be greater than 0 when set" -}}
-{{- end -}}
-{{- if and (not (empty .Values.servicePort.port)) (le (.Values.servicePort.port | int) 0) -}}
-{{- fail "values.servicePort.port must be greater than 0 when set" -}}
-{{- end -}}
-{{- if and .Values.metrics.enabled (not (empty .Values.metrics.port)) (le (.Values.metrics.port | int) 0) -}}
-{{- fail "values.metrics.port must be greater than 0 when set" -}}
-{{- end -}}
+  {{- if and (not (empty .Values.applicationPort.port)) (le (.Values.applicationPort.port | int) 0) -}}
+    {{- fail "values.applicationPort.port must be greater than 0 when set" -}}
+  {{- end -}}
+  {{- if and (not (empty .Values.servicePort.port)) (le (.Values.servicePort.port | int) 0) -}}
+    {{- fail "values.servicePort.port must be greater than 0 when set" -}}
+  {{- end -}}
+  {{- if and .Values.metrics.enabled (not (empty .Values.metrics.port)) (le (.Values.metrics.port | int) 0) -}}
+    {{- fail "values.metrics.port must be greater than 0 when set" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.portNames" -}}
-{{- $appPortNames := dict -}}
-{{- $_ := set $appPortNames .Values.applicationPort.name true -}}
-{{- range .Values.additionalApplicationPorts }}
-{{- if not .name -}}
-{{- fail "each entry in values.additionalApplicationPorts requires a name" -}}
-{{- end -}}
-{{- if le (.port | int) 0 -}}
-{{- fail "each entry in values.additionalApplicationPorts requires port > 0" -}}
-{{- end -}}
-{{- if hasKey $appPortNames .name -}}
-{{- fail (printf "duplicate port name detected: %s" .name) -}}
-{{- end -}}
-{{- $_ := set $appPortNames .name true -}}
-{{- end -}}
+  {{- $appPortNames := dict -}}
+  {{- $_ := set $appPortNames .Values.applicationPort.name true -}}
+  {{- range .Values.additionalApplicationPorts }}
+    {{- if not .name -}}
+      {{- fail "each entry in values.additionalApplicationPorts requires a name" -}}
+    {{- end -}}
+    {{- if le (.port | int) 0 -}}
+      {{- fail "each entry in values.additionalApplicationPorts requires port > 0" -}}
+    {{- end -}}
+    {{- if hasKey $appPortNames .name -}}
+      {{- fail (printf "duplicate port name detected: %s" .name) -}}
+    {{- end -}}
+    {{- $_ := set $appPortNames .name true -}}
+  {{- end -}}
 
-{{- $servicePortNames := dict -}}
-{{- range $n, $_ := $appPortNames }}
-{{- $_ = set $servicePortNames $n true -}}
-{{- end -}}
-{{- if and (not (empty .Values.servicePort.name)) (hasKey $servicePortNames .Values.servicePort.name) -}}
-{{- fail (printf "primary service port name '%s' conflicts with existing port names" .Values.servicePort.name) -}}
-{{- end -}}
-{{- if not (empty .Values.servicePort.name) -}}
-{{- $_ = set $servicePortNames .Values.servicePort.name true -}}
-{{- end -}}
-{{- range .Values.additionalServicePorts }}
-{{- if not .name -}}
-{{- fail "each entry in values.additionalServicePorts requires a name" -}}
-{{- end -}}
-{{- if le (.port | int) 0 -}}
-{{- fail "each entry in values.additionalServicePorts requires port > 0" -}}
-{{- end -}}
-{{- if hasKey $servicePortNames .name -}}
-{{- fail (printf "duplicate service port name detected: %s" .name) -}}
-{{- end -}}
-{{- $_ := set $servicePortNames .name true -}}
-{{- end -}}
-{{- if and .Values.metrics.enabled (hasKey $servicePortNames "metrics") -}}
-{{- fail "metrics port name 'metrics' conflicts with existing service port names" -}}
-{{- end -}}
-{{- if and .Values.oauth2.enabled (hasKey $servicePortNames "oauth2-proxy") -}}
-{{- fail "reserved oauth2 service port name 'oauth2-proxy' conflicts with service port names" -}}
-{{- end -}}
+  {{- $servicePortNames := dict -}}
+  {{- range $n, $_ := $appPortNames }}
+    {{- $_ = set $servicePortNames $n true -}}
+  {{- end -}}
+  {{- if and (not (empty .Values.servicePort.name)) (hasKey $servicePortNames .Values.servicePort.name) -}}
+    {{- fail (printf "primary service port name '%s' conflicts with existing port names" .Values.servicePort.name) -}}
+  {{- end -}}
+  {{- if not (empty .Values.servicePort.name) -}}
+    {{- $_ = set $servicePortNames .Values.servicePort.name true -}}
+  {{- end -}}
+  {{- range .Values.additionalServicePorts }}
+    {{- if not .name -}}
+      {{- fail "each entry in values.additionalServicePorts requires a name" -}}
+    {{- end -}}
+    {{- if le (.port | int) 0 -}}
+      {{- fail "each entry in values.additionalServicePorts requires port > 0" -}}
+    {{- end -}}
+    {{- if hasKey $servicePortNames .name -}}
+      {{- fail (printf "duplicate service port name detected: %s" .name) -}}
+    {{- end -}}
+    {{- $_ := set $servicePortNames .name true -}}
+  {{- end -}}
+  {{- if and .Values.metrics.enabled (hasKey $servicePortNames "metrics") -}}
+    {{- fail "metrics port name 'metrics' conflicts with existing service port names" -}}
+  {{- end -}}
+  {{- if and .Values.oauth2.enabled (hasKey $servicePortNames "oauth2-proxy") -}}
+    {{- fail "reserved oauth2 service port name 'oauth2-proxy' conflicts with service port names" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.gateway" -}}
-{{- if .Values.gateway.enabled -}}
-{{- if empty .Values.gateway.hostnames -}}
-{{- fail "values.gateway.hostnames is required when gateway.enabled=true" -}}
-{{- end -}}
-{{- if not .Values.gateway.gateway.name -}}
-{{- fail "values.gateway.gateway.name is required when gateway.enabled=true" -}}
-{{- end -}}
-{{- end -}}
+  {{- if .Values.gateway.enabled -}}
+    {{- if empty .Values.gateway.hostnames -}}
+      {{- fail "values.gateway.hostnames is required when gateway.enabled=true" -}}
+    {{- end -}}
+    {{- if not .Values.gateway.gateway.name -}}
+      {{- fail "values.gateway.gateway.name is required when gateway.enabled=true" -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.oauth2" -}}
-{{- if and .Values.oauth2.enabled (not .Values.oauth2.clientId) -}}
-{{- fail "values.oauth2.clientId is required when oauth2.enabled=true" -}}
-{{- end -}}
-{{- if and .Values.oauth2.enabled (not .Values.oauth2.issuerUrl) -}}
-{{- fail "values.oauth2.issuerUrl is required when oauth2.enabled=true" -}}
-{{- end -}}
-{{- if and .Values.oauth2.enabled (not .Values.oauth2.secretRef) -}}
-{{- fail "values.oauth2.secretRef is required when oauth2.enabled=true" -}}
-{{- end -}}
+  {{- if and .Values.oauth2.enabled (not .Values.oauth2.clientId) -}}
+    {{- fail "values.oauth2.clientId is required when oauth2.enabled=true" -}}
+  {{- end -}}
+  {{- if and .Values.oauth2.enabled (not .Values.oauth2.issuerUrl) -}}
+    {{- fail "values.oauth2.issuerUrl is required when oauth2.enabled=true" -}}
+  {{- end -}}
+  {{- if and .Values.oauth2.enabled (not .Values.oauth2.secretRef) -}}
+    {{- fail "values.oauth2.secretRef is required when oauth2.enabled=true" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.envNames" -}}
-{{- $envNames := dict -}}
-{{- range .Values.env }}
-{{- if not .name -}}
-{{- fail "each entry in values.env requires a name" -}}
-{{- end -}}
-{{- if hasKey $envNames .name -}}
-{{- fail (printf "duplicate env name detected: %s" .name) -}}
-{{- end -}}
-{{- $_ := set $envNames .name true -}}
-{{- end -}}
-{{- range .Values.additionalEnvs }}
-{{- if not .name -}}
-{{- fail "each entry in values.additionalEnvs requires a name" -}}
-{{- end -}}
-{{- if hasKey $envNames .name -}}
-{{- fail (printf "duplicate env name detected across env/additionalEnvs: %s" .name) -}}
-{{- end -}}
-{{- $_ := set $envNames .name true -}}
-{{- end -}}
+  {{- $envNames := dict -}}
+  {{- range .Values.env }}
+    {{- if not .name -}}
+      {{- fail "each entry in values.env requires a name" -}}
+    {{- end -}}
+    {{- if hasKey $envNames .name -}}
+      {{- fail (printf "duplicate env name detected: %s" .name) -}}
+    {{- end -}}
+    {{- $_ := set $envNames .name true -}}
+  {{- end -}}
+  {{- range .Values.extraEnvs }}
+    {{- if not .name -}}
+      {{- fail "each entry in values.extraEnvs requires a name" -}}
+    {{- end -}}
+    {{- if hasKey $envNames .name -}}
+      {{- fail (printf "duplicate env name detected across env/extraEnvs: %s" .name) -}}
+    {{- end -}}
+    {{- $_ := set $envNames .name true -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.volumes" -}}
-{{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) -}}
-{{- range $idx, $volume := $allVolumes }}
-{{- if not $volume.name -}}
-{{- fail (printf "merged volumes[%d].name is required (volumes + extraVolumes)" $idx) -}}
+  {{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) -}}
+  {{- $volumeNames := dict -}}
+  {{- range $idx, $volume := $allVolumes }}
+    {{- if not $volume.name -}}
+      {{- fail (printf "merged volumes[%d].name is required (volumes + extraVolumes)" $idx) -}}
+    {{- end -}}
+    {{- if hasKey $volumeNames $volume.name -}}
+      {{- fail (printf "duplicate volume name detected across volumes/extraVolumes: %s" $volume.name) -}}
+    {{- end -}}
+    {{- $_ := set $volumeNames $volume.name true -}}
+    {{- if not $volume.mountPath -}}
+      {{- fail (printf "merged volumes[%d].mountPath is required (volumes + extraVolumes)" $idx) -}}
+    {{- end -}}
+    {{- if not $volume.volumeSpec -}}
+      {{- fail (printf "merged volumes[%d].volumeSpec is required (volumes + extraVolumes)" $idx) -}}
+    {{- end -}}
+    {{- if $volume.volumeSpec.persistentVolumeClaim -}}
+      {{- $pvc := $volume.volumeSpec.persistentVolumeClaim -}}
+      {{- if and (not $pvc.existingClaim) (ne (default true $pvc.create) false) (not $pvc.size) -}}
+        {{- fail (printf "merged volumes[%d].volumeSpec.persistentVolumeClaim.size is required when creating a PVC (volumes + extraVolumes)" $idx) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
-{{- if not $volume.mountPath -}}
-{{- fail (printf "merged volumes[%d].mountPath is required (volumes + extraVolumes)" $idx) -}}
-{{- end -}}
-{{- if not $volume.volumeSpec -}}
-{{- fail (printf "merged volumes[%d].volumeSpec is required (volumes + extraVolumes)" $idx) -}}
-{{- end -}}
-{{- if $volume.volumeSpec.persistentVolumeClaim -}}
-{{- $pvc := $volume.volumeSpec.persistentVolumeClaim -}}
-{{- if and (not $pvc.existingClaim) (ne (default true $pvc.create) false) (not $pvc.size) -}}
-{{- fail (printf "merged volumes[%d].volumeSpec.persistentVolumeClaim.size is required when creating a PVC (volumes + extraVolumes)" $idx) -}}
-{{- end -}}
-{{- end -}}
+
+{{- define "kitapp.validate.envFromRefs" -}}
+{{- $allEnvFrom := concat (.Values.envFrom | default (list)) (.Values.extraEnvFrom | default (list)) -}}
+{{- $seen := dict -}}
+{{- range $idx, $entry := $allEnvFrom }}
+  {{- /* Allow only one ref type per envFrom entry and require a name. */ -}}
+  {{- $hasConfigMapRef := not (empty $entry.configMapRef) -}}
+  {{- $hasSecretRef := not (empty $entry.secretRef) -}}
+  {{- if and $hasConfigMapRef $hasSecretRef -}}
+    {{- fail (printf "merged envFrom[%d] must not contain both configMapRef and secretRef (envFrom + extraEnvFrom)" $idx) -}}
+  {{- end -}}
+  {{- if and (not $hasConfigMapRef) (not $hasSecretRef) -}}
+    {{- fail (printf "merged envFrom[%d] must contain either configMapRef or secretRef (envFrom + extraEnvFrom)" $idx) -}}
+  {{- end -}}
+
+  {{- /* Build canonical key for duplicate detection across merged lists. */ -}}
+  {{- $kind := "configMapRef" -}}
+  {{- $name := "" -}}
+  {{- if $hasConfigMapRef -}}
+    {{- $name = $entry.configMapRef.name -}}
+  {{- else -}}
+    {{- $kind = "secretRef" -}}
+    {{- $name = $entry.secretRef.name -}}
+  {{- end -}}
+  {{- if empty $name -}}
+    {{- fail (printf "merged envFrom[%d].%s.name is required (envFrom + extraEnvFrom)" $idx $kind) -}}
+  {{- end -}}
+
+  {{- $key := printf "%s:%s" $kind $name -}}
+  {{- if hasKey $seen $key -}}
+    {{- fail (printf "duplicate envFrom reference detected across envFrom/extraEnvFrom: %s" $key) -}}
+  {{- end -}}
+  {{- $_ := set $seen $key true -}}
 {{- end -}}
 {{- end -}}
