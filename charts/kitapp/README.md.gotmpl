@@ -238,6 +238,7 @@ Enable `oauth2` to add the injector opt-in label and required annotations automa
 - annotations:
   - `oauth2-proxy.kitkube.dk/configmap`
   - `oauth2-proxy.kitkube.dk/secret`
+  - `checksum/oauth2-config` to roll pods when the generated oauth2-proxy ConfigMap changes
 
 ```yaml
 oauth2:
