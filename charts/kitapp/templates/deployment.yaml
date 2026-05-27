@@ -60,6 +60,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ include "kitapp.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

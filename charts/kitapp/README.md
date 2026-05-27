@@ -90,6 +90,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | nodeSelector | object | {} | Node selector labels for pod scheduling. |
 | tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
+| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
 
 ### OAuth2
 
@@ -407,6 +408,12 @@ containerSecurityContext:
       - ALL
   seccompProfile:
     type: RuntimeDefault
+```
+
+Enable AppArmor only on clusters where AppArmor is available on the nodes:
+
+```yaml
+containerSecurityContext:
   appArmorProfile:
     type: RuntimeDefault
 ```

@@ -158,6 +158,21 @@ nodeSelector: {}
 # @section -- Scheduling
 tolerations: []
 
+# -- Kubernetes affinity rules for pod scheduling.
+# Defaults to preferred pod anti-affinity across nodes for replicas from the same release.
+# @default -- see values.yaml
+# @section -- Scheduling
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "kitapp.name" . }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          topologyKey: kubernetes.io/hostname
+
 # -- OAuth2 proxy injector integration.
 # Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook.
 # @default -- see values.yaml
@@ -313,8 +328,6 @@ containerSecurityContext:
     drop:
       - ALL
   seccompProfile:
-    type: RuntimeDefault
-  appArmorProfile:
     type: RuntimeDefault
 
 # -- Service settings for exposing the application.

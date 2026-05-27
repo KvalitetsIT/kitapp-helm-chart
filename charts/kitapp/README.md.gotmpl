@@ -220,6 +220,14 @@ Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `contai
 {{ .Files.Get "ci/security-values.yaml" | trim }}
 ```
 
+Enable AppArmor only on clusters where AppArmor is available on the nodes:
+
+```yaml
+containerSecurityContext:
+  appArmorProfile:
+    type: RuntimeDefault
+```
+
 ### OAuth2 proxy injector integration
 
 Enable `oauth2` to add the injector opt-in label and required annotations automatically.
