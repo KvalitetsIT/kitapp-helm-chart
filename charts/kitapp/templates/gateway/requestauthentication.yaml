@@ -1,5 +1,5 @@
-{{- if .Values.gateway.enabled }}
-{{- range $authName, $auth := .Values.gateway.requestAuthentications }}
+{{- if .Values.route.enabled }}
+{{- range $authName, $auth := .Values.route.requestAuthentications }}
 {{- if $auth }}
 ---
 apiVersion: security.istio.io/v1

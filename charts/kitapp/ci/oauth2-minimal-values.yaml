@@ -15,7 +15,7 @@ oauth2:
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal
 
-gateway:
+route:
   enabled: true
   hostnames:
     - my-app.example.com

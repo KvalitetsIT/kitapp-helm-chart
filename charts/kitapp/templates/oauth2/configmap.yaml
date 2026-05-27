@@ -38,14 +38,14 @@ data:
     cookie_samesite = "lax"
     session_store_type = "cookie"
     code_challenge_method = "S256"
-    {{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) }}
-    cookie_domains = {{ .Values.gateway.hostnames | toJson }}
+    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
+    cookie_domains = {{ .Values.route.hostnames | toJson }}
     {{- end }}
-    {{- if and .Values.gateway.enabled (not (empty .Values.gateway.hostnames)) }}
+    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
 
     # Redirect
-    redirect_url = {{ printf "https://%s/oauth2/callback" (first .Values.gateway.hostnames) | quote }}
-    whitelist_domains = {{ .Values.gateway.hostnames | toJson }}
+    redirect_url = {{ printf "https://%s/oauth2/callback" (first .Values.route.hostnames) | quote }}
+    whitelist_domains = {{ .Values.route.hostnames | toJson }}
     {{- end }}
 
     # Headers

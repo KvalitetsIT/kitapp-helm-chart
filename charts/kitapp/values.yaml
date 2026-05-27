@@ -391,64 +391,64 @@ extraVolumes: []
 # @section -- Dependencies
 templates: {}
 
-# -- Gateway API integration settings.
+# -- Gateway API route settings.
 # @default -- see values.yaml
-# @section -- Gateway
-gateway:
+# @section -- Route
+route:
   # -- Enable Gateway API resources (HTTPRoute, ListenerSet, and optional policies).
   # @default -- false
-  # @section -- Gateway
+  # @section -- Route
   enabled: false
 
   # -- Public hostname(s) for the HTTPRoute and ListenerSet.
   # The first hostname is also used to auto-populate oauth2-proxy redirect_url.
   # @default -- []
-  # @section -- Gateway
+  # @section -- Route
   hostnames: []
 
   # -- Backend port for the auto-generated catch-all rule.
   # Defaults to applicationPort.port, or 4180 when oauth2.enabled=true.
   # @default -- null
-  # @section -- Gateway
+  # @section -- Route
   port: null
 
   # -- Gateway attachment settings.
   # @default -- see values.yaml
-  # @section -- Gateway
+  # @section -- Route
   gateway:
     # -- Name of the Gateway to attach to.
     # @default -- ingressgateway
-    # @section -- Gateway
+    # @section -- Route
     name: ingressgateway
     # -- Namespace of the Gateway.
     # @default -- istio-ingress
-    # @section -- Gateway
+    # @section -- Route
     namespace: istio-ingress
     # -- If set, skip ListenerSet creation and attach the HTTPRoute directly to this Gateway listener section.
     # @default -- ""
-    # @section -- Gateway
+    # @section -- Route
     sectionName: ""
 
   # -- Cert-manager ClusterIssuer for auto-TLS on the ListenerSet.
   # @default -- letsencrypt-prod-istio
-  # @section -- Gateway
+  # @section -- Route
   clusterIssuer: letsencrypt-prod-istio
 
   # -- Explicit HTTPRoute rules. If empty, a catch-all rule to the app Service is generated.
   # @default -- []
-  # @section -- Gateway
+  # @section -- Route
   rules: []
 
   # -- Istio AuthorizationPolicy resources keyed by name.
   # Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules.
   # @default -- {}
-  # @section -- Gateway
+  # @section -- Route
   authorizationPolicies: {}
 
   # -- Istio RequestAuthentication resources keyed by name.
   # Use to require and validate JWTs from an OIDC provider (e.g. Keycloak).
   # @default -- {}
-  # @section -- Gateway
+  # @section -- Route
   requestAuthentications: {}
 
 # -- Audit log sidecar settings.

@@ -34,7 +34,7 @@ oauth2:
     configMap: oidc-provider-ca
     key: ca.crt
 
-gateway:
+route:
   enabled: true
   hostnames:
     - my-app.example.com

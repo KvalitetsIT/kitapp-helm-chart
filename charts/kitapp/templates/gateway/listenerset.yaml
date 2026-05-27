@@ -1,4 +1,4 @@
-{{- if and .Values.gateway.enabled (not .Values.gateway.gateway.sectionName) }}
+{{- if and .Values.route.enabled (not .Values.route.gateway.sectionName) }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: ListenerSet
 metadata:
@@ -6,18 +6,18 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}
-  {{- with .Values.gateway.clusterIssuer }}
+  {{- with .Values.route.clusterIssuer }}
   annotations:
     cert-manager.io/cluster-issuer: {{ . | quote }}
   {{- end }}
 spec:
   parentRef:
-    name: {{ .Values.gateway.gateway.name | quote }}
-    namespace: {{ .Values.gateway.gateway.namespace | quote }}
+    name: {{ .Values.route.gateway.name | quote }}
+    namespace: {{ .Values.route.gateway.namespace | quote }}
     kind: Gateway
     group: gateway.networking.k8s.io
   listeners:
-    {{- range $i, $hostname := .Values.gateway.hostnames }}
+    {{- range $i, $hostname := .Values.route.hostnames }}
     - name: {{ ternary "https" (printf "https-%d" $i) (eq $i 0) | quote }}
       hostname: {{ $hostname | quote }}
       protocol: HTTPS

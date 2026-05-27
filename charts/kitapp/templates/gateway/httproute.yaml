@@ -1,4 +1,4 @@
-{{- if .Values.gateway.enabled }}
+{{- if .Values.route.enabled }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -8,24 +8,24 @@ metadata:
     {{- include "kitapp.labels" . | nindent 4 }}
 spec:
   parentRefs:
-    {{- if .Values.gateway.gateway.sectionName }}
-    - name: {{ .Values.gateway.gateway.name | quote }}
-      namespace: {{ .Values.gateway.gateway.namespace | quote }}
+    {{- if .Values.route.gateway.sectionName }}
+    - name: {{ .Values.route.gateway.name | quote }}
+      namespace: {{ .Values.route.gateway.namespace | quote }}
       kind: Gateway
       group: gateway.networking.k8s.io
-      sectionName: {{ .Values.gateway.gateway.sectionName | quote }}
+      sectionName: {{ .Values.route.gateway.sectionName | quote }}
     {{- else }}
     - name: {{ include "kitapp.fullname" . | quote }}
       kind: ListenerSet
       group: gateway.networking.k8s.io
     {{- end }}
   hostnames:
-    {{- range .Values.gateway.hostnames }}
+    {{- range .Values.route.hostnames }}
     - {{ . | quote }}
     {{- end }}
   rules:
-    {{- if .Values.gateway.rules }}
-    {{- toYaml .Values.gateway.rules | nindent 4 }}
+    {{- if .Values.route.rules }}
+    {{- toYaml .Values.route.rules | nindent 4 }}
     {{- else }}
     - backendRefs:
         - group: ""

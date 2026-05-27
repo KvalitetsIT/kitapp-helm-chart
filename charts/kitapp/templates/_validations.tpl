@@ -75,12 +75,12 @@
 {{- end -}}
 
 {{- define "kitapp.validate.gateway" -}}
-  {{- if .Values.gateway.enabled -}}
-    {{- if empty .Values.gateway.hostnames -}}
-      {{- fail "values.gateway.hostnames is required when gateway.enabled=true" -}}
+  {{- if .Values.route.enabled -}}
+    {{- if empty .Values.route.hostnames -}}
+      {{- fail "values.route.hostnames is required when route.enabled=true" -}}
     {{- end -}}
-    {{- if not .Values.gateway.gateway.name -}}
-      {{- fail "values.gateway.gateway.name is required when gateway.enabled=true" -}}
+    {{- if not .Values.route.gateway.name -}}
+      {{- fail "values.route.gateway.name is required when route.enabled=true" -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}

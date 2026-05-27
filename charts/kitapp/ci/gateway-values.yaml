@@ -6,7 +6,7 @@ applicationPort:
   name: http
   port: 8080
 
-gateway:
+route:
   enabled: true
   hostnames:
     - app.local
