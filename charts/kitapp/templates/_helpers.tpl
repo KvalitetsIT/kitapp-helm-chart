@@ -35,6 +35,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- default $defaultClaimName .volume.volumeSpec.persistentVolumeClaim.claimName -}}
 {{- end -}}
 
+{{- define "kitapp.resolvedAppPort" -}}
+{{- if not (empty .Values.applicationPort.port) -}}
+{{- .Values.applicationPort.port | int -}}
+{{- else -}}
+{{- .Values.servicePort.port | int -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "kitapp.allVolumes" -}}
 {{- toYaml (concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list))) -}}
 {{- end -}}

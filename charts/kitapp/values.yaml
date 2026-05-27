@@ -187,9 +187,10 @@ oauth2:
   # @section -- OAuth2
   image: ""
   # -- Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg.
-  # @default -- http://127.0.0.1:8080
+  # Defaults to `http://127.0.0.1:<applicationPort.port>` when empty.
+  # @default -- ""
   # @section -- OAuth2
-  upstream: http://127.0.0.1:8080
+  upstream: ""
   # -- Reusable oauth2-proxy client id used by generated oauth2-proxy.cfg (`client_id`, `cookie_name`).
   # @default -- ""
   # @section -- OAuth2
