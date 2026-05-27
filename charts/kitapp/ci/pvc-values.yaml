@@ -1,9 +1,9 @@
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
-  port: 80
+  port: 8080
 
 volumes:
   - name: app-data
@@ -12,7 +12,7 @@ volumes:
       persistentVolumeClaim:
         existingClaim: my-existing-pvc
   - name: app-config-file
-    mountPath: /app/config/application.yaml
+    mountPath: /tmp/application.yaml
     subPath: application.yaml
     volumeSpec:
       configMap:
@@ -29,4 +29,23 @@ volumes:
     volumeSpec:
       persistentVolumeClaim:
         create: true
+        accessMode: ReadWriteOnce
         size: 1Gi
+
+templates:
+  resources:
+    my-existing-pvc:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    app-config:
+      apiVersion: v1
+      kind: ConfigMap
+      data:
+        application.yaml: |
+          example: true

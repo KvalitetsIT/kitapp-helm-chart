@@ -386,12 +386,12 @@ Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `contai
 
 ```yaml
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
 
 podSecurityContext:
   runAsNonRoot: true
@@ -498,12 +498,12 @@ Only unique, high-signal examples are included here to avoid duplication.
 
 ```yaml
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
 ```
 </details>
 
@@ -512,11 +512,11 @@ applicationPort:
 
 ```yaml
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
-  port: 80
+  port: 8080
 
 volumes:
   - name: app-data
@@ -525,7 +525,7 @@ volumes:
       persistentVolumeClaim:
         existingClaim: my-existing-pvc
   - name: app-config-file
-    mountPath: /app/config/application.yaml
+    mountPath: /tmp/application.yaml
     subPath: application.yaml
     volumeSpec:
       configMap:
@@ -542,7 +542,26 @@ volumes:
     volumeSpec:
       persistentVolumeClaim:
         create: true
+        accessMode: ReadWriteOnce
         size: 1Gi
+
+templates:
+  resources:
+    my-existing-pvc:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    app-config:
+      apiVersion: v1
+      kind: ConfigMap
+      data:
+        application.yaml: |
+          example: true
 ```
 </details>
 
@@ -551,12 +570,12 @@ volumes:
 
 ```yaml
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
 
 gateway:
   enabled: true
@@ -604,21 +623,21 @@ gateway:
 
 ```yaml
 image:
-  repository: ghcr.io/your-org/your-app
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
 
 servicePort:
-  port: 8000
+  port: 8080
 
 oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
   image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
-  upstream: http://127.0.0.1:8000
+  upstream: http://127.0.0.1:8080
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal
   config:
@@ -657,8 +676,8 @@ gateway:
 replicaCount: 2
 
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 env:
   - name: EXAMPLE
@@ -670,7 +689,7 @@ extraEnvs:
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
   protocol: TCP
 
 additionalApplicationPorts:
@@ -679,7 +698,7 @@ additionalApplicationPorts:
     protocol: TCP
 
 servicePort:
-  port: 8000
+  port: 8080
 
 resources:
   requests:

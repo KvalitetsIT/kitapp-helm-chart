@@ -1,13 +1,13 @@
 image:
-  repository: ghcr.io/your-org/your-app
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
 
 servicePort:
-  port: 8000
+  port: 8080
 
 oauth2:
   enabled: true

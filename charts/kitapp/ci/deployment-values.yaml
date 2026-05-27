@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 env:
   - name: EXAMPLE
@@ -10,7 +10,7 @@ env:
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
   protocol: TCP
 
 additionalApplicationPorts:
@@ -19,7 +19,7 @@ additionalApplicationPorts:
     protocol: TCP
 
 servicePort:
-  port: 8000
+  port: 8080
 
 livenessProbe:
   httpGet:

@@ -1,7 +1,7 @@
 image:
-  repository: nginx
-  tag: "1.31.0"
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
 applicationPort:
   name: http
-  port: 8000
+  port: 8080
