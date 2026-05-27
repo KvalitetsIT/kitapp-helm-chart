@@ -29,6 +29,5 @@
 {{- with .Values.oauth2.providerCA.key }}
 {{- $_ := set $annotations "oauth2-proxy.kitkube.dk/provider.ca.key" . -}}
 {{- end }}
-{{- $merged := mergeOverwrite (deepCopy $annotations) (.Values.oauth2.overrides.annotations | default dict) -}}
-{{- toYaml $merged -}}
+{{- toYaml $annotations -}}
 {{- end -}}
