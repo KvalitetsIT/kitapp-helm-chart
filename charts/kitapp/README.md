@@ -34,9 +34,10 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| replicaCount | int | 1 | Number of pod replicas. |
+| replicaCount | int | 2 | Number of pod replicas. |
 | strategy | object | see values.yaml | Deployment strategy configuration. |
 | strategy.type | string | RollingUpdate | Deployment strategy type. |
+| revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
 
 ### Image
 
@@ -130,6 +131,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | serviceAccount.create | bool | true | Create a dedicated ServiceAccount. |
 | serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
 | serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
+| serviceAccount.automountServiceAccountToken | bool | false | Mount the ServiceAccount token into pods. |
 | podSecurityContext | object | see values.yaml | Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup). |
 | containerSecurityContext | object | see values.yaml | Security context applied to the application container. |
 
@@ -185,7 +187,7 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 ### Example values
 
 ```yaml
-replicaCount: 1
+replicaCount: 2
 
 image:
   repository: ghcr.io/your-org/your-app
