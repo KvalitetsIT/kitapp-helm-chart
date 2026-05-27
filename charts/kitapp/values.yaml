@@ -336,6 +336,16 @@ service:
   # @default -- {}
   # @section -- Service
   annotations: {}
+  # -- Labels for the Service.
+  # @default -- see values.yaml
+  # @section -- Service
+  labels:
+    # -- Route traffic through the Istio waypoint proxy for L7 policy enforcement.
+    # @section -- Service
+    istio.io/use-waypoint: waypoint
+    # -- Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic).
+    # @section -- Service
+    istio.io/ingress-use-waypoint: "true"
 
 # -- Structured volume definitions.
 # Each entry defines both the container mount and the pod volume source.
