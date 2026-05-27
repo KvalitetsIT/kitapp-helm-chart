@@ -1,5 +1,5 @@
 {{- define "kitapp.name" -}}
-{{- .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "kitapp.fullname" -}}
