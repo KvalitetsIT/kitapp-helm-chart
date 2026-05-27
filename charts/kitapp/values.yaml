@@ -275,14 +275,28 @@ serviceAccount:
   annotations: {}
 
 # -- Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup).
-# @default -- {}
+# @default -- see values.yaml
 # @section -- Security
-podSecurityContext: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
 
 # -- Security context applied to the application container.
-# @default -- {}
+# @default -- see values.yaml
 # @section -- Security
-containerSecurityContext: {}
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+  appArmorProfile:
+    type: RuntimeDefault
 
 # -- Service settings for exposing the application.
 # @default -- see values.yaml

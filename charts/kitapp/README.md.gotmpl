@@ -216,18 +216,7 @@ gateway:
 Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `containerSecurityContext` for container-level hardening:
 
 ```yaml
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
+{{ .Files.Get "ci/security-values.yaml" | trim }}
 ```
 
 ### OAuth2 proxy injector integration
