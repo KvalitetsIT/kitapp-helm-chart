@@ -446,3 +446,66 @@ gateway:
   # @default -- {}
   # @section -- Gateway
   requestAuthentications: {}
+
+# -- Audit log sidecar settings.
+# When enabled, injects a Vector sidecar container into the pod that ships audit logs to a
+# Vector Aggregator (e.g. the `loki-audit` chart). A ConfigMap with the Vector pipeline config
+# is also created and mounted into the sidecar at `/etc/vector/vector.yaml`.
+# @default -- see values.yaml
+# @section -- Audit
+audit:
+  # -- Enable the Vector audit log sidecar (ConfigMap + sidecar container).
+  # @default -- false
+  # @section -- Audit
+  enabled: false
+
+  image:
+    # -- Vector container image repository.
+    # @default -- timberio/vector
+    # @section -- Audit
+    repository: timberio/vector
+    # -- Vector container image tag.
+    # @default -- 0.55.0-distroless-libc
+    # @section -- Audit
+    tag: 0.55.0-distroless-libc
+    # -- Image pull policy.
+    # @default -- IfNotPresent
+    # @section -- Audit
+    pullPolicy: IfNotPresent
+
+  # -- Resource requests and limits for the Vector audit sidecar container.
+  # @default -- see values.yaml
+  # @section -- Audit
+  resources:
+    requests:
+      # -- CPU request for the Vector audit sidecar.
+      # @default -- 50m
+      # @section -- Audit
+      cpu: 50m
+      # -- Memory request for the Vector audit sidecar.
+      # @default -- 64Mi
+      # @section -- Audit
+      memory: 64Mi
+    limits:
+      # -- Memory limit for the Vector audit sidecar.
+      # @default -- 128Mi
+      # @section -- Audit
+      memory: 128Mi
+
+  config:
+    # -- Port the Vector HTTP source listens on inside the sidecar. The application sends
+    # audit events to this port via HTTP POST.
+    # @default -- 9001
+    # @section -- Audit
+    httpPort: 9001
+
+    # -- Address of the Vector Aggregator to forward audit logs to. Override in env-repo
+    # values to match your loki-audit release name and namespace.
+    # @default -- loki-audit-vector.audit.svc.cluster.local:6000
+    # @section -- Audit
+    aggregatorAddress: vector-aggregator.logging.svc.cluster.local:6000
+
+    # -- Vector sink protocol version.
+    # @default -- "2"
+    # @section -- Audit
+    sinkVersion: "2"

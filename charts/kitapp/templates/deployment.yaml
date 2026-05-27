@@ -65,6 +65,30 @@ spec:
       affinity:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
+      {{- if (.Values.audit).enabled }}
+      initContainers:
+        - name: vector-audit
+          restartPolicy: Always
+          image: "{{ .Values.audit.image.repository }}:{{ .Values.audit.image.tag }}"
+          imagePullPolicy: {{ .Values.audit.image.pullPolicy }}
+          args:
+            - --config
+            - /etc/vector/vector.yaml
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          {{- with (.Values.audit).resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: vector-audit-config
+              mountPath: /etc/vector
+              readOnly: true
+      {{- end }}
       containers:
         - name: {{ include "kitapp.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -127,9 +151,14 @@ spec:
             {{- include "kitapp.volumeMount" . | nindent 12 }}
             {{- end }}
           {{- end }}
-      {{- with $allVolumes }}
+      {{- if or $allVolumes (.Values.audit).enabled }}
       volumes:
-        {{- range . }}
+        {{- range $allVolumes }}
         {{- include "kitapp.podVolume" (dict "volume" . "context" (dict "volume" . "Values" $.Values "Chart" $.Chart "Release" $.Release)) | nindent 8 }}
+        {{- end }}
+        {{- if (.Values.audit).enabled }}
+        - name: vector-audit-config
+          configMap:
+            name: {{ include "kitapp.fullname" . }}-vector-audit-config
         {{- end }}
       {{- end }}

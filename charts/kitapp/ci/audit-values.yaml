@@ -1,0 +1,10 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+audit:
+  enabled: true
