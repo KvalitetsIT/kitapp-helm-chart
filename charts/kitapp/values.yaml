@@ -11,7 +11,7 @@ fullnameOverride: ""
 # -- Number of pod replicas.
 # @default -- 2
 # @section -- Deployment
-replicaCount: 2
+replicas: 2
 
 # -- Deployment strategy configuration.
 # @default -- see values.yaml
@@ -240,12 +240,6 @@ oauth2:
   providerCA:
     configMap: ""
     key: ""
-  overrides:
-    # -- Optional injector annotations merged into pod annotations when oauth2.enabled=true.
-    # Use for advanced injector keys (for example oauth2-proxy.kitkube.dk/image, sidecar resources, provider CA settings).
-    # @default -- {}
-    # @section -- OAuth2
-    annotations: {}
 
 # -- Extra labels to add to the pod.
 # @default -- {}
