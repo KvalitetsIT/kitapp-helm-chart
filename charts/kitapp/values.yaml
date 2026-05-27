@@ -320,6 +320,7 @@ volumes: []
 # - name: config
 #   mountPath: /app/config
 #   readOnly: true
+#   subPath: application.yaml
 #   volumeSpec:
 #     configMap:
 #       name: my-config

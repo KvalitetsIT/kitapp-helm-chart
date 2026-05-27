@@ -236,6 +236,7 @@ volumes:
   - name: app-config
     mountPath: /app/config
     readOnly: true
+    subPath: application.yaml
     volumeSpec:
       configMap:
         name: my-config
@@ -507,6 +508,15 @@ volumes:
     volumeSpec:
       persistentVolumeClaim:
         existingClaim: my-existing-pvc
+  - name: app-config-file
+    mountPath: /app/config/application.yaml
+    subPath: application.yaml
+    volumeSpec:
+      configMap:
+        name: app-config
+        items:
+          - key: application.yaml
+            path: application.yaml
   - name: app-cache
     mountPath: /cache
     volumeSpec:

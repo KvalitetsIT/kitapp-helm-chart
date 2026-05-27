@@ -78,6 +78,7 @@ volumes:
   - name: app-config
     mountPath: /app/config
     readOnly: true
+    subPath: application.yaml
     volumeSpec:
       configMap:
         name: my-config
