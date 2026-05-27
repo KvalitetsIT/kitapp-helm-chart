@@ -44,13 +44,6 @@ data:
                 abort "missing/invalid: action"
               }
 
-              if !exists(.tenant_id) {
-                abort "missing/invalid: tenant_id"
-              }
-              .tenant_id = strip_whitespace(string!(.tenant_id))
-              if .tenant_id == "" {
-                abort "missing/invalid: tenant_id"
-              }
 
     transforms:
       add_kubernetes_metadata:
@@ -64,6 +57,7 @@ data:
           .kubernetes.node_name = "${NODE_NAME:-unknown}"
           .kubernetes.pod_ip = "${POD_IP:-unknown}"
           .kubernetes.app_label = "${APP_LABEL:-{{ include "kitapp.fullname" . }}}"
+          .kubernetes.namespace_labels."tenant.kitkube.dk/name" = "${TENANT_NAME}"
 
     sinks:
       audit_vector_aggregator:
