@@ -286,9 +286,9 @@ metrics:
 # @section -- Security
 serviceAccount:
   # -- Create a dedicated ServiceAccount.
-  # @default -- true
+  # @default -- false
   # @section -- Security
-  create: true
+  create: false
   # -- Existing ServiceAccount name to use (or generated when empty and create=true).
   # @default -- ""
   # @section -- Security
