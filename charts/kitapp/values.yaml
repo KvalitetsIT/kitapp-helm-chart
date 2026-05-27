@@ -191,10 +191,14 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   upstream: ""
-  # -- Reusable oauth2-proxy client id used by generated oauth2-proxy.cfg (`client_id`, `cookie_name`).
+  # -- OIDC client ID (`client_id` in oauth2-proxy.cfg).
   # @default -- ""
   # @section -- OAuth2
   clientId: ""
+  # -- Cookie name used by oauth2-proxy. Defaults to `clientId` when empty.
+  # @default -- ""
+  # @section -- OAuth2
+  cookieName: ""
   # -- Reusable oauth2-proxy issuer URL used by generated oauth2-proxy.cfg (`oidc_issuer_url`).
   # @default -- ""
   # @section -- OAuth2
