@@ -84,6 +84,13 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | readinessProbe | object | {} | Kubernetes readiness probe. |
 | startupProbe | object | {} | Kubernetes startup probe. |
 
+### Scheduling
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| nodeSelector | object | {} | Node selector labels for pod scheduling. |
+| tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
+
 ### OAuth2
 
 | Key | Type | Default | Description |
@@ -687,6 +694,15 @@ containerSecurityContext:
   capabilities:
     drop:
       - ALL
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: app
+    effect: NoSchedule
 
 livenessProbe:
   httpGet:

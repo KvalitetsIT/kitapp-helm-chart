@@ -148,6 +148,16 @@ readinessProbe: {}
 # @section -- Health
 startupProbe: {}
 
+# -- Node selector labels for pod scheduling.
+# @default -- {}
+# @section -- Scheduling
+nodeSelector: {}
+
+# -- Pod tolerations for scheduling onto tainted nodes.
+# @default -- []
+# @section -- Scheduling
+tolerations: []
+
 # -- OAuth2 proxy injector integration.
 # Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook.
 # @default -- see values.yaml

@@ -46,6 +46,15 @@ containerSecurityContext:
     drop:
       - ALL
 
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: app
+    effect: NoSchedule
+
 livenessProbe:
   httpGet:
     path: /
