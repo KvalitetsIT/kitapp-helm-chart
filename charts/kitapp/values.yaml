@@ -394,11 +394,6 @@ volumes: []
 # @section -- Persistence
 extraVolumes: []
 
-# -- Values passed to the KvalitetsIT templates dependency chart.
-# @default -- {}
-# @section -- Dependencies
-templates: {}
-
 # -- Gateway API route settings.
 # @default -- see values.yaml
 # @section -- Route

@@ -14,7 +14,7 @@ spec:
   storageClassName: {{ . }}
   {{- end }}
   accessModes:
-    - {{ default "ReadWriteMany" .volumeSpec.persistentVolumeClaim.accessMode }}
+    - {{ default "ReadWriteOnce" .volumeSpec.persistentVolumeClaim.accessMode }}
   resources:
     requests:
       storage: {{ .volumeSpec.persistentVolumeClaim.size }}

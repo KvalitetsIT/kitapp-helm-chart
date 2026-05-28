@@ -156,12 +156,6 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | volumes | list | [] | Structured volume definitions. Each entry defines both the container mount and the pod volume source. |
 | extraVolumes | list | [] | Additional structured volume definitions appended after `volumes`. Use to share common volumes in base values and extend per environment overlays. |
 
-### Dependencies
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| templates | object | {} | Values passed to the KvalitetsIT templates dependency chart. |
-
 ### Route
 
 | Key | Type | Default | Description |
