@@ -398,10 +398,16 @@ extraVolumes: []
 # @default -- see values.yaml
 # @section -- Route
 route:
-  # -- Enable Gateway API resources (HTTPRoute, ListenerSet, and optional policies).
+  # -- Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies).
   # @default -- false
   # @section -- Route
   enabled: false
+  # -- Route type. HTTPRoute terminates TLS at the gateway (cert-manager manages the certificate).
+  # TLSRoute passes TLS through to the backend — the application owns the certificate.
+  # Note: TLSRoute uses gateway.networking.k8s.io/v1alpha2 (experimental channel).
+  # @default -- HTTPRoute
+  # @section -- Route
+  type: HTTPRoute
 
   # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
   # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.

@@ -82,6 +82,12 @@
 
 {{- define "kitapp.validate.gateway" -}}
   {{- if .Values.route.enabled -}}
+    {{- if not (has .Values.route.type (list "HTTPRoute" "TLSRoute")) -}}
+      {{- fail "values.route.type must be HTTPRoute or TLSRoute" -}}
+    {{- end -}}
+    {{- if and (eq .Values.route.type "TLSRoute") .Values.oauth2.enabled -}}
+      {{- fail "oauth2 cannot be used with route.type=TLSRoute (TLS passthrough — gateway cannot inspect HTTP)" -}}
+    {{- end -}}
     {{- if empty .Values.route.hostnames -}}
       {{- fail "values.route.hostnames is required when route.enabled=true" -}}
     {{- end -}}
