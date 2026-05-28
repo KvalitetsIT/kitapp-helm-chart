@@ -184,52 +184,18 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 ### Default baseline
 
 ```yaml
-replicas: 2
-
 image:
   repository: docker.io/mccutchen/go-httpbin
   tag: "v2.15.0"
-
-env:
-  - name: EXAMPLE
-    value: hello
 
 applicationPort:
   name: http
   port: 8080
-  protocol: TCP
 
 additionalApplicationPorts:
   - name: grpc
-    port: 9095
+    port: 9090
     protocol: TCP
-
-servicePort:
-  port: 8080
-
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 20
-
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
-```
-
-### Advanced runtime, scheduling, and probes
-
-```yaml
-replicas: 2
-
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
 
 env:
   - name: EXAMPLE
@@ -239,19 +205,6 @@ extraEnvs:
   - name: LOG_LEVEL
     value: debug
 
-applicationPort:
-  name: http
-  port: 8080
-  protocol: TCP
-
-additionalApplicationPorts:
-  - name: grpc
-    port: 9095
-    protocol: TCP
-
-servicePort:
-  port: 8080
-
 resources:
   requests:
     cpu: 100m
@@ -259,28 +212,6 @@ resources:
   limits:
     cpu: 300m
     memory: 256Mi
-
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
-
-nodeSelector:
-  kubernetes.io/os: linux
-
-tolerations:
-  - key: dedicated
-    operator: Equal
-    value: app
-    effect: NoSchedule
 
 livenessProbe:
   httpGet:
@@ -293,8 +224,23 @@ readinessProbe:
   httpGet:
     path: /
     port: http
-  initialDelaySeconds: 10
+  initialDelaySeconds: 5
   periodSeconds: 10
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: app
+    effect: NoSchedule
+```
+
+### Advanced runtime, scheduling, and probes
+
+```yaml
+
 ```
 
 ### Metrics
@@ -322,37 +268,7 @@ metrics:
 Use a single `volumes` list where each item defines both mount options and a `volumeSpec` source.
 
 ```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
 
-applicationPort:
-  port: 8080
-
-volumes:
-  - name: app-data
-    mountPath: /data
-    volumeSpec:
-      persistentVolumeClaim:
-        create: true
-        accessMode: ReadWriteOnce
-        size: 1Gi
-  - name: app-config-file
-    mountPath: /tmp/application.yaml
-    subPath: application.yaml
-    volumeSpec:
-      emptyDir: {}
-  - name: app-cache
-    mountPath: /cache
-    volumeSpec:
-      emptyDir: {}
-  - name: app-data-created
-    mountPath: /created
-    volumeSpec:
-      persistentVolumeClaim:
-        create: true
-        accessMode: ReadWriteOnce
-        size: 1Gi
 ```
 
 Use `extraVolumes` with the same structure to append environment-specific entries on top of shared base `volumes`.
@@ -465,29 +381,7 @@ See [`ci/authpolicy-values.yaml`](ci/authpolicy-values.yaml).
 Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `containerSecurityContext` for container-level hardening:
 
 ```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
 
-applicationPort:
-  name: http
-  port: 8080
-
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  capabilities:
-    drop:
-      - ALL
-  seccompProfile:
-    type: RuntimeDefault
 ```
 
 Enable AppArmor only on clusters where AppArmor is available on the nodes:
@@ -635,28 +529,34 @@ Only unique, high-signal examples are included here to avoid duplication.
 <summary><code>ci/default-values.yaml</code></summary>
 
 ```yaml
-replicas: 2
-
 image:
   repository: docker.io/mccutchen/go-httpbin
   tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+additionalApplicationPorts:
+  - name: grpc
+    port: 9090
+    protocol: TCP
 
 env:
   - name: EXAMPLE
     value: hello
 
-applicationPort:
-  name: http
-  port: 8080
-  protocol: TCP
+extraEnvs:
+  - name: LOG_LEVEL
+    value: debug
 
-additionalApplicationPorts:
-  - name: grpc
-    port: 9095
-    protocol: TCP
-
-servicePort:
-  port: 8080
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
 
 livenessProbe:
   httpGet:
@@ -669,8 +569,17 @@ readinessProbe:
   httpGet:
     path: /
     port: http
-  initialDelaySeconds: 10
+  initialDelaySeconds: 5
   periodSeconds: 10
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: app
+    effect: NoSchedule
 ```
 </details>
 
@@ -721,37 +630,7 @@ route:
 <summary><code>ci/pvc-values.yaml</code></summary>
 
 ```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
 
-applicationPort:
-  port: 8080
-
-volumes:
-  - name: app-data
-    mountPath: /data
-    volumeSpec:
-      persistentVolumeClaim:
-        create: true
-        accessMode: ReadWriteOnce
-        size: 1Gi
-  - name: app-config-file
-    mountPath: /tmp/application.yaml
-    subPath: application.yaml
-    volumeSpec:
-      emptyDir: {}
-  - name: app-cache
-    mountPath: /cache
-    volumeSpec:
-      emptyDir: {}
-  - name: app-data-created
-    mountPath: /created
-    volumeSpec:
-      persistentVolumeClaim:
-        create: true
-        accessMode: ReadWriteOnce
-        size: 1Gi
 ```
 </details>
 
@@ -894,29 +773,7 @@ route:
 <summary><code>ci/security-values.yaml</code></summary>
 
 ```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
 
-applicationPort:
-  name: http
-  port: 8080
-
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  capabilities:
-    drop:
-      - ALL
-  seccompProfile:
-    type: RuntimeDefault
 ```
 </details>
 
@@ -924,76 +781,7 @@ containerSecurityContext:
 <summary><code>ci/advanced-values.yaml</code></summary>
 
 ```yaml
-replicas: 2
 
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-env:
-  - name: EXAMPLE
-    value: hello
-
-extraEnvs:
-  - name: LOG_LEVEL
-    value: debug
-
-applicationPort:
-  name: http
-  port: 8080
-  protocol: TCP
-
-additionalApplicationPorts:
-  - name: grpc
-    port: 9095
-    protocol: TCP
-
-servicePort:
-  port: 8080
-
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 300m
-    memory: 256Mi
-
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  capabilities:
-    drop:
-      - ALL
-
-nodeSelector:
-  kubernetes.io/os: linux
-
-tolerations:
-  - key: dedicated
-    operator: Equal
-    value: app
-    effect: NoSchedule
-
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 20
-
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
 ```
 </details>
 
