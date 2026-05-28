@@ -24,9 +24,9 @@ spec:
     - {{ . | quote }}
     {{- end }}
   rules:
-    {{- if .Values.route.rules }}
-    {{- toYaml .Values.route.rules | nindent 4 }}
-    {{- else }}
+    {{- with .Values.route.rules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
     - backendRefs:
         - group: ""
           kind: Service
@@ -37,5 +37,4 @@ spec:
         - path:
             type: PathPrefix
             value: /
-    {{- end }}
 {{- end }}
