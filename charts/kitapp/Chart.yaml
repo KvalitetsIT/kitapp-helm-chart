@@ -1,10 +1,9 @@
 apiVersion: v2
 type: application
 name: kitapp
-version: 0.0.0-dev
-appVersion: 0.0.0-dev
+version: 0.0.1-rc.1
+appVersion: 0.0.1-rc.1
 description: Small generic Helm chart for deploying a Kubernetes application as a Deployment.
-
 home: https://github.com/KvalitetsIT
 icon: https://raw.githubusercontent.com/KvalitetsIT/kitapp-helm-chart/main/docs/icon.png
 sources:
