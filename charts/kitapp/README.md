@@ -34,7 +34,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| replicaCount | int | 2 | Number of pod replicas. |
+| replicas | int | 2 | Number of pod replicas. |
 | strategy | object | see values.yaml | Deployment strategy configuration. |
 | strategy.type | string | RollingUpdate | Deployment strategy type. |
 | revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
@@ -99,8 +99,9 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
 | oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
 | oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
-| oauth2.upstream | string | http://127.0.0.1:8080 | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. |
-| oauth2.clientId | string | "" | Reusable oauth2-proxy client id used by generated oauth2-proxy.cfg (`client_id`, `cookie_name`). |
+| oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
+| oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg). |
+| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to `clientId` when empty. |
 | oauth2.issuerUrl | string | "" | Reusable oauth2-proxy issuer URL used by generated oauth2-proxy.cfg (`oidc_issuer_url`). |
 | oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
 | oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
@@ -110,7 +111,6 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation (required when oauth2.enabled=true). |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
-| oauth2.overrides.annotations | object | {} | Optional injector annotations merged into pod annotations when oauth2.enabled=true. Use for advanced injector keys (for example oauth2-proxy.kitkube.dk/image, sidecar resources, provider CA settings). |
 
 ### Pod Metadata
 
@@ -136,7 +136,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | serviceAccount | object | see values.yaml | Service account settings. |
-| serviceAccount.create | bool | true | Create a dedicated ServiceAccount. |
+| serviceAccount.create | bool | false | Create a dedicated ServiceAccount. |
 | serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
 | serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
 | serviceAccount.automountServiceAccountToken | bool | false | Mount the ServiceAccount token into pods. |
@@ -150,6 +150,9 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | service | object | see values.yaml | Service settings for exposing the application. |
 | service.type | string | ClusterIP | Kubernetes Service type. |
 | service.annotations | object | {} | Annotations for the Service. |
+| service.labels | object | see values.yaml | Labels for the Service. |
+| service.labels."istio.io/use-waypoint" | string | `"waypoint"` | Route traffic through the Istio waypoint proxy for L7 policy enforcement. |
+| service.labels."istio.io/ingress-use-waypoint" | string | `"true"` | Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic). |
 
 ### Persistence
 
@@ -164,22 +167,22 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | templates | object | {} | Values passed to the KvalitetsIT templates dependency chart. |
 
-### Gateway
+### Route
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| gateway | object | see values.yaml | Gateway API integration settings. |
-| gateway.enabled | bool | false | Enable Gateway API resources (HTTPRoute, ListenerSet, and optional policies). |
-| gateway.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
-| gateway.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
-| gateway.gateway | object | see values.yaml | Gateway attachment settings. |
-| gateway.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
-| gateway.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
-| gateway.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the HTTPRoute directly to this Gateway listener section. |
-| gateway.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. |
-| gateway.rules | list | [] | Explicit HTTPRoute rules. If empty, a catch-all rule to the app Service is generated. |
-| gateway.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
-| gateway.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
+| route | object | see values.yaml | Gateway API route settings. |
+| route.enabled | bool | false | Enable Gateway API resources (HTTPRoute, ListenerSet, and optional policies). |
+| route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
+| route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
+| route.gateway | object | see values.yaml | Gateway attachment settings. |
+| route.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
+| route.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
+| route.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the HTTPRoute directly to this Gateway listener section. |
+| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. |
+| route.rules | list | [] | Explicit HTTPRoute rules. If empty, a catch-all rule to the app Service is generated. |
+| route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
+| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
 
 ### Audit
 
@@ -595,7 +598,7 @@ applicationPort:
   name: http
   port: 8080
 
-gateway:
+route:
   enabled: true
   hostnames:
     - my-app.example.com
@@ -655,7 +658,6 @@ oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
   image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
-  upstream: http://127.0.0.1:8080
   clientId: portal
   issuerUrl: https://issuer.example.com/realms/portal
   config:
@@ -676,7 +678,7 @@ oauth2:
     configMap: oidc-provider-ca
     key: ca.crt
 
-gateway:
+route:
   enabled: true
   hostnames:
     - my-app.example.com
@@ -691,7 +693,7 @@ gateway:
 <summary><code>ci/advanced-values.yaml</code></summary>
 
 ```yaml
-replicaCount: 2
+replicas: 2
 
 image:
   repository: docker.io/mccutchen/go-httpbin
@@ -764,7 +766,7 @@ readinessProbe:
 ```
 </details>
 
-### Audit log sidecar
+### Audit
 
 Enable `audit` to inject a Vector native sidecar that receives audit events from the application
 over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
