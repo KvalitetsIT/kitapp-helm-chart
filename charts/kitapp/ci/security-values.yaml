@@ -26,5 +26,3 @@ containerSecurityContext:
       - ALL
   seccompProfile:
     type: RuntimeDefault
-  appArmorProfile:
-    type: RuntimeDefault
