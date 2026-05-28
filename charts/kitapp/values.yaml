@@ -402,9 +402,7 @@ route:
   # @default -- false
   # @section -- Route
   enabled: false
-  # -- Route type. HTTPRoute terminates TLS at the gateway (cert-manager manages the certificate).
-  # TLSRoute passes TLS through to the backend — the application owns the certificate.
-  # Note: TLSRoute uses gateway.networking.k8s.io/v1alpha2 (experimental channel).
+  # -- Route type. Supports HTTPRoute or TLSRoute.
   # @default -- HTTPRoute
   # @section -- Route
   type: HTTPRoute
