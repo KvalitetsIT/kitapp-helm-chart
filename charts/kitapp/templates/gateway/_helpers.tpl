@@ -1,6 +1,6 @@
 {{/*
 Resolved backend port for the gateway route.
-Priority: gateway.port → 4180 (when oauth2 enabled) → applicationPort.port / servicePort.port.
+Priority: route.port → oauth2.proxyPort (when oauth2 enabled) → applicationPort.port.
 */}}
 {{- define "kitapp.gateway.resolvedPort" -}}
 {{- if not (empty .Values.route.port) -}}
