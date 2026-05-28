@@ -27,18 +27,40 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | strategy | object | see values.yaml | Deployment strategy configuration. |
 | strategy.type | string | RollingUpdate | Deployment strategy type. |
 | revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
+| imagePullSecrets | list | [] | Optional list of image pull secrets. |
+| podLabels | object | {} | Extra labels to add to the pod. |
+| podAnnotations | object | {} | Extra pod annotations. |
+| nodeSelector | object | {} | Node selector labels for pod scheduling. |
+| tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
+| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
+| serviceAccount | object | see values.yaml | Service account settings. |
+| serviceAccount.create | bool | false | Create a dedicated ServiceAccount. |
+| serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
+| serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
+| serviceAccount.automountServiceAccountToken | bool | false | Mount the ServiceAccount token into pods. |
+| podSecurityContext | object | see values.yaml | Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup). |
+
+### Runtime
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
 | image | object | see values.yaml | Container image settings. |
 | image.repository | string | "" | Container image repository (required). |
 | image.tag | string | "" | Container image tag (required). |
 | image.pullPolicy | string | IfNotPresent | Image pull policy. |
-| imagePullSecrets | list | [] | Optional list of image pull secrets. |
-| nodeSelector | object | {} | Node selector labels for pod scheduling. |
-| tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
-| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
-| podLabels | object | {} | Extra labels to add to the pod. |
-| podAnnotations | object | {} | Extra pod annotations. |
+| command | list | [] | Optional container command override. |
+| args | list | [] | Optional container args override. |
+| env | list | [] | Environment variables for the container. |
+| extraEnvs | list | [] | Additional environment variables appended after `env`. Useful for overlay values files to extend env without replacing shared base entries. |
+| envFrom | list | [] | Environment variable sources (ConfigMapRef/SecretRef) for the container. |
+| extraEnvFrom | list | [] | Additional environment variable sources appended after `envFrom`. Useful for overlay values files to extend envFrom without replacing shared base entries. |
+| resources | object | {} | Container resource requests and limits. |
+| livenessProbe | object | {} | Kubernetes liveness probe. |
+| readinessProbe | object | {} | Kubernetes readiness probe. |
+| startupProbe | object | {} | Kubernetes startup probe. |
+| containerSecurityContext | object | see values.yaml | Security context applied to the application container. |
 
-### Ports
+### Service
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -52,21 +74,50 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | servicePort.port | string | null | Primary Service port number. If empty, defaults to applicationPort.port. |
 | servicePort.protocol | string | null | Primary Service protocol. If empty, falls back to applicationPort.protocol. |
 | additionalServicePorts | list | [] | Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`. If `targetPort` is omitted, it defaults to the same value as `port`. |
+| service | object | see values.yaml | Service settings for exposing the application. |
+| service.type | string | ClusterIP | Kubernetes Service type. |
+| service.annotations | object | {} | Annotations for the Service. |
+| service.labels | object | see values.yaml | Labels for the Service. |
+| service.labels."istio.io/use-waypoint" | string | `"waypoint"` | Route traffic through the Istio waypoint proxy for L7 policy enforcement. |
+| service.labels."istio.io/ingress-use-waypoint" | string | `"true"` | Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic). |
 
-### Runtime
+### Persistence
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| command | list | [] | Optional container command override. |
-| args | list | [] | Optional container args override. |
-| env | list | [] | Environment variables for the container. |
-| extraEnvs | list | [] | Additional environment variables appended after `env`. Useful for overlay values files to extend env without replacing shared base entries. |
-| envFrom | list | [] | Environment variable sources (ConfigMapRef/SecretRef) for the container. |
-| extraEnvFrom | list | [] | Additional environment variable sources appended after `envFrom`. Useful for overlay values files to extend envFrom without replacing shared base entries. |
-| resources | object | {} | Container resource requests and limits. |
-| livenessProbe | object | {} | Kubernetes liveness probe. |
-| readinessProbe | object | {} | Kubernetes readiness probe. |
-| startupProbe | object | {} | Kubernetes startup probe. |
+| volumes | list | [] | Structured volume definitions. Each entry defines both the container mount and the pod volume source. |
+| extraVolumes | list | [] | Additional structured volume definitions appended after `volumes`. Use to share common volumes in base values and extend per environment overlays. |
+
+### Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics | object | see values.yaml | Metrics settings for optional metrics port and ServiceMonitor. |
+| metrics.enabled | bool | false | Enable metrics port exposure on container and Service. The metrics port name is always `metrics` when enabled. |
+| metrics.port | string | null | Metrics port number. If empty, uses applicationPort.port. |
+| metrics.path | string | /metrics | Metrics scrape path. |
+| metrics.interval | string | 30s | ServiceMonitor scrape interval. |
+| metrics.labels | object | {} | Extra labels for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
+| metrics.annotations | object | {} | Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
+
+### Route
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| route | object | see values.yaml | Gateway API route settings. |
+| route.enabled | bool | false | Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies). |
+| route.type | string | HTTPRoute | Route type. Supports HTTPRoute or TLSRoute. |
+| route.exposeMetrics | bool | true | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all. Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 HTTPRoute only. |
+| route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
+| route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
+| route.gateway | object | see values.yaml | Gateway attachment settings. |
+| route.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
+| route.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
+| route.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the route directly to this Gateway listener section. |
+| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only. |
+| route.rules | list | [] | Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only. |
+| route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
+| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
 
 ### OAuth2
 
@@ -88,67 +139,6 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation (required when oauth2.enabled=true). |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
-
-### Metrics
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics | object | see values.yaml | Metrics settings for optional metrics port and ServiceMonitor. |
-| metrics.enabled | bool | false | Enable metrics port exposure on container and Service. The metrics port name is always `metrics` when enabled. |
-| metrics.port | string | null | Metrics port number. If empty, uses applicationPort.port. |
-| metrics.path | string | /metrics | Metrics scrape path. |
-| metrics.interval | string | 30s | ServiceMonitor scrape interval. |
-| metrics.labels | object | {} | Extra labels for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
-| metrics.annotations | object | {} | Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
-
-### Security
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| serviceAccount | object | see values.yaml | Service account settings. |
-| serviceAccount.create | bool | false | Create a dedicated ServiceAccount. |
-| serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
-| serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
-| serviceAccount.automountServiceAccountToken | bool | false | Mount the ServiceAccount token into pods. |
-| podSecurityContext | object | see values.yaml | Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup). |
-| containerSecurityContext | object | see values.yaml | Security context applied to the application container. |
-
-### Service
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| service | object | see values.yaml | Service settings for exposing the application. |
-| service.type | string | ClusterIP | Kubernetes Service type. |
-| service.annotations | object | {} | Annotations for the Service. |
-| service.labels | object | see values.yaml | Labels for the Service. |
-| service.labels."istio.io/use-waypoint" | string | `"waypoint"` | Route traffic through the Istio waypoint proxy for L7 policy enforcement. |
-| service.labels."istio.io/ingress-use-waypoint" | string | `"true"` | Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic). |
-
-### Persistence
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| volumes | list | [] | Structured volume definitions. Each entry defines both the container mount and the pod volume source. |
-| extraVolumes | list | [] | Additional structured volume definitions appended after `volumes`. Use to share common volumes in base values and extend per environment overlays. |
-
-### Route
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| route | object | see values.yaml | Gateway API route settings. |
-| route.enabled | bool | false | Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies). |
-| route.type | string | HTTPRoute | Route type. Supports HTTPRoute or TLSRoute. |
-| route.exposeMetrics | bool | true | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all. Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 HTTPRoute only. |
-| route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
-| route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
-| route.gateway | object | see values.yaml | Gateway attachment settings. |
-| route.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
-| route.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
-| route.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the route directly to this Gateway listener section. |
-| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only. |
-| route.rules | list | [] | Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only. |
-| route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
-| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
 
 ### Audit
 

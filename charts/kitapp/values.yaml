@@ -27,73 +27,92 @@ strategy:
 # @section -- Deployment
 revisionHistoryLimit: 5
 
-# -- Container image settings.
-# @default -- see values.yaml
-# @section -- Deployment
-image:
-  # -- Container image repository (required).
-  # @default -- ""
-  # @section -- Deployment
-  repository: ""
-  # -- Container image tag (required).
-  # @default -- ""
-  # @section -- Deployment
-  tag: ""
-  # -- Image pull policy.
-  # @default -- IfNotPresent
-  # @section -- Deployment
-  pullPolicy: IfNotPresent
-
 # -- Optional list of image pull secrets.
 # @default -- []
 # @section -- Deployment
 imagePullSecrets: []
 
-# -- Primary application port exposed by the container and Service.
-# @default -- see values.yaml
-# @section -- Ports
-applicationPort:
-  # -- Primary application port name.
-  # @default -- http
-  # @section -- Ports
-  name: http
-  # -- Primary application container port.
-  # @default -- 8080
-  # @section -- Ports
-  port: 8080
-  # -- Primary application protocol.
-  # @default -- TCP
-  # @section -- Ports
-  protocol: TCP
+# -- Extra labels to add to the pod.
+# @default -- {}
+# @section -- Deployment
+podLabels: {}
 
-# -- Additional named application ports exposed on both container and Service.
-# Each item supports name, port, and optional protocol.
+# -- Extra pod annotations.
+# @default -- {}
+# @section -- Deployment
+podAnnotations: {}
+
+# -- Node selector labels for pod scheduling.
+# @default -- {}
+# @section -- Deployment
+nodeSelector: {}
+
+# -- Pod tolerations for scheduling onto tainted nodes.
 # @default -- []
-# @section -- Ports
-additionalApplicationPorts: []
+# @section -- Deployment
+tolerations: []
 
-# -- Primary Service port exposed by the Service.
+# -- Kubernetes affinity rules for pod scheduling.
+# Defaults to preferred pod anti-affinity across nodes for replicas from the same release.
 # @default -- see values.yaml
-# @section -- Ports
-servicePort:
-  # -- Primary Service port name. If empty, falls back to applicationPort.name.
-  # @default -- null
-  # @section -- Ports
-  name: null
-  # -- Primary Service port number. If empty, defaults to applicationPort.port.
-  # @default -- null
-  # @section -- Ports
-  port: null
-  # -- Primary Service protocol. If empty, falls back to applicationPort.protocol.
-  # @default -- null
-  # @section -- Ports
-  protocol: null
+# @section -- Deployment
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "kitapp.name" . }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          topologyKey: kubernetes.io/hostname
 
-# -- Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`.
-# If `targetPort` is omitted, it defaults to the same value as `port`.
-# @default -- []
-# @section -- Ports
-additionalServicePorts: []
+# -- Service account settings.
+# @default -- see values.yaml
+# @section -- Deployment
+serviceAccount:
+  # -- Create a dedicated ServiceAccount.
+  # @default -- false
+  # @section -- Deployment
+  create: false
+  # -- Existing ServiceAccount name to use (or generated when empty and create=true).
+  # @default -- ""
+  # @section -- Deployment
+  name: ""
+  # -- Annotations for the ServiceAccount.
+  # @default -- {}
+  # @section -- Deployment
+  annotations: {}
+  # -- Mount the ServiceAccount token into pods.
+  # @default -- false
+  # @section -- Deployment
+  automountServiceAccountToken: false
+
+# -- Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup).
+# @default -- see values.yaml
+# @section -- Deployment
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# -- Container image settings.
+# @default -- see values.yaml
+# @section -- Runtime
+image:
+  # -- Container image repository (required).
+  # @default -- ""
+  # @section -- Runtime
+  repository: ""
+  # -- Container image tag (required).
+  # @default -- ""
+  # @section -- Runtime
+  tag: ""
+  # -- Image pull policy.
+  # @default -- IfNotPresent
+  # @section -- Runtime
+  pullPolicy: IfNotPresent
 
 # -- Optional container command override.
 # @default -- []
@@ -147,30 +166,228 @@ readinessProbe: {}
 # @section -- Runtime
 startupProbe: {}
 
-# -- Node selector labels for pod scheduling.
-# @default -- {}
-# @section -- Deployment
-nodeSelector: {}
-
-# -- Pod tolerations for scheduling onto tainted nodes.
-# @default -- []
-# @section -- Deployment
-tolerations: []
-
-# -- Kubernetes affinity rules for pod scheduling.
-# Defaults to preferred pod anti-affinity across nodes for replicas from the same release.
+# -- Security context applied to the application container.
 # @default -- see values.yaml
-# @section -- Deployment
-affinity:
-  podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/name: '{{ include "kitapp.name" . }}'
-              app.kubernetes.io/instance: "{{ .Release.Name }}"
-          topologyKey: kubernetes.io/hostname
+# @section -- Runtime
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Primary application port exposed by the container and Service.
+# @default -- see values.yaml
+# @section -- Service
+applicationPort:
+  # -- Primary application port name.
+  # @default -- http
+  # @section -- Service
+  name: http
+  # -- Primary application container port.
+  # @default -- 8080
+  # @section -- Service
+  port: 8080
+  # -- Primary application protocol.
+  # @default -- TCP
+  # @section -- Service
+  protocol: TCP
+
+# -- Additional named application ports exposed on both container and Service.
+# Each item supports name, port, and optional protocol.
+# @default -- []
+# @section -- Service
+additionalApplicationPorts: []
+
+# -- Primary Service port exposed by the Service.
+# @default -- see values.yaml
+# @section -- Service
+servicePort:
+  # -- Primary Service port name. If empty, falls back to applicationPort.name.
+  # @default -- null
+  # @section -- Service
+  name: null
+  # -- Primary Service port number. If empty, defaults to applicationPort.port.
+  # @default -- null
+  # @section -- Service
+  port: null
+  # -- Primary Service protocol. If empty, falls back to applicationPort.protocol.
+  # @default -- null
+  # @section -- Service
+  protocol: null
+
+# -- Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`.
+# If `targetPort` is omitted, it defaults to the same value as `port`.
+# @default -- []
+# @section -- Service
+additionalServicePorts: []
+
+# -- Service settings for exposing the application.
+# @default -- see values.yaml
+# @section -- Service
+service:
+  # -- Kubernetes Service type.
+  # @default -- ClusterIP
+  # @section -- Service
+  type: ClusterIP
+  # -- Annotations for the Service.
+  # @default -- {}
+  # @section -- Service
+  annotations: {}
+  # -- Labels for the Service.
+  # @default -- see values.yaml
+  # @section -- Service
+  labels:
+    # -- Route traffic through the Istio waypoint proxy for L7 policy enforcement.
+    # @section -- Service
+    istio.io/use-waypoint: waypoint
+    # -- Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic).
+    # @section -- Service
+    istio.io/ingress-use-waypoint: "true"
+
+# -- Structured volume definitions.
+# Each entry defines both the container mount and the pod volume source.
+# @default -- []
+# @section -- Persistence
+volumes: []
+# Typical examples:
+# - name: config
+#   mountPath: /app/config
+#   readOnly: true
+#   subPath: application.yaml
+#   volumeSpec:
+#     configMap:
+#       name: my-config
+#
+# - name: app-data
+#   mountPath: /data
+#   volumeSpec:
+#     persistentVolumeClaim:
+#       # Use existingClaim to mount an external PVC without creating one.
+#       existingClaim: my-existing-pvc
+#
+# - name: app-data
+#   mountPath: /data
+#   volumeSpec:
+#     persistentVolumeClaim:
+#       # create defaults to true when existingClaim is not set.
+#       create: true
+#       # Optional override for generated claim name (<release>-<volume-name>).
+#       claimName: ""
+#       accessMode: ReadWriteMany
+#       storageClass: nfs
+#       size: 8Gi
+
+# -- Additional structured volume definitions appended after `volumes`.
+# Use to share common volumes in base values and extend per environment overlays.
+# @default -- []
+# @section -- Persistence
+extraVolumes: []
+
+# -- Metrics settings for optional metrics port and ServiceMonitor.
+# @default -- see values.yaml
+# @section -- Metrics
+metrics:
+  # -- Enable metrics port exposure on container and Service.
+  # The metrics port name is always `metrics` when enabled.
+  # @default -- false
+  # @section -- Metrics
+  enabled: false
+  # -- Metrics port number. If empty, uses applicationPort.port.
+  # @default -- null
+  # @section -- Metrics
+  port: null
+  # -- Metrics scrape path.
+  # @default -- /metrics
+  # @section -- Metrics
+  path: /metrics
+  # -- ServiceMonitor scrape interval.
+  # @default -- 30s
+  # @section -- Metrics
+  interval: 30s
+  # -- Extra labels for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed).
+  # @default -- {}
+  # @section -- Metrics
+  labels: {}
+  # -- Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed).
+  # @default -- {}
+  # @section -- Metrics
+  annotations: {}
+
+# -- Gateway API route settings.
+# @default -- see values.yaml
+# @section -- Route
+route:
+  # -- Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies).
+  # @default -- false
+  # @section -- Route
+  enabled: false
+  # -- Route type. Supports HTTPRoute or TLSRoute.
+  # @default -- HTTPRoute
+  # @section -- Route
+  type: HTTPRoute
+
+  # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
+  # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.
+  # Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235
+  # HTTPRoute only.
+  # @default -- true
+  # @section -- Route
+  exposeMetrics: true
+
+  # -- Public hostname(s) for the HTTPRoute and ListenerSet.
+  # The first hostname is also used to auto-populate oauth2-proxy redirect_url.
+  # @default -- []
+  # @section -- Route
+  hostnames: []
+
+  # -- Backend port for the auto-generated catch-all rule.
+  # Defaults to applicationPort.port, or 4180 when oauth2.enabled=true.
+  # @default -- null
+  # @section -- Route
+  port: null
+
+  # -- Gateway attachment settings.
+  # @default -- see values.yaml
+  # @section -- Route
+  gateway:
+    # -- Name of the Gateway to attach to.
+    # @default -- ingressgateway
+    # @section -- Route
+    name: ingressgateway
+    # -- Namespace of the Gateway.
+    # @default -- istio-ingress
+    # @section -- Route
+    namespace: istio-ingress
+    # -- If set, skip ListenerSet creation and attach the route directly to this Gateway listener section.
+    # @default -- ""
+    # @section -- Route
+    sectionName: ""
+
+  # -- Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only.
+  # @default -- letsencrypt-prod-istio
+  # @section -- Route
+  clusterIssuer: letsencrypt-prod-istio
+
+  # -- Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only.
+  # @default -- []
+  # @section -- Route
+  rules: []
+
+  # -- Istio AuthorizationPolicy resources keyed by name.
+  # Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules.
+  # @default -- {}
+  # @section -- Route
+  authorizationPolicies: {}
+
+  # -- Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic.
+  # Use to require and validate JWTs from an OIDC provider (e.g. Keycloak).
+  # @default -- {}
+  # @section -- Route
+  requestAuthentications: {}
 
 # -- OAuth2 proxy injector integration.
 # Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook.
@@ -248,223 +465,6 @@ oauth2:
   providerCA:
     configMap: ""
     key: ""
-
-# -- Extra labels to add to the pod.
-# @default -- {}
-# @section -- Deployment
-podLabels: {}
-
-# -- Extra pod annotations.
-# @default -- {}
-# @section -- Deployment
-podAnnotations: {}
-
-# -- Metrics settings for optional metrics port and ServiceMonitor.
-# @default -- see values.yaml
-# @section -- Metrics
-metrics:
-  # -- Enable metrics port exposure on container and Service.
-  # The metrics port name is always `metrics` when enabled.
-  # @default -- false
-  # @section -- Metrics
-  enabled: false
-  # -- Metrics port number. If empty, uses applicationPort.port.
-  # @default -- null
-  # @section -- Metrics
-  port: null
-  # -- Metrics scrape path.
-  # @default -- /metrics
-  # @section -- Metrics
-  path: /metrics
-  # -- ServiceMonitor scrape interval.
-  # @default -- 30s
-  # @section -- Metrics
-  interval: 30s
-  # -- Extra labels for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed).
-  # @default -- {}
-  # @section -- Metrics
-  labels: {}
-  # -- Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed).
-  # @default -- {}
-  # @section -- Metrics
-  annotations: {}
-
-# -- Service account settings.
-# @default -- see values.yaml
-# @section -- Security
-serviceAccount:
-  # -- Create a dedicated ServiceAccount.
-  # @default -- false
-  # @section -- Security
-  create: false
-  # -- Existing ServiceAccount name to use (or generated when empty and create=true).
-  # @default -- ""
-  # @section -- Security
-  name: ""
-  # -- Annotations for the ServiceAccount.
-  # @default -- {}
-  # @section -- Security
-  annotations: {}
-  # -- Mount the ServiceAccount token into pods.
-  # @default -- false
-  # @section -- Security
-  automountServiceAccountToken: false
-
-# -- Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup).
-# @default -- see values.yaml
-# @section -- Security
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-
-# -- Security context applied to the application container.
-# @default -- see values.yaml
-# @section -- Security
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  capabilities:
-    drop:
-      - ALL
-  seccompProfile:
-    type: RuntimeDefault
-
-# -- Service settings for exposing the application.
-# @default -- see values.yaml
-# @section -- Service
-service:
-  # -- Kubernetes Service type.
-  # @default -- ClusterIP
-  # @section -- Service
-  type: ClusterIP
-  # -- Annotations for the Service.
-  # @default -- {}
-  # @section -- Service
-  annotations: {}
-  # -- Labels for the Service.
-  # @default -- see values.yaml
-  # @section -- Service
-  labels:
-    # -- Route traffic through the Istio waypoint proxy for L7 policy enforcement.
-    # @section -- Service
-    istio.io/use-waypoint: waypoint
-    # -- Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic).
-    # @section -- Service
-    istio.io/ingress-use-waypoint: "true"
-
-# -- Structured volume definitions.
-# Each entry defines both the container mount and the pod volume source.
-# @default -- []
-# @section -- Persistence
-volumes: []
-# Typical examples:
-# - name: config
-#   mountPath: /app/config
-#   readOnly: true
-#   subPath: application.yaml
-#   volumeSpec:
-#     configMap:
-#       name: my-config
-#
-# - name: app-data
-#   mountPath: /data
-#   volumeSpec:
-#     persistentVolumeClaim:
-#       # Use existingClaim to mount an external PVC without creating one.
-#       existingClaim: my-existing-pvc
-#
-# - name: app-data
-#   mountPath: /data
-#   volumeSpec:
-#     persistentVolumeClaim:
-#       # create defaults to true when existingClaim is not set.
-#       create: true
-#       # Optional override for generated claim name (<release>-<volume-name>).
-#       claimName: ""
-#       accessMode: ReadWriteMany
-#       storageClass: nfs
-#       size: 8Gi
-
-# -- Additional structured volume definitions appended after `volumes`.
-# Use to share common volumes in base values and extend per environment overlays.
-# @default -- []
-# @section -- Persistence
-extraVolumes: []
-
-# -- Gateway API route settings.
-# @default -- see values.yaml
-# @section -- Route
-route:
-  # -- Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies).
-  # @default -- false
-  # @section -- Route
-  enabled: false
-  # -- Route type. Supports HTTPRoute or TLSRoute.
-  # @default -- HTTPRoute
-  # @section -- Route
-  type: HTTPRoute
-
-  # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
-  # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.
-  # Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235
-  # HTTPRoute only.
-  # @default -- true
-  # @section -- Route
-  exposeMetrics: true
-
-  # -- Public hostname(s) for the HTTPRoute and ListenerSet.
-  # The first hostname is also used to auto-populate oauth2-proxy redirect_url.
-  # @default -- []
-  # @section -- Route
-  hostnames: []
-
-  # -- Backend port for the auto-generated catch-all rule.
-  # Defaults to applicationPort.port, or 4180 when oauth2.enabled=true.
-  # @default -- null
-  # @section -- Route
-  port: null
-
-  # -- Gateway attachment settings.
-  # @default -- see values.yaml
-  # @section -- Route
-  gateway:
-    # -- Name of the Gateway to attach to.
-    # @default -- ingressgateway
-    # @section -- Route
-    name: ingressgateway
-    # -- Namespace of the Gateway.
-    # @default -- istio-ingress
-    # @section -- Route
-    namespace: istio-ingress
-    # -- If set, skip ListenerSet creation and attach the route directly to this Gateway listener section.
-    # @default -- ""
-    # @section -- Route
-    sectionName: ""
-
-  # -- Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only.
-  # @default -- letsencrypt-prod-istio
-  # @section -- Route
-  clusterIssuer: letsencrypt-prod-istio
-
-  # -- Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only.
-  # @default -- []
-  # @section -- Route
-  rules: []
-
-  # -- Istio AuthorizationPolicy resources keyed by name.
-  # Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules.
-  # @default -- {}
-  # @section -- Route
-  authorizationPolicies: {}
-
-  # -- Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic.
-  # Use to require and validate JWTs from an OIDC provider (e.g. Keycloak).
-  # @default -- {}
-  # @section -- Route
-  requestAuthentications: {}
 
 # -- Audit log sidecar settings.
 # When enabled, injects a Vector sidecar container into the pod that ships audit logs to a

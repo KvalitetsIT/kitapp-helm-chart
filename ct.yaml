@@ -3,7 +3,4 @@ remote: origin
 target-branch: main
 chart-dirs:
   - charts/
-helm-extra-args: --timeout 600s
 all: true
-chart-repos:
-  - kvalitetsit=https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/
