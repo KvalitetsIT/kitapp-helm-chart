@@ -8,8 +8,6 @@ metadata:
     {{- include "kitapp.labels" . | nindent 4 }}
 data:
   vector.yaml: |
-    data_dir: /tmp/vector
-
     sources:
       audit_http_source:
         type: http_server
