@@ -1,7 +1,5 @@
 apiVersion: apps/v1
 kind: Deployment
-{{- $resolvedAppPort := .Values.applicationPort.port | int }}
-{{- $metricsPort := include "kitapp.metricsPort" . | int }}
 {{- $allVolumes := include "kitapp.allVolumes" . | fromYamlArray }}
 metadata:
   name: {{ include "kitapp.fullname" . }}
@@ -121,7 +119,7 @@ spec:
           {{- end }}
           ports:
             - name: {{ .Values.applicationPort.name }}
-              containerPort: {{ $resolvedAppPort }}
+              containerPort: {{ .Values.applicationPort.port | int }}
               protocol: {{ .Values.applicationPort.protocol }}
             {{- range .Values.additionalApplicationPorts }}
             - name: {{ .name }}
@@ -130,7 +128,7 @@ spec:
             {{- end }}
             {{- if .Values.metrics.enabled }}
             - name: metrics
-              containerPort: {{ $metricsPort }}
+              containerPort: {{ include "kitapp.metricsPort" . | int }}
               protocol: TCP
             {{- end }}
           {{- $allEnvs := concat (.Values.env | default (list)) (.Values.extraEnvs | default (list)) }}
