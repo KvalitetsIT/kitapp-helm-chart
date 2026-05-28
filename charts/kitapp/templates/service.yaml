@@ -1,11 +1,6 @@
 apiVersion: v1
 kind: Service
-{{ $resolvedAppPort := 0 }}
-{{- if not (empty .Values.applicationPort.port) }}
-{{- $resolvedAppPort = (.Values.applicationPort.port | int) }}
-{{- else if not (empty .Values.servicePort.port) }}
-{{- $resolvedAppPort = (.Values.servicePort.port | int) }}
-{{- end }}
+{{- $resolvedAppPort := include "kitapp.resolvedAppPort" . | int }}
 {{- $metricsPort := $resolvedAppPort }}
 {{- if not (empty .Values.metrics.port) }}
 {{- $metricsPort = (.Values.metrics.port | int) }}
