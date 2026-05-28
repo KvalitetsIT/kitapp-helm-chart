@@ -1,11 +1,11 @@
 # -- Override the chart name used for resource naming.
 # @default -- ""
-# @section -- Naming
+# @section -- Deployment
 nameOverride: ""
 
 # -- Fully override the generated full resource name.
 # @default -- ""
-# @section -- Naming
+# @section -- Deployment
 fullnameOverride: ""
 
 # -- Number of pod replicas.
@@ -29,24 +29,24 @@ revisionHistoryLimit: 5
 
 # -- Container image settings.
 # @default -- see values.yaml
-# @section -- Image
+# @section -- Deployment
 image:
   # -- Container image repository (required).
   # @default -- ""
-  # @section -- Image
+  # @section -- Deployment
   repository: ""
   # -- Container image tag (required).
   # @default -- ""
-  # @section -- Image
+  # @section -- Deployment
   tag: ""
   # -- Image pull policy.
   # @default -- IfNotPresent
-  # @section -- Image
+  # @section -- Deployment
   pullPolicy: IfNotPresent
 
 # -- Optional list of image pull secrets.
 # @default -- []
-# @section -- Image
+# @section -- Deployment
 imagePullSecrets: []
 
 # -- Primary application port exposed by the container and Service.
@@ -134,33 +134,33 @@ resources: {}
 
 # -- Kubernetes liveness probe.
 # @default -- {}
-# @section -- Health
+# @section -- Runtime
 livenessProbe: {}
 
 # -- Kubernetes readiness probe.
 # @default -- {}
-# @section -- Health
+# @section -- Runtime
 readinessProbe: {}
 
 # -- Kubernetes startup probe.
 # @default -- {}
-# @section -- Health
+# @section -- Runtime
 startupProbe: {}
 
 # -- Node selector labels for pod scheduling.
 # @default -- {}
-# @section -- Scheduling
+# @section -- Deployment
 nodeSelector: {}
 
 # -- Pod tolerations for scheduling onto tainted nodes.
 # @default -- []
-# @section -- Scheduling
+# @section -- Deployment
 tolerations: []
 
 # -- Kubernetes affinity rules for pod scheduling.
 # Defaults to preferred pod anti-affinity across nodes for replicas from the same release.
 # @default -- see values.yaml
-# @section -- Scheduling
+# @section -- Deployment
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -251,12 +251,12 @@ oauth2:
 
 # -- Extra labels to add to the pod.
 # @default -- {}
-# @section -- Pod Metadata
+# @section -- Deployment
 podLabels: {}
 
 # -- Extra pod annotations.
 # @default -- {}
-# @section -- Pod Metadata
+# @section -- Deployment
 podAnnotations: {}
 
 # -- Metrics settings for optional metrics port and ServiceMonitor.

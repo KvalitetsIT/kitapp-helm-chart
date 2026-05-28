@@ -17,31 +17,26 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 ## Values
 
-### Naming
+### Deployment
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | nameOverride | string | "" | Override the chart name used for resource naming. |
 | fullnameOverride | string | "" | Fully override the generated full resource name. |
-
-### Deployment
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
 | replicas | int | 2 | Number of pod replicas. |
 | strategy | object | see values.yaml | Deployment strategy configuration. |
 | strategy.type | string | RollingUpdate | Deployment strategy type. |
 | revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
-
-### Image
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
 | image | object | see values.yaml | Container image settings. |
 | image.repository | string | "" | Container image repository (required). |
 | image.tag | string | "" | Container image tag (required). |
 | image.pullPolicy | string | IfNotPresent | Image pull policy. |
 | imagePullSecrets | list | [] | Optional list of image pull secrets. |
+| nodeSelector | object | {} | Node selector labels for pod scheduling. |
+| tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
+| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
+| podLabels | object | {} | Extra labels to add to the pod. |
+| podAnnotations | object | {} | Extra pod annotations. |
 
 ### Ports
 
@@ -69,22 +64,9 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | envFrom | list | [] | Environment variable sources (ConfigMapRef/SecretRef) for the container. |
 | extraEnvFrom | list | [] | Additional environment variable sources appended after `envFrom`. Useful for overlay values files to extend envFrom without replacing shared base entries. |
 | resources | object | {} | Container resource requests and limits. |
-
-### Health
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
 | livenessProbe | object | {} | Kubernetes liveness probe. |
 | readinessProbe | object | {} | Kubernetes readiness probe. |
 | startupProbe | object | {} | Kubernetes startup probe. |
-
-### Scheduling
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| nodeSelector | object | {} | Node selector labels for pod scheduling. |
-| tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
-| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
 
 ### OAuth2
 
@@ -106,13 +88,6 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation (required when oauth2.enabled=true). |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
-
-### Pod Metadata
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| podLabels | object | {} | Extra labels to add to the pod. |
-| podAnnotations | object | {} | Extra pod annotations. |
 
 ### Metrics
 
