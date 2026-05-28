@@ -24,6 +24,9 @@ spec:
       {{- if .Values.oauth2.enabled }}
         oauth2-proxy.kitkube.dk/inject: "true"
       {{- end }}
+      {{- if (.Values.audit).enabled }}
+        audit.kitkube.dk/vector-sidecar: "true"
+      {{- end }}
       annotations:
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
