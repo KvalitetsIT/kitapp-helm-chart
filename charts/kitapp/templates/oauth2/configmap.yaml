@@ -1,0 +1,69 @@
+{{- if .Values.oauth2.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kitapp.oauth2.configMapName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+data:
+  oauth2-proxy.cfg: |
+    # Server
+    http_address = {{ printf "0.0.0.0:%d" (.Values.oauth2.proxyPort | int) | quote }}
+    upstreams = {{ list (.Values.oauth2.upstream | default (printf "http://127.0.0.1:%d" (.Values.applicationPort.port | int))) | toJson }}
+    reverse_proxy = true
+
+    # Provider
+    provider = "oidc"
+    client_id = {{ .Values.oauth2.clientId | quote }}
+    oidc_issuer_url = {{ .Values.oauth2.issuerUrl | quote }}
+    insecure_oidc_allow_unverified_email = true
+
+    # Authentication
+    email_domains = {{ .Values.oauth2.config.emailDomains | toJson }}
+    {{- with .Values.oauth2.config.allowedGroups }}
+    allowed_groups = {{ . | toJson }}
+    {{- end }}
+    {{- with .Values.oauth2.config.skipAuthRoutes }}
+    skip_auth_routes = {{ . | toJson }}
+    {{- end }}
+    skip_auth_preflight = true
+    skip_jwt_bearer_tokens = true
+    skip_provider_button = true
+
+    # Cookie
+    cookie_name = {{ .Values.oauth2.cookieName | default .Values.oauth2.clientId | quote }}
+    cookie_secure = true
+    cookie_httponly = true
+    cookie_samesite = "lax"
+    session_store_type = "cookie"
+    code_challenge_method = "S256"
+    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
+    cookie_domains = {{ .Values.route.hostnames | toJson }}
+    {{- end }}
+    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
+
+    # Redirect
+    redirect_url = {{ printf "https://%s/oauth2/callback" (first .Values.route.hostnames) | quote }}
+    whitelist_domains = {{ .Values.route.hostnames | toJson }}
+    {{- end }}
+
+    # Headers
+    pass_authorization_header = true
+    pass_access_token = true
+    pass_user_headers = true
+    set_xauthrequest = true
+
+    # Logging
+    standard_logging = true
+    auth_logging = true
+    request_logging = true
+    errors_to_info_log = true
+    {{- with .Values.oauth2.rawConfig }}
+
+    # Additional
+    {{- range $k, $v := . }}
+    {{ $k }} = {{ $v | toJson }}
+    {{- end }}
+    {{- end }}
+{{- end }}

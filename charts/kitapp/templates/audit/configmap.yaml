@@ -1,0 +1,72 @@
+{{- if (.Values.audit).enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kitapp.fullname" . }}-vector-audit-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+data:
+  vector.yaml: |
+    sources:
+      audit_http_source:
+        type: http_server
+        address: {{ printf "0.0.0.0:%d" (.Values.audit.config.httpPort | int) | quote }}
+        decoding:
+          codec: vrl
+          vrl:
+            source: |
+              . = parse_json!(.message)
+
+              if !exists(.message) {
+                abort "missing/invalid: message"
+              }
+              .message = strip_whitespace(string!(.message))
+              if .message == "" {
+                abort "missing/invalid: message"
+              }
+
+              if !exists(.actor) {
+                abort "missing/invalid: actor"
+              }
+              .actor = strip_whitespace(string!(.actor))
+              if .actor == "" {
+                abort "missing/invalid: actor"
+              }
+
+              if !exists(.action) {
+                abort "missing/invalid: action"
+              }
+              .action = strip_whitespace(string!(.action))
+              if .action == "" {
+                abort "missing/invalid: action"
+              }
+
+              if exists(.data) && !is_object(.data) {
+                abort "invalid: data must be an object"
+              }
+
+
+    transforms:
+      add_kubernetes_metadata:
+        type: remap
+        inputs:
+          - audit_http_source
+        source: |
+          .kubernetes = {}
+          .kubernetes.pod_name = "${POD_NAME:-unknown}"
+          .kubernetes.pod_namespace = "${POD_NAMESPACE:-unknown}"
+          .kubernetes.node_name = "${NODE_NAME:-unknown}"
+          .kubernetes.pod_ip = "${POD_IP:-unknown}"
+          .kubernetes.app_label = "${APP_LABEL:-{{ include "kitapp.fullname" . }}}"
+          .kubernetes.namespace_labels = {}
+          .kubernetes.namespace_labels."tenant.kitkube.dk/name" = {{ .Values.audit.tenantName | quote }}
+
+    sinks:
+      audit_vector_aggregator:
+        type: vector
+        inputs:
+          - add_kubernetes_metadata
+        address: {{ .Values.audit.config.aggregatorAddress | quote }}
+        version: {{ .Values.audit.config.sinkVersion | quote }}
+{{- end }}

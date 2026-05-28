@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "kitapp.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: {{ .Values.servicePort.name | default .Values.applicationPort.name }}
+      port: {{ .Values.servicePort.port | default .Values.applicationPort.port | int }}
+      targetPort: {{ .Values.applicationPort.name }}
+      protocol: {{ .Values.servicePort.protocol | default .Values.applicationPort.protocol }}
+    {{- range .Values.additionalApplicationPorts }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .name }}
+      protocol: {{ .protocol | default "TCP" }}
+    {{- end }}
+    {{- range .Values.additionalServicePorts }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort | default .port }}
+      protocol: {{ .protocol | default "TCP" }}
+    {{- end }}
+    {{- if .Values.oauth2.enabled }}
+    - name: oauth2-proxy
+      port: {{ .Values.oauth2.proxyPort }}
+      targetPort: {{ .Values.oauth2.proxyPort }}
+      protocol: TCP
+    {{- end }}
+    {{- if and .Values.metrics.enabled (ne (include "kitapp.metricsPort" . | int) (.Values.applicationPort.port | int)) }}
+    - name: metrics
+      port: {{ include "kitapp.metricsPort" . | int }}
+      targetPort: metrics
+      protocol: TCP
+    {{- end }}

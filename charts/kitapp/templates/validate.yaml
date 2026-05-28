@@ -1,0 +1,10 @@
+{{- include "kitapp.validate.requiredImage" . -}}
+{{- include "kitapp.validate.requiredApplicationPort" . -}}
+{{- include "kitapp.validate.portNumbers" . -}}
+{{- include "kitapp.validate.portNames" . -}}
+{{- include "kitapp.validate.envNames" . -}}
+{{- include "kitapp.validate.envFromRefs" . -}}
+{{- include "kitapp.validate.volumes" . -}}
+{{- include "kitapp.validate.oauth2" . -}}
+{{- include "kitapp.validate.gateway" . -}}
+{{- include "kitapp.validate.audit" . -}}

@@ -1,0 +1,110 @@
+name: PR
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  docs:
+    name: Validating docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Generate docs
+        run: make docs
+
+      - name: Check for uncommitted doc changes
+        run: |
+          if ! git diff --exit-code -- charts/kitapp/README.md; then
+            echo ""
+            echo "Chart READMEs are out of date. Run 'make docs' locally and commit the result."
+            exit 1
+          fi
+
+  lint-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+        with:
+          version: "v3.17.0"
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: 3.x
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --config ct.yaml)
+          echo "Changed charts:"
+          echo "$changed"
+
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run chart-testing (lint)
+        run: ct lint --config ct.yaml
+
+      - name: Kubernetes KinD Cluster
+        id: kind
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+        if: steps.list-changed.outputs.changed == 'true'
+
+      - name: Install CRDs
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          wait_for_crd() {
+            local crd="$1"
+            kubectl wait --for=condition=Established --timeout=60s "crd/${crd}" \
+              || kubectl wait --for=condition=Established --timeout=60s "crd/${crd}"
+          }
+
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/refs/tags/v1.5.1/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
+          wait_for_crd httproutes.gateway.networking.k8s.io
+
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/refs/tags/v1.5.1/config/crd/standard/gateway.networking.k8s.io_listenersets.yaml
+          wait_for_crd listenersets.gateway.networking.k8s.io
+
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/refs/tags/v1.5.1/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
+          wait_for_crd referencegrants.gateway.networking.k8s.io
+
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/refs/tags/v1.5.1/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
+          wait_for_crd tlsroutes.gateway.networking.k8s.io
+
+          kubectl apply -f https://raw.githubusercontent.com/istio/istio/1.29.1/manifests/charts/base/files/crd-all.gen.yaml
+          wait_for_crd authorizationpolicies.security.istio.io
+
+      - name: Add Helm repositories
+        run: |
+          helm repo add kvalitetsit https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/
+          helm repo update
+
+      - name: Run chart-testing (install)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          ct install --config ct.yaml

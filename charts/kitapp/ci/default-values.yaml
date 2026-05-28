@@ -1,0 +1,45 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+additionalApplicationPorts:
+  - name: actuator
+    port: 9090
+    protocol: TCP
+
+env:
+  - name: EXAMPLE
+    value: hello
+
+extraEnvs:
+  - name: LOG_LEVEL
+    value: debug
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+nodeSelector:
+  kubernetes.io/os: linux

@@ -1,0 +1,13 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  port: 8080
+
+metrics:
+  enabled: true
+  port: 9090
+  path: /metrics
+  labels:
+    release: kube-prometheus-stack

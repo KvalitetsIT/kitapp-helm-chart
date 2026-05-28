@@ -1,0 +1,50 @@
+{{- if and .Values.route.enabled (not .Values.route.gateway.sectionName) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: ListenerSet
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+  {{- if and (eq .Values.route.type "HTTPRoute") .Values.route.clusterIssuer }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.route.clusterIssuer | quote }}
+  {{- end }}
+spec:
+  parentRef:
+    name: {{ .Values.route.gateway.name | quote }}
+    namespace: {{ .Values.route.gateway.namespace | quote }}
+    kind: Gateway
+    group: gateway.networking.k8s.io
+  listeners:
+    {{- if eq .Values.route.type "HTTPRoute" }}
+    {{- range $i, $hostname := .Values.route.hostnames }}
+    - name: {{ ternary "https" (printf "https-%d" $i) (eq $i 0) | quote }}
+      hostname: {{ $hostname | quote }}
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: Same
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: {{ $hostname | quote }}
+            namespace: {{ $.Release.Namespace | quote }}
+    {{- end }}
+    {{- else }}
+    {{- range $i, $hostname := .Values.route.hostnames }}
+    - name: {{ ternary "tls" (printf "tls-%d" $i) (eq $i 0) | quote }}
+      hostname: {{ $hostname | quote }}
+      protocol: TLS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: Same
+      tls:
+        mode: Passthrough
+    {{- end }}
+    {{- end }}
+{{- end }}

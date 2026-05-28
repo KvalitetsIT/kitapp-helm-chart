@@ -1,0 +1,36 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        create: true
+        accessMode: ReadWriteOnce
+        size: 1Gi
+
+  - name: app-config
+    mountPath: /etc/app/config.yaml
+    subPath: config.yaml
+    readOnly: true
+    volumeSpec:
+      configMap:
+        name: my-app-config
+        optional: true
+
+  - name: tmp
+    mountPath: /tmp
+    volumeSpec:
+      emptyDir: {}
+
+extraVolumes:
+  - name: shared-cache
+    mountPath: /cache
+    volumeSpec:
+      emptyDir: {}

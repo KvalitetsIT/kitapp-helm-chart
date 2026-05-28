@@ -1,0 +1,186 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+## Usage
+
+This chart deploys a generic Kubernetes `Deployment` with a `Service` and optional structured `volumes`.
+
+### Required values
+
+- `image.repository` and `image.tag` must be set
+- `applicationPort.port` must be set (defaults to `8080`)
+- when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
+- when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
+
+### Minimal
+
+```yaml
+{{ .Files.Get "ci/minimal-values.yaml" | trim }}
+```
+
+### Runtime and scheduling
+
+Covers `additionalApplicationPorts`, `env`/`extraEnvs`, `resources`, liveness/readiness probes, and `nodeSelector`.
+
+```yaml
+{{ .Files.Get "ci/default-values.yaml" | trim }}
+```
+
+### Advanced runtime
+
+Covers `command`/`args`, `envFrom`/`extraEnvFrom`, `startupProbe`, `tolerations`, and `affinity`.
+
+```yaml
+{{ .Files.Get "ci/advanced-values.yaml" | trim }}
+```
+
+### Metrics
+
+When `metrics.enabled=true`, the metrics port name is always `metrics`.
+
+```yaml
+{{ .Files.Get "ci/metrics-values.yaml" | trim }}
+```
+
+### Volumes and PVCs
+
+Use `volumes` to define both the container mount and the pod volume source in a single entry.
+Use `extraVolumes` to append entries on top of a shared base without replacing it.
+
+```yaml
+{{ .Files.Get "ci/persistence-values.yaml" | trim }}
+```
+
+To mount an externally managed PVC, use `existingClaim` instead of `create`:
+
+```yaml
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        existingClaim: my-existing-pvc
+```
+
+### Expose via Gateway API
+
+Enable `route` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
+The backend is automatically wired to the chart's own Service.
+
+```yaml
+{{ .Files.Get "ci/gateway-values.yaml" | trim }}
+```
+
+To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`:
+
+```yaml
+route:
+  gateway:
+    sectionName: https-my-app
+```
+
+### TLSRoute
+
+For passthrough TLS (e.g. gRPC-TLS or raw TCP), use `route.type: TLSRoute`.
+No ListenerSet or cert-manager is involved.
+
+```yaml
+{{ .Files.Get "ci/tlsroute-values.yaml" | trim }}
+```
+
+### Authorization policies and JWT validation
+
+Use `route.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
+Use `route.requestAuthentications` to create Istio `RequestAuthentication` resources that validate JWTs
+from an OIDC provider such as Keycloak.
+
+```yaml
+{{ .Files.Get "ci/authpolicy-values.yaml" | trim }}
+```
+
+### Security context
+
+Override `podSecurityContext` and `containerSecurityContext` to harden the pod.
+Enable AppArmor only on clusters where it is available on the nodes.
+
+```yaml
+{{ .Files.Get "ci/security-values.yaml" | trim }}
+```
+
+### OAuth2 proxy injector integration
+
+Enable `oauth2` to add the injector opt-in label and required annotations automatically.
+
+Auto-injected metadata:
+
+- label: `oauth2-proxy.kitkube.dk/inject: "true"`
+- annotations: `oauth2-proxy.kitkube.dk/configmap`, `oauth2-proxy.kitkube.dk/secret`, `checksum/oauth2-config`
+
+```yaml
+{{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
+```
+
+Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
+
+```yaml
+{{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
+```
+
+### Route + OAuth2
+
+When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
+- Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
+- Injects `redirect_url = https://<first-hostname>/oauth2/callback` into the oauth2-proxy ConfigMap
+
+Both are shown combined in [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
+
+### Audit
+
+Enable `audit` to inject a Vector native sidecar that receives audit events from the application
+over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
+POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod.
+
+#### Event schema
+
+| Field     | Type   | Required | Description                                              |
+|-----------|--------|----------|----------------------------------------------------------|
+| `message` | string | yes      | Human-readable description of what happened.             |
+| `actor`   | string | yes      | Identity of the user or system that performed the action.|
+| `action`  | string | yes      | Machine-readable action identifier (e.g. `CREATE`).      |
+| `data`    | object | no       | Arbitrary structured context for the event.              |
+
+```json
+{
+  "message": "User updated patient record",
+  "actor": "doctor@hospital.dk",
+  "action": "UPDATE",
+  "data": {
+    "resourceId": "patient-42",
+    "resourceType": "PatientRecord",
+    "changes": {
+      "diagnosis": "updated"
+    }
+  }
+}
+```
+
+The sidecar rejects events where required fields are missing, blank, or where `data` is not an object.
+Events are enriched with Kubernetes pod metadata (`pod_name`, `pod_namespace`, `node_name`, `pod_ip`) before forwarding.
+
+```yaml
+{{ .Files.Get "ci/audit-values.yaml" | trim }}
+```
+
+{{ template "helm-docs.versionFooter" . }}

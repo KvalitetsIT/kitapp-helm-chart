@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: Deployment
+{{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) }}
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+spec:
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "kitapp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kitapp.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.oauth2.enabled }}
+        oauth2-proxy.kitkube.dk/inject: "true"
+      {{- end }}
+      {{- if (.Values.audit).enabled }}
+        audit.kitkube.dk/vector-sidecar: "true"
+      {{- end }}
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.oauth2.enabled }}
+        checksum/oauth2-config: {{ include (print $.Template.BasePath "/oauth2/configmap.yaml") . | sha256sum }}
+        {{- include "kitapp.oauth2.injectorAnnotations" . | nindent 8 }}
+        {{- end }}
+        {{- if (.Values.audit).enabled }}
+        checksum/audit-config: {{ include (print $.Template.BasePath "/audit/configmap.yaml") . | sha256sum }}
+        {{- end }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kitapp.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- if (.Values.audit).enabled }}
+      initContainers:
+        {{- include "kitapp.audit.sidecar" . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ include "kitapp.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: {{ .Values.applicationPort.name }}
+              containerPort: {{ .Values.applicationPort.port | int }}
+              protocol: {{ .Values.applicationPort.protocol }}
+            {{- range .Values.additionalApplicationPorts }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+              protocol: {{ .protocol | default "TCP" }}
+            {{- end }}
+            {{- if and .Values.metrics.enabled (ne (include "kitapp.metricsPort" . | int) (.Values.applicationPort.port | int)) }}
+            - name: metrics
+              containerPort: {{ include "kitapp.metricsPort" . | int }}
+              protocol: TCP
+            {{- end }}
+          {{- $allEnvs := concat (.Values.env | default (list)) (.Values.extraEnvs | default (list)) }}
+          {{- with $allEnvs }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- $allEnvFrom := concat (.Values.envFrom | default (list)) (.Values.extraEnvFrom | default (list)) }}
+          {{- with $allEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $allVolumes }}
+          volumeMounts:
+            {{- range . }}
+            {{- include "kitapp.volumeMount" . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      {{- if or $allVolumes (.Values.audit).enabled }}
+      volumes:
+        {{- range $allVolumes }}
+        {{- include "kitapp.podVolume" (dict "volume" . "context" (dict "volume" . "Values" $.Values "Chart" $.Chart "Release" $.Release)) | nindent 8 }}
+        {{- end }}
+        {{- if (.Values.audit).enabled }}
+        - name: vector-audit-config
+          configMap:
+            name: {{ include "kitapp.fullname" . }}-vector-audit-config
+        {{- end }}
+      {{- end }}

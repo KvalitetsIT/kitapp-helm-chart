@@ -1,0 +1,49 @@
+{{- if and .Values.route.enabled (eq .Values.route.type "HTTPRoute") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    {{- if .Values.route.gateway.sectionName }}
+    - name: {{ .Values.route.gateway.name | quote }}
+      namespace: {{ .Values.route.gateway.namespace | quote }}
+      kind: Gateway
+      group: gateway.networking.k8s.io
+      sectionName: {{ .Values.route.gateway.sectionName | quote }}
+    {{- else }}
+    - name: {{ include "kitapp.fullname" . | quote }}
+      kind: ListenerSet
+      group: gateway.networking.k8s.io
+    {{- end }}
+  hostnames:
+    {{- range .Values.route.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    {{- if not .Values.route.exposeMetrics }}
+    {{- /* Empty backendRefs returns 404 in Istio's Gateway API implementation:
+         https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 */}}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /metrics
+      backendRefs: []
+    {{- end }}
+    {{- with .Values.route.rules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ include "kitapp.fullname" . | quote }}
+          port: {{ include "kitapp.gateway.resolvedPort" . }}
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+{{- end }}

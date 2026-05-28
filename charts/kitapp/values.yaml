@@ -1,0 +1,536 @@
+# -- Override the chart name used for resource naming.
+# @default -- ""
+# @section -- Deployment
+nameOverride: ""
+
+# -- Fully override the generated full resource name.
+# @default -- ""
+# @section -- Deployment
+fullnameOverride: ""
+
+# -- Number of pod replicas.
+# @default -- 2
+# @section -- Deployment
+replicas: 2
+
+# -- Deployment strategy configuration.
+# @default -- see values.yaml
+# @section -- Deployment
+strategy:
+  # -- Deployment strategy type.
+  # @default -- RollingUpdate
+  # @section -- Deployment
+  type: RollingUpdate
+
+# -- Number of old ReplicaSets to retain for Deployment rollback history.
+# @default -- 5
+# @section -- Deployment
+revisionHistoryLimit: 5
+
+# -- Optional list of image pull secrets.
+# @default -- []
+# @section -- Deployment
+imagePullSecrets: []
+
+# -- Extra labels to add to the pod.
+# @default -- {}
+# @section -- Deployment
+podLabels: {}
+
+# -- Extra pod annotations.
+# @default -- {}
+# @section -- Deployment
+podAnnotations: {}
+
+# -- Node selector labels for pod scheduling.
+# @default -- {}
+# @section -- Deployment
+nodeSelector: {}
+
+# -- Pod tolerations for scheduling onto tainted nodes.
+# @default -- []
+# @section -- Deployment
+tolerations: []
+
+# -- Kubernetes affinity rules for pod scheduling.
+# Defaults to preferred pod anti-affinity across nodes for replicas from the same release.
+# @default -- see values.yaml
+# @section -- Deployment
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "kitapp.name" . }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          topologyKey: kubernetes.io/hostname
+
+# -- Service account settings.
+# @default -- see values.yaml
+# @section -- Deployment
+serviceAccount:
+  # -- Create a dedicated ServiceAccount.
+  # @default -- false
+  # @section -- Deployment
+  create: false
+  # -- Existing ServiceAccount name to use (or generated when empty and create=true).
+  # @default -- ""
+  # @section -- Deployment
+  name: ""
+  # -- Annotations for the ServiceAccount.
+  # @default -- {}
+  # @section -- Deployment
+  annotations: {}
+  # -- Mount the ServiceAccount token into pods.
+  # @default -- false
+  # @section -- Deployment
+  automountServiceAccountToken: false
+
+# -- Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup).
+# @default -- see values.yaml
+# @section -- Deployment
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# -- Container image settings.
+# @default -- see values.yaml
+# @section -- Runtime
+image:
+  # -- Container image repository (required).
+  # @default -- ""
+  # @section -- Runtime
+  repository: ""
+  # -- Container image tag (required).
+  # @default -- ""
+  # @section -- Runtime
+  tag: ""
+  # -- Image pull policy.
+  # @default -- IfNotPresent
+  # @section -- Runtime
+  pullPolicy: IfNotPresent
+
+# -- Optional container command override.
+# @default -- []
+# @section -- Runtime
+command: []
+
+# -- Optional container args override.
+# @default -- []
+# @section -- Runtime
+args: []
+
+# -- Environment variables for the container.
+# @default -- []
+# @section -- Runtime
+env: []
+
+# -- Additional environment variables appended after `env`.
+# Useful for overlay values files to extend env without replacing shared base entries.
+# @default -- []
+# @section -- Runtime
+extraEnvs: []
+
+# -- Environment variable sources (ConfigMapRef/SecretRef) for the container.
+# @default -- []
+# @section -- Runtime
+envFrom: []
+
+# -- Additional environment variable sources appended after `envFrom`.
+# Useful for overlay values files to extend envFrom without replacing shared base entries.
+# @default -- []
+# @section -- Runtime
+extraEnvFrom: []
+
+# -- Container resource requests and limits.
+# @default -- {}
+# @section -- Runtime
+resources: {}
+
+# -- Kubernetes liveness probe.
+# @default -- {}
+# @section -- Runtime
+livenessProbe: {}
+
+# -- Kubernetes readiness probe.
+# @default -- {}
+# @section -- Runtime
+readinessProbe: {}
+
+# -- Kubernetes startup probe.
+# @default -- {}
+# @section -- Runtime
+startupProbe: {}
+
+# -- Security context applied to the application container.
+# @default -- see values.yaml
+# @section -- Runtime
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Primary application port exposed by the container and Service.
+# @default -- see values.yaml
+# @section -- Service
+applicationPort:
+  # -- Primary application port name.
+  # @default -- http
+  # @section -- Service
+  name: http
+  # -- Primary application container port.
+  # @default -- 8080
+  # @section -- Service
+  port: 8080
+  # -- Primary application protocol.
+  # @default -- TCP
+  # @section -- Service
+  protocol: TCP
+
+# -- Additional named application ports exposed on both container and Service.
+# Each item supports name, port, and optional protocol.
+# @default -- []
+# @section -- Service
+additionalApplicationPorts: []
+
+# -- Primary Service port exposed by the Service.
+# @default -- see values.yaml
+# @section -- Service
+servicePort:
+  # -- Primary Service port name. If empty, falls back to applicationPort.name.
+  # @default -- null
+  # @section -- Service
+  name: null
+  # -- Primary Service port number. If empty, defaults to applicationPort.port.
+  # @default -- null
+  # @section -- Service
+  port: null
+  # -- Primary Service protocol. If empty, falls back to applicationPort.protocol.
+  # @default -- null
+  # @section -- Service
+  protocol: null
+
+# -- Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`.
+# If `targetPort` is omitted, it defaults to the same value as `port`.
+# @default -- []
+# @section -- Service
+additionalServicePorts: []
+
+# -- Service settings for exposing the application.
+# @default -- see values.yaml
+# @section -- Service
+service:
+  # -- Kubernetes Service type.
+  # @default -- ClusterIP
+  # @section -- Service
+  type: ClusterIP
+  # -- Annotations for the Service.
+  # @default -- {}
+  # @section -- Service
+  annotations: {}
+  # -- Labels for the Service.
+  # @default -- see values.yaml
+  # @section -- Service
+  labels:
+    # -- Route traffic through the Istio waypoint proxy for L7 policy enforcement.
+    # @section -- Service
+    istio.io/use-waypoint: waypoint
+    # -- Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic).
+    # @section -- Service
+    istio.io/ingress-use-waypoint: "true"
+
+# -- Structured volume definitions.
+# Each entry defines both the container mount and the pod volume source.
+# @default -- []
+# @section -- Persistence
+volumes: []
+# Typical examples:
+# - name: config
+#   mountPath: /app/config
+#   readOnly: true
+#   subPath: application.yaml
+#   volumeSpec:
+#     configMap:
+#       name: my-config
+#
+# - name: app-data
+#   mountPath: /data
+#   volumeSpec:
+#     persistentVolumeClaim:
+#       # Use existingClaim to mount an external PVC without creating one.
+#       existingClaim: my-existing-pvc
+#
+# - name: app-data
+#   mountPath: /data
+#   volumeSpec:
+#     persistentVolumeClaim:
+#       # create defaults to true when existingClaim is not set.
+#       create: true
+#       # Optional override for generated claim name (<release>-<volume-name>).
+#       claimName: ""
+#       accessMode: ReadWriteMany
+#       storageClass: nfs
+#       size: 8Gi
+
+# -- Additional structured volume definitions appended after `volumes`.
+# Use to share common volumes in base values and extend per environment overlays.
+# @default -- []
+# @section -- Persistence
+extraVolumes: []
+
+# -- Metrics settings for optional metrics port and ServiceMonitor.
+# @default -- see values.yaml
+# @section -- Metrics
+metrics:
+  # -- Enable metrics port exposure on container and Service.
+  # The metrics port name is always `metrics` when enabled.
+  # @default -- false
+  # @section -- Metrics
+  enabled: false
+  # -- Metrics port number. If empty, uses applicationPort.port.
+  # @default -- null
+  # @section -- Metrics
+  port: null
+  # -- Metrics scrape path.
+  # @default -- /metrics
+  # @section -- Metrics
+  path: /metrics
+  # -- ServiceMonitor scrape interval.
+  # @default -- 30s
+  # @section -- Metrics
+  interval: 30s
+  # -- Extra labels for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed).
+  # @default -- {}
+  # @section -- Metrics
+  labels: {}
+  # -- Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed).
+  # @default -- {}
+  # @section -- Metrics
+  annotations: {}
+
+# -- Gateway API route settings.
+# @default -- see values.yaml
+# @section -- Route
+route:
+  # -- Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies).
+  # @default -- false
+  # @section -- Route
+  enabled: false
+  # -- Route type. Supports HTTPRoute or TLSRoute.
+  # @default -- HTTPRoute
+  # @section -- Route
+  type: HTTPRoute
+
+  # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
+  # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.
+  # Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235
+  # HTTPRoute only.
+  # @default -- true
+  # @section -- Route
+  exposeMetrics: true
+
+  # -- Public hostname(s) for the HTTPRoute and ListenerSet.
+  # The first hostname is also used to auto-populate oauth2-proxy redirect_url.
+  # @default -- []
+  # @section -- Route
+  hostnames: []
+
+  # -- Backend port for the auto-generated catch-all rule.
+  # Defaults to applicationPort.port, or 4180 when oauth2.enabled=true.
+  # @default -- null
+  # @section -- Route
+  port: null
+
+  # -- Gateway attachment settings.
+  # @default -- see values.yaml
+  # @section -- Route
+  gateway:
+    # -- Name of the Gateway to attach to.
+    # @default -- ingressgateway
+    # @section -- Route
+    name: ingressgateway
+    # -- Namespace of the Gateway.
+    # @default -- istio-ingress
+    # @section -- Route
+    namespace: istio-ingress
+    # -- If set, skip ListenerSet creation and attach the route directly to this Gateway listener section.
+    # @default -- ""
+    # @section -- Route
+    sectionName: ""
+
+  # -- Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only.
+  # @default -- letsencrypt-prod-istio
+  # @section -- Route
+  clusterIssuer: letsencrypt-prod-istio
+
+  # -- Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only.
+  # @default -- []
+  # @section -- Route
+  rules: []
+
+  # -- Istio AuthorizationPolicy resources keyed by name.
+  # Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules.
+  # @default -- {}
+  # @section -- Route
+  authorizationPolicies: {}
+
+  # -- Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic.
+  # Use to require and validate JWTs from an OIDC provider (e.g. Keycloak).
+  # @default -- {}
+  # @section -- Route
+  requestAuthentications: {}
+
+# -- OAuth2 proxy injector integration.
+# Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook.
+# @default -- see values.yaml
+# @section -- OAuth2
+oauth2:
+  # -- Enable oauth2-proxy sidecar injection metadata on the pod.
+  # @default -- false
+  # @section -- OAuth2
+  enabled: false
+  # -- Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port.
+  # @default -- 4180
+  # @section -- OAuth2
+  proxyPort: 4180
+  # -- Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`.
+  # @default -- ""
+  # @section -- OAuth2
+  image: ""
+  # -- Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg.
+  # Defaults to `http://127.0.0.1:<applicationPort.port>` when empty.
+  # @default -- ""
+  # @section -- OAuth2
+  upstream: ""
+  # -- OIDC client ID (`client_id` in oauth2-proxy.cfg).
+  # @default -- ""
+  # @section -- OAuth2
+  clientId: ""
+  # -- Cookie name used by oauth2-proxy. Defaults to `clientId` when empty.
+  # @default -- ""
+  # @section -- OAuth2
+  cookieName: ""
+  # -- Reusable oauth2-proxy issuer URL used by generated oauth2-proxy.cfg (`oidc_issuer_url`).
+  # @default -- ""
+  # @section -- OAuth2
+  issuerUrl: ""
+  # -- Structured oauth2-proxy config for commonly configured keys.
+  # @default -- see values.yaml
+  # @section -- OAuth2
+  config:
+    # -- Email domains allowed to authenticate. Use ["*"] to allow any domain.
+    # @default -- ["*"]
+    # @section -- OAuth2
+    emailDomains:
+      - "*"
+    # -- Groups allowed to authenticate. Empty means no group restriction.
+    # @default -- []
+    # @section -- OAuth2
+    allowedGroups: []
+    # -- URL path patterns that bypass authentication.
+    # @default -- []
+    # @section -- OAuth2
+    skipAuthRoutes: []
+  # -- Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg.
+  # Use for any oauth2-proxy setting not covered by the structured keys above.
+  # @default -- {}
+  # @section -- OAuth2
+  rawConfig: {}
+  # -- Existing Secret name referenced by injector annotation (required when oauth2.enabled=true).
+  # @default -- ""
+  # @section -- OAuth2
+  secretRef: ""
+  # -- Optional sidecar resource annotation settings.
+  # @default -- see values.yaml
+  # @section -- OAuth2
+  sidecar:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  # -- Optional provider CA annotation settings.
+  # @default -- see values.yaml
+  # @section -- OAuth2
+  providerCA:
+    configMap: ""
+    key: ""
+
+# -- Audit log sidecar settings.
+# When enabled, injects a Vector sidecar container into the pod that ships audit logs to a
+# Vector Aggregator (e.g. the `loki-audit` chart). A ConfigMap with the Vector pipeline config
+# is also created and mounted into the sidecar at `/etc/vector/vector.yaml`.
+# @default -- see values.yaml
+# @section -- Audit
+audit:
+  # -- Enable the Vector audit log sidecar (ConfigMap + sidecar container).
+  # @default -- false
+  # @section -- Audit
+  enabled: false
+  # -- Tenant name stamped on every audit event. Required when audit.enabled=true.
+  # Set via a platform-controlled mechanism (e.g. ArgoCD helm parameter) rather than
+  # letting the application team set it freely, to prevent tenant spoofing.
+  # @default -- ""
+  # @section -- Audit
+  tenantName: ""
+
+  image:
+    # -- Vector container image repository.
+    # @default -- timberio/vector
+    # @section -- Audit
+    repository: timberio/vector
+    # -- Vector container image tag.
+    # @default -- 0.55.0-distroless-libc
+    # @section -- Audit
+    tag: 0.55.0-distroless-libc
+    # -- Image pull policy.
+    # @default -- IfNotPresent
+    # @section -- Audit
+    pullPolicy: IfNotPresent
+
+  # -- Resource requests and limits for the Vector audit sidecar container.
+  # @default -- see values.yaml
+  # @section -- Audit
+  resources:
+    requests:
+      # -- CPU request for the Vector audit sidecar.
+      # @default -- 50m
+      # @section -- Audit
+      cpu: 50m
+      # -- Memory request for the Vector audit sidecar.
+      # @default -- 64Mi
+      # @section -- Audit
+      memory: 64Mi
+    limits:
+      # -- Memory limit for the Vector audit sidecar.
+      # @default -- 128Mi
+      # @section -- Audit
+      memory: 128Mi
+
+  config:
+    # -- Port the Vector HTTP source listens on inside the sidecar. The application sends
+    # audit events to this port via HTTP POST.
+    # @default -- 9001
+    # @section -- Audit
+    httpPort: 9001
+
+    # -- Address of the Vector Aggregator to forward audit logs to. Override in env-repo
+    # values to match your loki-audit release name and namespace.
+    # @default -- vector-aggregator.logging.svc.cluster.local:6000
+    # @section -- Audit
+    aggregatorAddress: vector-aggregator.logging.svc.cluster.local:6000
+
+    # -- Vector sink protocol version.
+    # @default -- "2"
+    # @section -- Audit
+    sinkVersion: "2"

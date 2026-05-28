@@ -1,0 +1,16 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: https
+  port: 8443
+
+route:
+  enabled: true
+  type: TLSRoute
+  hostnames:
+    - app.local
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress

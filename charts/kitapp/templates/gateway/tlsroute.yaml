@@ -1,0 +1,33 @@
+{{- if and .Values.route.enabled (eq .Values.route.type "TLSRoute") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: TLSRoute
+metadata:
+  name: {{ include "kitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    {{- if .Values.route.gateway.sectionName }}
+    - name: {{ .Values.route.gateway.name | quote }}
+      namespace: {{ .Values.route.gateway.namespace | quote }}
+      kind: Gateway
+      group: gateway.networking.k8s.io
+      sectionName: {{ .Values.route.gateway.sectionName | quote }}
+    {{- else }}
+    - name: {{ include "kitapp.fullname" . | quote }}
+      kind: ListenerSet
+      group: gateway.networking.k8s.io
+    {{- end }}
+  hostnames:
+    {{- range .Values.route.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ include "kitapp.fullname" . | quote }}
+          port: {{ .Values.route.port | default .Values.applicationPort.port | int }}
+          weight: 1
+{{- end }}
