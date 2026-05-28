@@ -1,0 +1,36 @@
+replicas: 2
+
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+env:
+  - name: EXAMPLE
+    value: hello
+
+applicationPort:
+  name: http
+  port: 8080
+  protocol: TCP
+
+additionalApplicationPorts:
+  - name: grpc
+    port: 9095
+    protocol: TCP
+
+servicePort:
+  port: 8080
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10

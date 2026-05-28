@@ -1,127 +1,71 @@
-# kitapp Helm Chart
+# kitapp Helm chart repository
 
-Generic application Helm chart for deploying a Kubernetes `Deployment`.
+Repository for the generic `kitapp` Helm chart.
 
-## What This Repository Contains
+The chart lives in [`charts/kitapp`](charts/kitapp).
 
-- Chart source: [`charts/kitapp`](charts/kitapp)
-- Full chart docs (values reference, generated docs): [`charts/kitapp/README.md`](charts/kitapp/README.md)
-- CI values used for rendering/linting scenarios:
-  - [`charts/kitapp/ci/minimal-values.yaml`](charts/kitapp/ci/minimal-values.yaml)
-  - [`charts/kitapp/ci/deployment-values.yaml`](charts/kitapp/ci/deployment-values.yaml)
-  - [`charts/kitapp/ci/ingress-values.yaml`](charts/kitapp/ci/ingress-values.yaml)
-  - [`charts/kitapp/ci/metrics-values.yaml`](charts/kitapp/ci/metrics-values.yaml)
-  - [`charts/kitapp/ci/pvc-values.yaml`](charts/kitapp/ci/pvc-values.yaml)
-  - [`charts/kitapp/ci/oauth2-minimal-values.yaml`](charts/kitapp/ci/oauth2-minimal-values.yaml)
-  - [`charts/kitapp/ci/oauth2-advanced-values.yaml`](charts/kitapp/ci/oauth2-advanced-values.yaml)
+---
 
-## Review Guide
+## Where to find chart documentation
 
-Use this sequence to review quickly and consistently:
+To avoid duplicate maintenance, all chart API and usage docs are maintained in:
 
-1. Verify API shape in [`charts/kitapp/values.yaml`](charts/kitapp/values.yaml).
-2. Verify rendering behavior in:
-   - [`charts/kitapp/templates/deployment.yaml`](charts/kitapp/templates/deployment.yaml)
-   - [`charts/kitapp/templates/service.yaml`](charts/kitapp/templates/service.yaml)
-   - [`charts/kitapp/templates/validate.yaml`](charts/kitapp/templates/validate.yaml)
-3. Verify docs and examples match actual schema:
-   - [`charts/kitapp/README.md`](charts/kitapp/README.md)
-   - `charts/kitapp/ci/*.yaml`
-4. Verify chart metadata and dependencies in [`charts/kitapp/Chart.yaml`](charts/kitapp/Chart.yaml).
+- [`charts/kitapp/README.md`](charts/kitapp/README.md)
 
-## Required Inputs
+That file is generated from `README.md.gotmpl` and CI example values.
 
-At minimum, a consumer must provide:
+---
 
-- `image.repository`
-- `image.tag`
-- `applicationPort.name`
-- one of `applicationPort.port` or `servicePort.port`
+## Repository structure
 
-## Example Configurations
-
-### Expanded: Typical App Deployment
-
-```yaml
-replicaCount: 2
-
-image:
-  repository: ghcr.io/your-org/your-app
-  tag: "1.31.0"
-
-applicationPort:
-  name: http
-  port: 8080
-  protocol: TCP
-
-service:
-  type: ClusterIP
-
-servicePort:
-  port: 8080
-
-livenessProbe:
-  httpGet:
-    path: /healthz
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 20
-
-readinessProbe:
-  httpGet:
-    path: /healthz
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
+```text
+.
+├── charts/
+│   └── kitapp/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       ├── README.md.gotmpl
+│       ├── README.md
+│       ├── templates/
+│       └── ci/
+│           └── *-values.yaml
+├── Makefile
+├── ct.yaml
+└── README.md
 ```
 
-<details>
-<summary>Gateway API Route Example</summary>
+---
 
-```yaml
-ingress:
-  routes:
-    app:
-      httpRoute:
-        hostnames:
-          - my-app.example.com
-        rules:
-          - backendRefs:
-              - name: my-app
-                port: 8080
+## Development
+
+### Prerequisites
+
+- Docker (used by `make docs` and `make lint`)
+
+### Generate chart docs
+
+```sh
+make docs
 ```
 
-</details>
+Regenerates [`charts/kitapp/README.md`](charts/kitapp/README.md) from:
 
-<details>
-<summary>Metrics Example</summary>
+- `charts/kitapp/README.md.gotmpl`
+- chart metadata and values docs
+- `charts/kitapp/ci/*.yaml` examples
 
-```yaml
-metrics:
-  enabled: true
-  port: 9090
-  path: /metrics
-  labels:
-    release: kube-prometheus-stack
+### Lint chart
+
+```sh
+make lint
 ```
 
-</details>
+Runs chart-testing (`ct lint`) using `ct.yaml`.
 
-<details>
-<summary>OAuth2 Minimal Example</summary>
+---
 
-```yaml
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
-```
+## Maintainer notes
 
-</details>
-
-## Notes for Maintainers
-
-- Root README is intentionally high-level.
-- Detailed value docs are maintained in `charts/kitapp/README.md`.
-- If values/templates change, regenerate chart docs and keep CI values aligned.
+- Keep this root README repository-focused (setup/workflow only).
+- Put chart behavior, values, and examples in `charts/kitapp/README.md.gotmpl` and `charts/kitapp/ci/*.yaml`.
+- Do not edit generated `charts/kitapp/README.md` manually.

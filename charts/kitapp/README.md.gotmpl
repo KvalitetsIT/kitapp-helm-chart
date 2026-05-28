@@ -22,131 +22,59 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 - `image.repository` must be set
 - `image.tag` must be set
 - `applicationPort.name` must be set
-- one of `applicationPort.port` or `servicePort.port` must be set
+- `applicationPort.port` must be set (defaults to `8080` in `values.yaml`)
+- when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
+- when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
-### Example values
+### Default baseline
 
 ```yaml
-replicaCount: 2
-
-image:
-  repository: ghcr.io/your-org/your-app
-  tag: "1.31.0"
-
-env:
-  - name: APP_ENV
-    value: production
-
-applicationPort:
-  name: http
-  port: 8000
-  protocol: TCP
-
-servicePort:
-  port: 8000
-
-livenessProbe:
-  httpGet:
-    path: /healthz
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 20
-
-readinessProbe:
-  httpGet:
-    path: /healthz
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 10
-
-metrics:
-  enabled: true
-  port: 9090
-  path: /metrics
-  labels:
-    release: kube-prometheus-stack
+{{ .Files.Get "ci/default-values.yaml" | trim }}
 ```
 
+### Advanced runtime, scheduling, and probes
+
+```yaml
+{{ .Files.Get "ci/advanced-values.yaml" | trim }}
+```
+
+### Metrics
+
 When `metrics.enabled=true`, the metrics port name is always `metrics`.
+
+```yaml
+{{ .Files.Get "ci/metrics-values.yaml" | trim }}
+```
 
 ### Volumes and PVCs
 
 Use a single `volumes` list where each item defines both mount options and a `volumeSpec` source.
 
 ```yaml
-volumes:
-  - name: app-config
-    mountPath: /app/config
-    readOnly: true
-    subPath: application.yaml
-    volumeSpec:
-      configMap:
-        name: my-config
+{{ .Files.Get "ci/pvc-values.yaml" | trim }}
 ```
 
 Use `extraVolumes` with the same structure to append environment-specific entries on top of shared base `volumes`.
 
-Mount an external PVC:
-
-```yaml
-volumes:
-  - name: app-data
-    mountPath: /data
-    volumeSpec:
-      persistentVolumeClaim:
-        existingClaim: my-existing-pvc
-```
-
-Create and mount a PVC from the chart:
-
-```yaml
-volumes:
-  - name: app-data
-    mountPath: /data
-    volumeSpec:
-      persistentVolumeClaim:
-        create: true
-        size: 8Gi
-        storageClass: nfs
-        accessMode: ReadWriteMany
-```
-
 ### Additional application ports
 
 Use `additionalApplicationPorts` to expose extra named ports on both the container and Service.
-
-```yaml
-applicationPort:
-  name: http
-  port: 8000
-
-additionalApplicationPorts:
-  - name: grpc
-    port: 9095
-    protocol: TCP
-```
+See [`ci/default-values.yaml`](ci/default-values.yaml) and [`ci/advanced-values.yaml`](ci/advanced-values.yaml).
 
 ### Expose via Gateway API
 
-Enable `gateway` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
+Enable `route` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
 The backend is automatically wired to the chart's own Service. When `oauth2.enabled=true`,
 the backend port defaults to `4180` and `redirect_url` is injected into the oauth2-proxy config.
 
 ```yaml
-gateway:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
+{{ .Files.Get "ci/gateway-values.yaml" | trim }}
 ```
 
-To skip ListenerSet creation and attach directly to an existing Gateway listener:
+To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`.
 
 ```yaml
-gateway:
+route:
   enabled: true
   hostnames:
     - my-app.example.com
@@ -158,59 +86,18 @@ gateway:
 
 ### Authorization policies
 
-Use `gateway.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
+Use `route.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
 
 ```yaml
-gateway:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  authorizationPolicies:
-    block-metrics:
-      action: DENY
-      rules:
-        - to:
-            - operation:
-                paths: [/metrics]
-    ip-allowlist:
-      action: ALLOW
-      rules:
-        - from:
-            - source:
-                remoteIpBlocks: ["10.0.0.0/8"]
-    mesh-only:
-      action: ALLOW
-      rules:
-        - from:
-            - source:
-                principals: ["cluster.local/ns/frontend/sa/frontend"]
+{{ .Files.Get "ci/authpolicy-values.yaml" | trim }}
 ```
 
 ### JWT / RequestAuthentication (Keycloak)
 
-Use `gateway.requestAuthentications` to create Istio `RequestAuthentication` resources
+Use `route.requestAuthentications` to create Istio `RequestAuthentication` resources
 that validate JWTs from an OIDC provider such as Keycloak.
 
-```yaml
-gateway:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  requestAuthentications:
-    keycloak:
-      jwtRules:
-        - issuer: https://keycloak.example.com/realms/myrealm
-          jwksUri: https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs
-          audiences:
-            - my-app
-          forwardOriginalToken: false
-```
+See [`ci/authpolicy-values.yaml`](ci/authpolicy-values.yaml).
 
 ### Security context
 
@@ -241,62 +128,29 @@ Enable `oauth2` to add the injector opt-in label and required annotations automa
   - `checksum/oauth2-config` to roll pods when the generated oauth2-proxy ConfigMap changes
 
 ```yaml
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
+{{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
 ```
 
 See [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
 
-### Advanced injector overrides
+### Advanced OAuth2 settings
 
-Use `oauth2.overrides.annotations` for advanced injector settings without expanding chart API:
+Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations without expanding the chart API surface:
 
 ```yaml
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
-  upstream: http://127.0.0.1:8000
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
-  config:
-    emailDomains:
-      - example.com
-    allowedGroups:
-      - admins
-    skipAuthRoutes:
-      - ^/healthz$
-  overrides:
-    annotations:
-      oauth2-proxy.kitkube.dk/sidecar.requests.cpu: 50m
-      oauth2-proxy.kitkube.dk/sidecar.requests.memory: 64Mi
+{{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
 ```
 
 See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
 
-### Gateway + OAuth2 combined
+### Route + OAuth2 combined
 
-When both `gateway.enabled=true` and `oauth2.enabled=true`, the chart automatically:
+When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
 - Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
 - Injects `redirect_url = https://<first-hostname>/oauth2/callback` into the oauth2-proxy ConfigMap
 
 ```yaml
-gateway:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  issuerUrl: https://keycloak.example.com/realms/myrealm
+{{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
 ```
 
 ### CI examples (from files)
@@ -305,10 +159,26 @@ These snippets are injected directly from `ci/*.yaml` so docs stay in sync with 
 Only unique, high-signal examples are included here to avoid duplication.
 
 <details>
-<summary><code>ci/minimal-values.yaml</code></summary>
+<summary><code>ci/default-values.yaml</code></summary>
 
 ```yaml
-{{ .Files.Get "ci/minimal-values.yaml" | trim }}
+{{ .Files.Get "ci/default-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/metrics-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/metrics-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/gateway-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/gateway-values.yaml" | trim }}
 ```
 </details>
 
@@ -329,10 +199,26 @@ Only unique, high-signal examples are included here to avoid duplication.
 </details>
 
 <details>
+<summary><code>ci/oauth2-minimal-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
+```
+</details>
+
+<details>
 <summary><code>ci/oauth2-advanced-values.yaml</code></summary>
 
 ```yaml
 {{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
+```
+</details>
+
+<details>
+<summary><code>ci/security-values.yaml</code></summary>
+
+```yaml
+{{ .Files.Get "ci/security-values.yaml" | trim }}
 ```
 </details>
 
