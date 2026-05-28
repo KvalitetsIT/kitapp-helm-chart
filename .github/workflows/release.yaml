@@ -56,13 +56,18 @@ jobs:
         with:
           version: "v3.17.0"
 
+      - name: Set Chart Version
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          yq -i ".version = \"${VERSION}\"" charts/kitapp/Chart.yaml
+          yq -i ".appVersion = \"${VERSION}\"" charts/kitapp/Chart.yaml
+
       - name: Update Chart Dependencies
         run: helm dependency update charts/kitapp
 
       - name: Build Chart
-        env:
-          VERSION: ${{ needs.metadata.outputs.version }}
-        run: helm package charts/kitapp --version "${VERSION}" --app-version "${VERSION}"
+        run: helm package charts/kitapp
 
       - name: Configure Git
         run: |
