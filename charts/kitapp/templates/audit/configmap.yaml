@@ -44,6 +44,10 @@ data:
                 abort "missing/invalid: action"
               }
 
+              if exists(.data) && !is_object(.data) {
+                abort "invalid: data must be an object"
+              }
+
 
     transforms:
       add_kubernetes_metadata:

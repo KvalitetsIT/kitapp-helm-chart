@@ -1078,7 +1078,20 @@ Enable `audit` to inject a Vector native sidecar that receives audit events from
 over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
 POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod. The sidecar validates required
 fields (`message`, `actor`, `action`) and enriches each event with Kubernetes
-pod metadata before forwarding.
+pod metadata before forwarding. An optional `data` field (object) can carry arbitrary
+event-specific context.
+
+```json
+{
+  "message": "User updated record",
+  "actor": "user@example.com",
+  "action": "UPDATE",
+  "data": {
+    "resourceId": "42",
+    "resourceType": "PatientRecord"
+  }
+}
+```
 
 ```yaml
 image:
