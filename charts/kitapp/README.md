@@ -1077,7 +1077,7 @@ readinessProbe:
 Enable `audit` to inject a Vector native sidecar that receives audit events from the application
 over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
 POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod. The sidecar validates required
-fields (`action`, `subject`, `resource`, `outcome`) and enriches each event with Kubernetes
+fields (`message`, `actor`, `action`) and enriches each event with Kubernetes
 pod metadata before forwarding.
 
 ```yaml
