@@ -37,6 +37,9 @@ spec:
         checksum/oauth2-config: {{ include (print $.Template.BasePath "/oauth2/configmap.yaml") . | sha256sum }}
         {{- include "kitapp.oauth2.injectorAnnotations" . | nindent 8 }}
         {{- end }}
+        {{- if (.Values.audit).enabled }}
+        checksum/audit-config: {{ include (print $.Template.BasePath "/audit/configmap.yaml") . | sha256sum }}
+        {{- end }}
     spec:
       {{- with .Values.podSecurityContext }}
       securityContext:
