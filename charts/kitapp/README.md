@@ -15,12 +15,6 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 * <https://github.com/KvalitetsIT/kitapp-helm-chart>
 * <https://github.com/KvalitetsIT/kitapp-helm-chart/tree/main/charts/kitapp>
 
-## Requirements
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/ | templates | 2.1.1 |
-
 ## Values
 
 ### Naming

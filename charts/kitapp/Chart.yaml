@@ -14,7 +14,3 @@ maintainers:
   - name: KvalitetsIT
     email: kithosting@kvalitetsit.dk
     url: https://github.com/KvalitetsIT/helm-repo
-dependencies:
-  - name: templates
-    version: 2.1.1
-    repository: https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/
