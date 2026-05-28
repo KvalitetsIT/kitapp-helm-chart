@@ -246,23 +246,19 @@ applicationPort:
   name: http
   port: 8080
 
-command:
-  - /bin/app
-
-args:
-  - --config=/etc/app/config.yaml
-
 envFrom:
   - secretRef:
       name: my-app-secrets
+      optional: true
 
 extraEnvFrom:
   - configMapRef:
       name: my-app-config
+      optional: true
 
 startupProbe:
   httpGet:
-    path: /healthz
+    path: /
     port: http
   failureThreshold: 30
   periodSeconds: 10
@@ -275,9 +271,10 @@ tolerations:
 
 affinity:
   nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 50
+        preference:
+          matchExpressions:
             - key: node-role
               operator: In
               values:
@@ -334,6 +331,7 @@ volumes:
     volumeSpec:
       configMap:
         name: my-app-config
+        optional: true
 
   - name: tmp
     mountPath: /tmp
