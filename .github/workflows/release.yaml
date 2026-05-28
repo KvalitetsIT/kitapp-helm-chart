@@ -75,18 +75,16 @@ jobs:
           repository: KvalitetsIT/helm-repo
           token: ${{ secrets.KIT_GITHUB_ACCESS }}
           path: helm-repo
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Publish chart
         env:
           TAG: ${{ needs.metadata.outputs.version }}
-          KIT_GITHUB_ACCESS: ${{ secrets.KIT_GITHUB_ACCESS }}
         run: |
           set -euo pipefail
           mkdir -p helm-repo/kitapp
           cp kitapp-*.tgz helm-repo/kitapp/
           cd helm-repo
-          git remote set-url origin "https://${KIT_GITHUB_ACCESS}:x-oauth-basic@github.com/KvalitetsIT/helm-repo"
           helm repo index . --url https://raw.githubusercontent.com/KvalitetsIT/helm-repo/master/
           git add -A
           git commit -m "chore: release kitapp chart v${TAG}" || exit 0
