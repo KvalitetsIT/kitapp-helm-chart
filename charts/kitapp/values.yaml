@@ -58,10 +58,9 @@ applicationPort:
   # @section -- Ports
   name: http
   # -- Primary application container port.
-  # If empty, falls back to servicePort.
-  # @default -- null
+  # @default -- 8080
   # @section -- Ports
-  port: null
+  port: 8080
   # -- Primary application protocol.
   # @default -- TCP
   # @section -- Ports
@@ -81,7 +80,7 @@ servicePort:
   # @default -- null
   # @section -- Ports
   name: null
-  # -- Primary Service port number. If empty, falls back to applicationPort.port.
+  # -- Primary Service port number. If empty, defaults to applicationPort.port.
   # @default -- null
   # @section -- Ports
   port: null

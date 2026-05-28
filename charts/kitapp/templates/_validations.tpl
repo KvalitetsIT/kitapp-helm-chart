@@ -11,8 +11,8 @@
   {{- if not .Values.applicationPort.name -}}
     {{- fail "values.applicationPort.name is required" -}}
   {{- end -}}
-  {{- if and (empty .Values.applicationPort.port) (empty .Values.servicePort.port) -}}
-    {{- fail "one of values.applicationPort.port or values.servicePort.port must be set" -}}
+  {{- if empty .Values.applicationPort.port -}}
+    {{- fail "values.applicationPort.port is required" -}}
   {{- end -}}
 {{- end -}}
 

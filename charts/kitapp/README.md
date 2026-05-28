@@ -55,12 +55,12 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | applicationPort | object | see values.yaml | Primary application port exposed by the container and Service. |
 | applicationPort.name | string | http | Primary application port name. |
-| applicationPort.port | string | null | Primary application container port. If empty, falls back to servicePort. |
+| applicationPort.port | int | 8080 | Primary application container port. |
 | applicationPort.protocol | string | TCP | Primary application protocol. |
 | additionalApplicationPorts | list | [] | Additional named application ports exposed on both container and Service. Each item supports name, port, and optional protocol. |
 | servicePort | object | see values.yaml | Primary Service port exposed by the Service. |
 | servicePort.name | string | null | Primary Service port name. If empty, falls back to applicationPort.name. |
-| servicePort.port | string | null | Primary Service port number. If empty, falls back to applicationPort.port. |
+| servicePort.port | string | null | Primary Service port number. If empty, defaults to applicationPort.port. |
 | servicePort.protocol | string | null | Primary Service protocol. If empty, falls back to applicationPort.protocol. |
 | additionalServicePorts | list | [] | Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`. If `targetPort` is omitted, it defaults to the same value as `port`. |
 

@@ -36,11 +36,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "kitapp.resolvedAppPort" -}}
-{{- if not (empty .Values.applicationPort.port) -}}
 {{- .Values.applicationPort.port | int -}}
-{{- else -}}
-{{- .Values.servicePort.port | int -}}
-{{- end -}}
 {{- end -}}
 
 {{- define "kitapp.allVolumes" -}}
