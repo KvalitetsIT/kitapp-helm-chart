@@ -10,7 +10,7 @@ data:
   oauth2-proxy.cfg: |
     # Server
     http_address = {{ printf "0.0.0.0:%d" (.Values.oauth2.proxyPort | int) | quote }}
-    upstreams = {{ list (.Values.oauth2.upstream | default (printf "http://127.0.0.1:%s" (include "kitapp.resolvedAppPort" .))) | toJson }}
+    upstreams = {{ list (.Values.oauth2.upstream | default (printf "http://127.0.0.1:%d" (.Values.applicationPort.port | int))) | toJson }}
     reverse_proxy = true
 
     # Provider

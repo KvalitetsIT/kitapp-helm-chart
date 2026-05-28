@@ -8,6 +8,6 @@ Priority: gateway.port → 4180 (when oauth2 enabled) → applicationPort.port /
 {{- else if .Values.oauth2.enabled -}}
 {{- .Values.oauth2.proxyPort | int -}}
 {{- else -}}
-{{- include "kitapp.resolvedAppPort" . -}}
+{{- .Values.applicationPort.port | int -}}
 {{- end -}}
 {{- end -}}

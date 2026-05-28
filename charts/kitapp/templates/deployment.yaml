@@ -1,10 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
-{{- $resolvedAppPort := include "kitapp.resolvedAppPort" . | int }}
-{{- $metricsPort := $resolvedAppPort }}
-{{- if not (empty .Values.metrics.port) }}
-{{- $metricsPort = (.Values.metrics.port | int) }}
-{{- end }}
+{{- $resolvedAppPort := .Values.applicationPort.port | int }}
+{{- $metricsPort := include "kitapp.metricsPort" . | int }}
 {{- $allVolumes := include "kitapp.allVolumes" . | fromYamlArray }}
 metadata:
   name: {{ include "kitapp.fullname" . }}
