@@ -182,6 +182,10 @@ oauth2:
   # @default -- false
   # @section -- OAuth2
   enabled: false
+  # -- Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port.
+  # @default -- 4180
+  # @section -- OAuth2
+  proxyPort: 4180
   # -- Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`.
   # @default -- ""
   # @section -- OAuth2

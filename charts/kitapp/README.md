@@ -98,6 +98,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
 | oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
+| oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
 | oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
 | oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg). |

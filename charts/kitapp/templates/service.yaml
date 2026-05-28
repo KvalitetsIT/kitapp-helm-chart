@@ -52,8 +52,8 @@ spec:
     {{- end }}
     {{- if .Values.oauth2.enabled }}
     - name: oauth2-proxy
-      port: 4180
-      targetPort: 4180
+      port: {{ .Values.oauth2.proxyPort }}
+      targetPort: {{ .Values.oauth2.proxyPort }}
       protocol: TCP
     {{- end }}
     {{- if .Values.metrics.enabled }}
