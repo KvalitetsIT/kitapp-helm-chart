@@ -198,7 +198,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | audit.resources.requests.memory | string | 64Mi | Memory request for the Vector audit sidecar. |
 | audit.resources.limits.memory | string | 128Mi | Memory limit for the Vector audit sidecar. |
 | audit.config.httpPort | int | 9001 | Port the Vector HTTP source listens on inside the sidecar. The application sends audit events to this port via HTTP POST. |
-| audit.config.aggregatorAddress | string | loki-audit-vector.audit.svc.cluster.local:6000 | Address of the Vector Aggregator to forward audit logs to. Override in env-repo values to match your loki-audit release name and namespace. |
+| audit.config.aggregatorAddress | string | vector-aggregator.logging.svc.cluster.local:6000 | Address of the Vector Aggregator to forward audit logs to. Override in env-repo values to match your loki-audit release name and namespace. |
 | audit.config.sinkVersion | string | "2" | Vector sink protocol version. |
 
 ## Usage

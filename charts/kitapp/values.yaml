@@ -510,7 +510,7 @@ audit:
 
     # -- Address of the Vector Aggregator to forward audit logs to. Override in env-repo
     # values to match your loki-audit release name and namespace.
-    # @default -- loki-audit-vector.audit.svc.cluster.local:6000
+    # @default -- vector-aggregator.logging.svc.cluster.local:6000
     # @section -- Audit
     aggregatorAddress: vector-aggregator.logging.svc.cluster.local:6000
 
