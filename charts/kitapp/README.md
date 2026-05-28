@@ -163,17 +163,17 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | route | object | see values.yaml | Gateway API route settings. |
 | route.enabled | bool | false | Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies). |
 | route.type | string | HTTPRoute | Route type. Supports HTTPRoute or TLSRoute. |
-| route.exposeMetrics | bool | true | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all. Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 |
+| route.exposeMetrics | bool | true | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all. Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 HTTPRoute only. |
 | route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
 | route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
 | route.gateway | object | see values.yaml | Gateway attachment settings. |
 | route.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
 | route.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
-| route.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the HTTPRoute directly to this Gateway listener section. |
-| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. |
-| route.rules | list | [] | Explicit HTTPRoute rules. If empty, a catch-all rule to the app Service is generated. |
+| route.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the route directly to this Gateway listener section. |
+| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only. |
+| route.rules | list | [] | Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only. |
 | route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
-| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
+| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
 
 ### Audit
 

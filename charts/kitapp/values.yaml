@@ -410,6 +410,7 @@ route:
   # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
   # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.
   # Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235
+  # HTTPRoute only.
   # @default -- true
   # @section -- Route
   exposeMetrics: true
@@ -438,17 +439,17 @@ route:
     # @default -- istio-ingress
     # @section -- Route
     namespace: istio-ingress
-    # -- If set, skip ListenerSet creation and attach the HTTPRoute directly to this Gateway listener section.
+    # -- If set, skip ListenerSet creation and attach the route directly to this Gateway listener section.
     # @default -- ""
     # @section -- Route
     sectionName: ""
 
-  # -- Cert-manager ClusterIssuer for auto-TLS on the ListenerSet.
+  # -- Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only.
   # @default -- letsencrypt-prod-istio
   # @section -- Route
   clusterIssuer: letsencrypt-prod-istio
 
-  # -- Explicit HTTPRoute rules. If empty, a catch-all rule to the app Service is generated.
+  # -- Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only.
   # @default -- []
   # @section -- Route
   rules: []
@@ -459,7 +460,7 @@ route:
   # @section -- Route
   authorizationPolicies: {}
 
-  # -- Istio RequestAuthentication resources keyed by name.
+  # -- Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic.
   # Use to require and validate JWTs from an OIDC provider (e.g. Keycloak).
   # @default -- {}
   # @section -- Route
