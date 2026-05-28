@@ -234,22 +234,34 @@ Only unique, high-signal examples are included here to avoid duplication.
 
 Enable `audit` to inject a Vector native sidecar that receives audit events from the application
 over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
-POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod. The sidecar validates required
-fields (`message`, `actor`, `action`) and enriches each event with Kubernetes
-pod metadata before forwarding. An optional `data` field (object) can carry arbitrary
-event-specific context.
+POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod.
+
+#### Event schema
+
+| Field     | Type   | Required | Description                                              |
+|-----------|--------|----------|----------------------------------------------------------|
+| `message` | string | yes      | Human-readable description of what happened.             |
+| `actor`   | string | yes      | Identity of the user or system that performed the action.|
+| `action`  | string | yes      | Machine-readable action identifier (e.g. `CREATE`).      |
+| `data`    | object | no       | Arbitrary structured context for the event.              |
 
 ```json
 {
-  "message": "User updated record",
-  "actor": "user@example.com",
+  "message": "User updated patient record",
+  "actor": "doctor@hospital.dk",
   "action": "UPDATE",
   "data": {
-    "resourceId": "42",
-    "resourceType": "PatientRecord"
+    "resourceId": "patient-42",
+    "resourceType": "PatientRecord",
+    "changes": {
+      "diagnosis": "updated"
+    }
   }
 }
 ```
+
+The sidecar rejects events where required fields are missing, blank, or where `data` is not an object.
+Events are enriched with Kubernetes pod metadata (`pod_name`, `pod_namespace`, `node_name`, `pod_ip`) before forwarding.
 
 ```yaml
 {{ .Files.Get "ci/audit-values.yaml" | trim }}
