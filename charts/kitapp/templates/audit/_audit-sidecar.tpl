@@ -33,7 +33,7 @@
     readOnlyRootFilesystem: true
   {{- with (.Values.audit).resources }}
   resources:
-    {{- toYaml . | nindent 2 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
   volumeMounts:
     - name: vector-audit-config
