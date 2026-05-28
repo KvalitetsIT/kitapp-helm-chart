@@ -357,16 +357,14 @@ volumes:
     mountPath: /data
     volumeSpec:
       persistentVolumeClaim:
-        existingClaim: my-existing-pvc
+        create: true
+        accessMode: ReadWriteOnce
+        size: 1Gi
   - name: app-config-file
     mountPath: /tmp/application.yaml
     subPath: application.yaml
     volumeSpec:
-      configMap:
-        name: app-config
-        items:
-          - key: application.yaml
-            path: application.yaml
+      emptyDir: {}
   - name: app-cache
     mountPath: /cache
     volumeSpec:
@@ -378,24 +376,6 @@ volumes:
         create: true
         accessMode: ReadWriteOnce
         size: 1Gi
-
-templates:
-  resources:
-    my-existing-pvc:
-      apiVersion: v1
-      kind: PersistentVolumeClaim
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
-    app-config:
-      apiVersion: v1
-      kind: ConfigMap
-      data:
-        application.yaml: |
-          example: true
 ```
 
 Use `extraVolumes` with the same structure to append environment-specific entries on top of shared base `volumes`.
@@ -776,16 +756,14 @@ volumes:
     mountPath: /data
     volumeSpec:
       persistentVolumeClaim:
-        existingClaim: my-existing-pvc
+        create: true
+        accessMode: ReadWriteOnce
+        size: 1Gi
   - name: app-config-file
     mountPath: /tmp/application.yaml
     subPath: application.yaml
     volumeSpec:
-      configMap:
-        name: app-config
-        items:
-          - key: application.yaml
-            path: application.yaml
+      emptyDir: {}
   - name: app-cache
     mountPath: /cache
     volumeSpec:
@@ -797,24 +775,6 @@ volumes:
         create: true
         accessMode: ReadWriteOnce
         size: 1Gi
-
-templates:
-  resources:
-    my-existing-pvc:
-      apiVersion: v1
-      kind: PersistentVolumeClaim
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
-    app-config:
-      apiVersion: v1
-      kind: ConfigMap
-      data:
-        application.yaml: |
-          example: true
 ```
 </details>
 
