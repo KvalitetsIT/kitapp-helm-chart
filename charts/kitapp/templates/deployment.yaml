@@ -13,7 +13,7 @@ metadata:
     {{- include "kitapp.labels" . | nindent 4 }}
 spec:
   strategy:
-    type: {{ .Values.strategy.type }}
+    {{- toYaml .Values.strategy | nindent 4 }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   replicas: {{ .Values.replicas }}
   selector:
