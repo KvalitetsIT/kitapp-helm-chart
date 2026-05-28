@@ -403,6 +403,12 @@ route:
   # @section -- Route
   enabled: false
 
+  # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
+  # When false, a rule returning 500 is prepended for PathPrefix /metrics before the catch-all.
+  # @default -- true
+  # @section -- Route
+  exposeMetrics: true
+
   # -- Public hostname(s) for the HTTPRoute and ListenerSet.
   # The first hostname is also used to auto-populate oauth2-proxy redirect_url.
   # @default -- []

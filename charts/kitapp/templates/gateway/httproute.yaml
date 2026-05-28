@@ -24,6 +24,13 @@ spec:
     - {{ . | quote }}
     {{- end }}
   rules:
+    {{- if not .Values.route.exposeMetrics }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /metrics
+      backendRefs: []
+    {{- end }}
     {{- with .Values.route.rules }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
