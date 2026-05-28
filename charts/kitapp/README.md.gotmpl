@@ -19,20 +19,28 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 ### Required values
 
-- `image.repository` must be set
-- `image.tag` must be set
-- `applicationPort.name` must be set
-- `applicationPort.port` must be set (defaults to `8080` in `values.yaml`)
+- `image.repository` and `image.tag` must be set
+- `applicationPort.port` must be set (defaults to `8080`)
 - when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
-### Default baseline
+### Minimal
+
+```yaml
+{{ .Files.Get "ci/minimal-values.yaml" | trim }}
+```
+
+### Runtime and scheduling
+
+Covers `additionalApplicationPorts`, `env`/`extraEnvs`, `resources`, liveness/readiness probes, and `nodeSelector`.
 
 ```yaml
 {{ .Files.Get "ci/default-values.yaml" | trim }}
 ```
 
-### Advanced runtime, scheduling, and probes
+### Advanced runtime
+
+Covers `command`/`args`, `envFrom`/`extraEnvFrom`, `startupProbe`, `tolerations`, and `affinity`.
 
 ```yaml
 {{ .Files.Get "ci/advanced-values.yaml" | trim }}
@@ -48,187 +56,95 @@ When `metrics.enabled=true`, the metrics port name is always `metrics`.
 
 ### Volumes and PVCs
 
-Use a single `volumes` list where each item defines both mount options and a `volumeSpec` source.
+Use `volumes` to define both the container mount and the pod volume source in a single entry.
+Use `extraVolumes` to append entries on top of a shared base without replacing it.
 
 ```yaml
-{{ .Files.Get "ci/pvc-values.yaml" | trim }}
+{{ .Files.Get "ci/persistence-values.yaml" | trim }}
 ```
 
-Use `extraVolumes` with the same structure to append environment-specific entries on top of shared base `volumes`.
+To mount an externally managed PVC, use `existingClaim` instead of `create`:
 
-### Additional application ports
-
-Use `additionalApplicationPorts` to expose extra named ports on both the container and Service.
-See [`ci/default-values.yaml`](ci/default-values.yaml) and [`ci/advanced-values.yaml`](ci/advanced-values.yaml).
+```yaml
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        existingClaim: my-existing-pvc
+```
 
 ### Expose via Gateway API
 
 Enable `route` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
-The backend is automatically wired to the chart's own Service. When `oauth2.enabled=true`,
-the backend port defaults to `4180` and `redirect_url` is injected into the oauth2-proxy config.
+The backend is automatically wired to the chart's own Service.
 
 ```yaml
 {{ .Files.Get "ci/gateway-values.yaml" | trim }}
 ```
 
-To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`.
+To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`:
 
 ```yaml
 route:
-  enabled: true
-  hostnames:
-    - my-app.example.com
   gateway:
-    name: ingressgateway
-    namespace: istio-ingress
     sectionName: https-my-app
 ```
 
-### Authorization policies
+### TLSRoute
+
+For passthrough TLS (e.g. gRPC-TLS or raw TCP), use `route.type: TLSRoute`.
+No ListenerSet or cert-manager is involved.
+
+```yaml
+{{ .Files.Get "ci/tlsroute-values.yaml" | trim }}
+```
+
+### Authorization policies and JWT validation
 
 Use `route.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
+Use `route.requestAuthentications` to create Istio `RequestAuthentication` resources that validate JWTs
+from an OIDC provider such as Keycloak.
 
 ```yaml
 {{ .Files.Get "ci/authpolicy-values.yaml" | trim }}
 ```
 
-### JWT / RequestAuthentication (Keycloak)
-
-Use `route.requestAuthentications` to create Istio `RequestAuthentication` resources
-that validate JWTs from an OIDC provider such as Keycloak.
-
-See [`ci/authpolicy-values.yaml`](ci/authpolicy-values.yaml).
-
 ### Security context
 
-Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `containerSecurityContext` for container-level hardening:
+Override `podSecurityContext` and `containerSecurityContext` to harden the pod.
+Enable AppArmor only on clusters where it is available on the nodes.
 
 ```yaml
 {{ .Files.Get "ci/security-values.yaml" | trim }}
-```
-
-Enable AppArmor only on clusters where AppArmor is available on the nodes:
-
-```yaml
-containerSecurityContext:
-  appArmorProfile:
-    type: RuntimeDefault
 ```
 
 ### OAuth2 proxy injector integration
 
 Enable `oauth2` to add the injector opt-in label and required annotations automatically.
 
-### OAuth2 required metadata (auto-injected)
+Auto-injected metadata:
 
 - label: `oauth2-proxy.kitkube.dk/inject: "true"`
-- annotations:
-  - `oauth2-proxy.kitkube.dk/configmap`
-  - `oauth2-proxy.kitkube.dk/secret`
-  - `checksum/oauth2-config` to roll pods when the generated oauth2-proxy ConfigMap changes
+- annotations: `oauth2-proxy.kitkube.dk/configmap`, `oauth2-proxy.kitkube.dk/secret`, `checksum/oauth2-config`
 
 ```yaml
 {{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
 ```
 
-See [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
-
-### Advanced OAuth2 settings
-
-Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations without expanding the chart API surface:
+Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 
 ```yaml
 {{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
 ```
 
-See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
-
-### Route + OAuth2 combined
+### Route + OAuth2
 
 When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
 - Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
 - Injects `redirect_url = https://<first-hostname>/oauth2/callback` into the oauth2-proxy ConfigMap
 
-```yaml
-{{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
-```
-
-### CI examples (from files)
-
-These snippets are injected directly from `ci/*.yaml` so docs stay in sync with tested examples.
-Only unique, high-signal examples are included here to avoid duplication.
-
-<details>
-<summary><code>ci/default-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/default-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/metrics-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/metrics-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/gateway-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/gateway-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/pvc-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/pvc-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/authpolicy-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/authpolicy-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/oauth2-minimal-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/oauth2-minimal-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/oauth2-advanced-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/security-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/security-values.yaml" | trim }}
-```
-</details>
-
-<details>
-<summary><code>ci/advanced-values.yaml</code></summary>
-
-```yaml
-{{ .Files.Get "ci/advanced-values.yaml" | trim }}
-```
-</details>
+Both are shown combined in [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
 
 ### Audit
 

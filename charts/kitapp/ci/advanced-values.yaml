@@ -1,0 +1,44 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+command:
+  - /bin/app
+
+args:
+  - --config=/etc/app/config.yaml
+
+envFrom:
+  - secretRef:
+      name: my-app-secrets
+
+extraEnvFrom:
+  - configMapRef:
+      name: my-app-config
+
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  failureThreshold: 30
+  periodSeconds: 10
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: app
+    effect: NoSchedule
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role
+              operator: In
+              values:
+                - application

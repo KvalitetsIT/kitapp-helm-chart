@@ -174,14 +174,26 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 ### Required values
 
-- `image.repository` must be set
-- `image.tag` must be set
-- `applicationPort.name` must be set
-- `applicationPort.port` must be set (defaults to `8080` in `values.yaml`)
+- `image.repository` and `image.tag` must be set
+- `applicationPort.port` must be set (defaults to `8080`)
 - when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
-### Default baseline
+### Minimal
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+```
+
+### Runtime and scheduling
+
+Covers `additionalApplicationPorts`, `env`/`extraEnvs`, `resources`, liveness/readiness probes, and `nodeSelector`.
 
 ```yaml
 image:
@@ -193,7 +205,7 @@ applicationPort:
   port: 8080
 
 additionalApplicationPorts:
-  - name: grpc
+  - name: actuator
     port: 9090
     protocol: TCP
 
@@ -229,18 +241,57 @@ readinessProbe:
 
 nodeSelector:
   kubernetes.io/os: linux
+```
+
+### Advanced runtime
+
+Covers `command`/`args`, `envFrom`/`extraEnvFrom`, `startupProbe`, `tolerations`, and `affinity`.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+command:
+  - /bin/app
+
+args:
+  - --config=/etc/app/config.yaml
+
+envFrom:
+  - secretRef:
+      name: my-app-secrets
+
+extraEnvFrom:
+  - configMapRef:
+      name: my-app-config
+
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  failureThreshold: 30
+  periodSeconds: 10
 
 tolerations:
   - key: dedicated
     operator: Equal
     value: app
     effect: NoSchedule
-```
 
-### Advanced runtime, scheduling, and probes
-
-```yaml
-
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role
+              operator: In
+              values:
+                - application
 ```
 
 ### Metrics
@@ -265,24 +316,62 @@ metrics:
 
 ### Volumes and PVCs
 
-Use a single `volumes` list where each item defines both mount options and a `volumeSpec` source.
+Use `volumes` to define both the container mount and the pod volume source in a single entry.
+Use `extraVolumes` to append entries on top of a shared base without replacing it.
 
 ```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
+applicationPort:
+  name: http
+  port: 8080
+
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        create: true
+        accessMode: ReadWriteOnce
+        size: 1Gi
+
+  - name: app-config
+    mountPath: /etc/app/config.yaml
+    subPath: config.yaml
+    readOnly: true
+    volumeSpec:
+      configMap:
+        name: my-app-config
+
+  - name: tmp
+    mountPath: /tmp
+    volumeSpec:
+      emptyDir: {}
+
+extraVolumes:
+  - name: shared-cache
+    mountPath: /cache
+    volumeSpec:
+      emptyDir: {}
 ```
 
-Use `extraVolumes` with the same structure to append environment-specific entries on top of shared base `volumes`.
+To mount an externally managed PVC, use `existingClaim` instead of `create`:
 
-### Additional application ports
-
-Use `additionalApplicationPorts` to expose extra named ports on both the container and Service.
-See [`ci/default-values.yaml`](ci/default-values.yaml) and [`ci/advanced-values.yaml`](ci/advanced-values.yaml).
+```yaml
+volumes:
+  - name: app-data
+    mountPath: /data
+    volumeSpec:
+      persistentVolumeClaim:
+        existingClaim: my-existing-pvc
+```
 
 ### Expose via Gateway API
 
 Enable `route` to create an HTTPRoute and ListenerSet (with auto-TLS via cert-manager).
-The backend is automatically wired to the chart's own Service. When `oauth2.enabled=true`,
-the backend port defaults to `4180` and `redirect_url` is injected into the oauth2-proxy config.
+The backend is automatically wired to the chart's own Service.
 
 ```yaml
 image:
@@ -303,22 +392,43 @@ route:
   clusterIssuer: letsencrypt-prod-istio
 ```
 
-To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`.
+To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`:
 
 ```yaml
 route:
-  enabled: true
-  hostnames:
-    - my-app.example.com
   gateway:
-    name: ingressgateway
-    namespace: istio-ingress
     sectionName: https-my-app
 ```
 
-### Authorization policies
+### TLSRoute
+
+For passthrough TLS (e.g. gRPC-TLS or raw TCP), use `route.type: TLSRoute`.
+No ListenerSet or cert-manager is involved.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: https
+  port: 8443
+
+route:
+  enabled: true
+  type: TLSRoute
+  hostnames:
+    - app.local
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+```
+
+### Authorization policies and JWT validation
 
 Use `route.authorizationPolicies` to create Istio `AuthorizationPolicy` resources targeting the app Service.
+Use `route.requestAuthentications` to create Istio `RequestAuthentication` resources that validate JWTs
+from an OIDC provider such as Keycloak.
 
 ```yaml
 image:
@@ -369,25 +479,40 @@ route:
           forwardOriginalToken: false
 ```
 
-### JWT / RequestAuthentication (Keycloak)
-
-Use `route.requestAuthentications` to create Istio `RequestAuthentication` resources
-that validate JWTs from an OIDC provider such as Keycloak.
-
-See [`ci/authpolicy-values.yaml`](ci/authpolicy-values.yaml).
-
 ### Security context
 
-Use `podSecurityContext` for pod-level settings (fsGroup, runAsUser) and `containerSecurityContext` for container-level hardening:
+Override `podSecurityContext` and `containerSecurityContext` to harden the pod.
+Enable AppArmor only on clusters where it is available on the nodes.
 
 ```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
 
-```
+applicationPort:
+  name: http
+  port: 8080
 
-Enable AppArmor only on clusters where AppArmor is available on the nodes:
+serviceAccount:
+  create: true
+  annotations:
+    this-is-a-key: this-is-a-value
 
-```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+
 containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
   appArmorProfile:
     type: RuntimeDefault
 ```
@@ -396,13 +521,10 @@ containerSecurityContext:
 
 Enable `oauth2` to add the injector opt-in label and required annotations automatically.
 
-### OAuth2 required metadata (auto-injected)
+Auto-injected metadata:
 
 - label: `oauth2-proxy.kitkube.dk/inject: "true"`
-- annotations:
-  - `oauth2-proxy.kitkube.dk/configmap`
-  - `oauth2-proxy.kitkube.dk/secret`
-  - `checksum/oauth2-config` to roll pods when the generated oauth2-proxy ConfigMap changes
+- annotations: `oauth2-proxy.kitkube.dk/configmap`, `oauth2-proxy.kitkube.dk/secret`, `checksum/oauth2-config`
 
 ```yaml
 image:
@@ -432,11 +554,7 @@ route:
   clusterIssuer: letsencrypt-prod-istio
 ```
 
-See [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
-
-### Advanced OAuth2 settings
-
-Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations without expanding the chart API surface:
+Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 
 ```yaml
 image:
@@ -484,306 +602,13 @@ route:
   clusterIssuer: letsencrypt-prod-istio
 ```
 
-See [`ci/oauth2-advanced-values.yaml`](ci/oauth2-advanced-values.yaml).
-
-### Route + OAuth2 combined
+### Route + OAuth2
 
 When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
 - Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
 - Injects `redirect_url = https://<first-hostname>/oauth2/callback` into the oauth2-proxy ConfigMap
 
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  name: http
-  port: 8080
-
-servicePort:
-  port: 8080
-
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
-
-route:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
-```
-
-### CI examples (from files)
-
-These snippets are injected directly from `ci/*.yaml` so docs stay in sync with tested examples.
-Only unique, high-signal examples are included here to avoid duplication.
-
-<details>
-<summary><code>ci/default-values.yaml</code></summary>
-
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  name: http
-  port: 8080
-
-additionalApplicationPorts:
-  - name: grpc
-    port: 9090
-    protocol: TCP
-
-env:
-  - name: EXAMPLE
-    value: hello
-
-extraEnvs:
-  - name: LOG_LEVEL
-    value: debug
-
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 300m
-    memory: 256Mi
-
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 20
-
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 5
-  periodSeconds: 10
-
-nodeSelector:
-  kubernetes.io/os: linux
-
-tolerations:
-  - key: dedicated
-    operator: Equal
-    value: app
-    effect: NoSchedule
-```
-</details>
-
-<details>
-<summary><code>ci/metrics-values.yaml</code></summary>
-
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  port: 8080
-
-metrics:
-  enabled: true
-  port: 9090
-  path: /metrics
-  labels:
-    release: kube-prometheus-stack
-```
-</details>
-
-<details>
-<summary><code>ci/gateway-values.yaml</code></summary>
-
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  name: http
-  port: 8080
-
-route:
-  enabled: true
-  hostnames:
-    - app.local
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
-```
-</details>
-
-<details>
-<summary><code>ci/pvc-values.yaml</code></summary>
-
-```yaml
-
-```
-</details>
-
-<details>
-<summary><code>ci/authpolicy-values.yaml</code></summary>
-
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  name: http
-  port: 8080
-
-route:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
-  authorizationPolicies:
-    block-metrics:
-      action: DENY
-      rules:
-        - to:
-            - operation:
-                paths:
-                  - /metrics
-    ip-allowlist:
-      action: ALLOW
-      rules:
-        - from:
-            - source:
-                remoteIpBlocks:
-                  - "10.0.0.0/8"
-    mesh-only:
-      action: ALLOW
-      rules:
-        - from:
-            - source:
-                principals:
-                  - "cluster.local/ns/frontend/sa/frontend"
-  requestAuthentications:
-    keycloak:
-      jwtRules:
-        - issuer: https://keycloak.example.com/realms/myrealm
-          jwksUri: https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs
-          audiences:
-            - my-app
-          forwardOriginalToken: false
-```
-</details>
-
-<details>
-<summary><code>ci/oauth2-minimal-values.yaml</code></summary>
-
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  name: http
-  port: 8080
-
-servicePort:
-  port: 8080
-
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
-
-route:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
-```
-</details>
-
-<details>
-<summary><code>ci/oauth2-advanced-values.yaml</code></summary>
-
-```yaml
-image:
-  repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
-
-applicationPort:
-  name: http
-  port: 8080
-
-servicePort:
-  port: 8080
-
-oauth2:
-  enabled: true
-  secretRef: my-app-oauth2-proxy-envs
-  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
-  config:
-    emailDomains:
-      - example.com
-    allowedGroups:
-      - admins
-    skipAuthRoutes:
-      - ^/healthz$
-  sidecar:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-  providerCA:
-    configMap: oidc-provider-ca
-    key: ca.crt
-
-route:
-  enabled: true
-  hostnames:
-    - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
-```
-</details>
-
-<details>
-<summary><code>ci/security-values.yaml</code></summary>
-
-```yaml
-
-```
-</details>
-
-<details>
-<summary><code>ci/advanced-values.yaml</code></summary>
-
-```yaml
-
-```
-</details>
+Both are shown combined in [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-values.yaml).
 
 ### Audit
 

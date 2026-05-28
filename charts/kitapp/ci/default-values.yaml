@@ -7,7 +7,7 @@ applicationPort:
   port: 8080
 
 additionalApplicationPorts:
-  - name: grpc
+  - name: actuator
     port: 9090
     protocol: TCP
 
@@ -43,9 +43,3 @@ readinessProbe:
 
 nodeSelector:
   kubernetes.io/os: linux
-
-tolerations:
-  - key: dedicated
-    operator: Equal
-    value: app
-    effect: NoSchedule

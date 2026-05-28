@@ -3,6 +3,7 @@ image:
   tag: "v2.15.0"
 
 applicationPort:
+  name: http
   port: 8080
 
 volumes:
@@ -13,19 +14,22 @@ volumes:
         create: true
         accessMode: ReadWriteOnce
         size: 1Gi
-  - name: app-config-file
-    mountPath: /tmp/application.yaml
-    subPath: application.yaml
+
+  - name: app-config
+    mountPath: /etc/app/config.yaml
+    subPath: config.yaml
+    readOnly: true
+    volumeSpec:
+      configMap:
+        name: my-app-config
+
+  - name: tmp
+    mountPath: /tmp
     volumeSpec:
       emptyDir: {}
-  - name: app-cache
+
+extraVolumes:
+  - name: shared-cache
     mountPath: /cache
     volumeSpec:
       emptyDir: {}
-  - name: app-data-created
-    mountPath: /created
-    volumeSpec:
-      persistentVolumeClaim:
-        create: true
-        accessMode: ReadWriteOnce
-        size: 1Gi
