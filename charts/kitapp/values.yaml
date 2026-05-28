@@ -470,6 +470,12 @@ audit:
   # @default -- false
   # @section -- Audit
   enabled: false
+  # -- Tenant name stamped on every audit event. Required when audit.enabled=true.
+  # Set via a platform-controlled mechanism (e.g. ArgoCD helm parameter) rather than
+  # letting the application team set it freely, to prevent tenant spoofing.
+  # @default -- ""
+  # @section -- Audit
+  tenantName: ""
 
   image:
     # -- Vector container image repository.

@@ -7,3 +7,4 @@
 {{- include "kitapp.validate.volumes" . -}}
 {{- include "kitapp.validate.oauth2" . -}}
 {{- include "kitapp.validate.gateway" . -}}
+{{- include "kitapp.validate.audit" . -}}

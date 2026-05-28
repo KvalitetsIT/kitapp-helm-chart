@@ -191,6 +191,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | audit | object | see values.yaml | Audit log sidecar settings. When enabled, injects a Vector sidecar container into the pod that ships audit logs to a Vector Aggregator (e.g. the `loki-audit` chart). A ConfigMap with the Vector pipeline config is also created and mounted into the sidecar at `/etc/vector/vector.yaml`. |
 | audit.enabled | bool | false | Enable the Vector audit log sidecar (ConfigMap + sidecar container). |
+| audit.tenantName | string | "" | Tenant name stamped on every audit event. Required when audit.enabled=true. Set via a platform-controlled mechanism (e.g. ArgoCD helm parameter) rather than letting the application team set it freely, to prevent tenant spoofing. |
 | audit.image.repository | string | timberio/vector | Vector container image repository. |
 | audit.image.tag | string | 0.55.0-distroless-libc | Vector container image tag. |
 | audit.image.pullPolicy | string | IfNotPresent | Image pull policy. |
@@ -1090,6 +1091,7 @@ applicationPort:
 
 audit:
   enabled: true
+  tenantName: test-tenant
 ```
 
 ----------------------------------------------

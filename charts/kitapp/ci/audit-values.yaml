@@ -8,3 +8,4 @@ applicationPort:
 
 audit:
   enabled: true
+  tenantName: test-tenant
