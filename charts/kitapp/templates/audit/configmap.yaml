@@ -61,6 +61,7 @@ data:
           .kubernetes.node_name = "${NODE_NAME:-unknown}"
           .kubernetes.pod_ip = "${POD_IP:-unknown}"
           .kubernetes.app_label = "${APP_LABEL:-{{ include "kitapp.fullname" . }}}"
+          .kubernetes.namespace_labels = {}
           .kubernetes.namespace_labels."tenant.kitkube.dk/name" = {{ .Values.audit.tenantName | quote }}
 
     sinks:
