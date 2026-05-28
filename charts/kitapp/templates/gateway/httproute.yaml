@@ -25,6 +25,8 @@ spec:
     {{- end }}
   rules:
     {{- if not .Values.route.exposeMetrics }}
+    {{- /* Empty backendRefs returns 404 in Istio's Gateway API implementation:
+         https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 */}}
     - matches:
         - path:
             type: PathPrefix

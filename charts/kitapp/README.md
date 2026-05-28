@@ -162,7 +162,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | route | object | see values.yaml | Gateway API route settings. |
 | route.enabled | bool | false | Enable Gateway API resources (HTTPRoute, ListenerSet, and optional policies). |
-| route.exposeMetrics | bool | true | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a rule returning 500 is prepended for PathPrefix /metrics before the catch-all. |
+| route.exposeMetrics | bool | true | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all. Istio returns 404 for empty backendRefs (see conversion.go#L231-L235). |
 | route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
 | route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
 | route.gateway | object | see values.yaml | Gateway attachment settings. |

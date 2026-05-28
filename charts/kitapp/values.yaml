@@ -404,7 +404,8 @@ route:
   enabled: false
 
   # -- Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics.
-  # When false, a rule returning 500 is prepended for PathPrefix /metrics before the catch-all.
+  # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.
+  # Istio returns 404 for empty backendRefs (see conversion.go#L231-L235).
   # @default -- true
   # @section -- Route
   exposeMetrics: true
