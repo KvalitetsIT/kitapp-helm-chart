@@ -43,10 +43,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
-{{- define "kitapp.allVolumes" -}}
-{{- toYaml (concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list))) -}}
-{{- end -}}
-
 {{- define "kitapp.volumeMount" -}}
 - name: {{ .name }}
   mountPath: {{ .mountPath }}

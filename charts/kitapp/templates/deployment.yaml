@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-{{- $allVolumes := include "kitapp.allVolumes" . | fromYamlArray }}
+{{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) }}
 metadata:
   name: {{ include "kitapp.fullname" . }}
   namespace: {{ .Release.Namespace }}

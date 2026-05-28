@@ -1,4 +1,4 @@
-{{- $allVolumes := include "kitapp.allVolumes" . | fromYamlArray }}
+{{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) }}
 {{- range $allVolumes }}
 {{- if .volumeSpec.persistentVolumeClaim }}
 {{- if and (not .volumeSpec.persistentVolumeClaim.existingClaim) (ne (default true .volumeSpec.persistentVolumeClaim.create) false) }}
