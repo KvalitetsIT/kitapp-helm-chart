@@ -501,8 +501,6 @@ containerSecurityContext:
       - ALL
   seccompProfile:
     type: RuntimeDefault
-  appArmorProfile:
-    type: RuntimeDefault
 ```
 
 ### OAuth2 proxy injector integration
