@@ -23,6 +23,7 @@
     - name: APP_LABEL
       value: {{ include "kitapp.fullname" . | quote }}
   args:
+    - --watch-config
     - --config
     - /etc/vector/vector.yaml
   securityContext:
@@ -36,7 +37,7 @@
     {{- toYaml . | nindent 4 }}
   {{- end }}
   volumeMounts:
-    - name: vector-audit-config
+    - name: vector-audit-rules
       mountPath: /etc/vector
       readOnly: true
 {{- end -}}

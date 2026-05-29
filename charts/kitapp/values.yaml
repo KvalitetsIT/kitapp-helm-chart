@@ -467,22 +467,17 @@ oauth2:
     key: ""
 
 # -- Audit log sidecar settings.
-# When enabled, injects a Vector sidecar container into the pod that ships audit logs to a
-# Vector Aggregator (e.g. the `loki-audit` chart). A ConfigMap with the Vector pipeline config
-# is also created and mounted into the sidecar at `/etc/vector/vector.yaml`.
+# When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap
+# deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads
+# automatically when the ConfigMap changes — no pod restart needed.
 # @default -- see values.yaml
 # @section -- Audit
 audit:
-  # -- Enable the Vector audit log sidecar (ConfigMap + sidecar container).
+  # -- Enable the Vector audit log sidecar. Requires the `vector-audit-rules` ConfigMap to exist
+  # in the namespace, deployed via projectDefaults.auditlog in the tenant chart.
   # @default -- false
   # @section -- Audit
   enabled: false
-  # -- Tenant name stamped on every audit event. Required when audit.enabled=true.
-  # Set via a platform-controlled mechanism (e.g. ArgoCD helm parameter) rather than
-  # letting the application team set it freely, to prevent tenant spoofing.
-  # @default -- ""
-  # @section -- Audit
-  tenantName: ""
 
   image:
     # -- Vector container image repository.
@@ -519,18 +514,7 @@ audit:
 
   config:
     # -- Port the Vector HTTP source listens on inside the sidecar. The application sends
-    # audit events to this port via HTTP POST.
+    # audit events to this port via HTTP POST. Used only for the CiliumNetworkPolicy egress rule.
     # @default -- 9001
     # @section -- Audit
     httpPort: 9001
-
-    # -- Address of the Vector Aggregator to forward audit logs to. Override in env-repo
-    # values to match your loki-audit release name and namespace.
-    # @default -- vector-aggregator.logging.svc.cluster.local:6000
-    # @section -- Audit
-    aggregatorAddress: vector-aggregator.logging.svc.cluster.local:6000
-
-    # -- Vector sink protocol version.
-    # @default -- "2"
-    # @section -- Audit
-    sinkVersion: "2"

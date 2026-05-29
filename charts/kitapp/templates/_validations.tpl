@@ -74,12 +74,6 @@
   {{- end -}}
 {{- end -}}
 
-{{- define "kitapp.validate.audit" -}}
-  {{- if and (.Values.audit).enabled (empty (.Values.audit).tenantName) -}}
-    {{- fail "values.audit.tenantName is required when audit.enabled=true" -}}
-  {{- end -}}
-{{- end -}}
-
 {{- define "kitapp.validate.gateway" -}}
   {{- if .Values.route.enabled -}}
     {{- if not (has .Values.route.type (list "HTTPRoute" "TLSRoute")) -}}
