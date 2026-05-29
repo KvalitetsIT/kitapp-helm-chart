@@ -133,5 +133,6 @@ spec:
         - name: vector-audit-rules
           configMap:
             name: vector-audit-rules
+            optional: true
         {{- end }}
       {{- end }}
