@@ -1,6 +1,6 @@
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "v2.23.0"
 
 applicationPort:
   name: http
