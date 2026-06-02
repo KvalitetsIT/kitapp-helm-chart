@@ -33,6 +33,14 @@ and when both are set the rendered image becomes `repository:tag@digest`.
 {{ .Files.Get "ci/digest-values.yaml" | trim }}
 ```
 
+### Image digests and tags
+
+When both `image.tag` and `image.digest` are set, the rendered image reference becomes `repository:tag@digest`.
+
+```yaml
+{{ .Files.Get "ci/tag-and-digest-values.yaml" | trim }}
+```
+
 ### Minimal
 
 ```yaml

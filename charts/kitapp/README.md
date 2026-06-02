@@ -189,6 +189,21 @@ applicationPort:
   port: 8080
 ```
 
+### Image digests and tags
+
+When both `image.tag` and `image.digest` are set, the rendered image reference becomes `repository:tag@digest`.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.23.0"
+  digest: sha256:b5d2ef3378e61138998cb4e60edf117000594f33b9be504825921190a7109e69
+
+applicationPort:
+  name: http
+  port: 8080
+```
+
 ### Minimal
 
 ```yaml
