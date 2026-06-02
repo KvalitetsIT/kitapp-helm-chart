@@ -16,10 +16,6 @@
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
-    - name: POD_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.podIP
     - name: APP_LABEL
       value: {{ include "kitapp.fullname" . | quote }}
   args:
