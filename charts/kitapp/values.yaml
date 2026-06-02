@@ -139,10 +139,15 @@ image:
   # @default -- ""
   # @section -- Runtime
   repository: ""
-  # -- Container image tag (required).
+  # -- Container image tag. Required when image.digest is empty.
   # @default -- ""
   # @section -- Runtime
   tag: ""
+  # -- Container image digest (recommended). Required when image.tag is empty.
+  # When both image.tag and image.digest are set, the rendered image is `repository:tag@digest`.
+  # @default -- ""
+  # @section -- Runtime
+  digest: ""
   # -- Image pull policy.
   # @default -- IfNotPresent
   # @section -- Runtime
