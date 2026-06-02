@@ -10,7 +10,9 @@ spec:
   strategy:
     {{- toYaml .Values.strategy | nindent 4 }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "kitapp.selectorLabels" . | nindent 6 }}

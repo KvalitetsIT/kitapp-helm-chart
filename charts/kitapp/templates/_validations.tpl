@@ -91,6 +91,28 @@
   {{- end -}}
 {{- end -}}
 
+{{- define "kitapp.validate.autoscaling" -}}
+  {{- if .Values.autoscaling.enabled -}}
+    {{- $minReplicas := .Values.autoscaling.minReplicas | int -}}
+    {{- $maxReplicas := .Values.autoscaling.maxReplicas | int -}}
+    {{- if le $minReplicas 0 -}}
+      {{- fail "values.autoscaling.minReplicas must be greater than 0 when autoscaling.enabled=true" -}}
+    {{- end -}}
+    {{- if lt $maxReplicas $minReplicas -}}
+      {{- fail "values.autoscaling.maxReplicas must be greater than or equal to values.autoscaling.minReplicas when autoscaling.enabled=true" -}}
+    {{- end -}}
+    {{- if and (empty .Values.autoscaling.targetCPUUtilizationPercentage) (empty .Values.autoscaling.targetMemoryUtilizationPercentage) -}}
+      {{- fail "set at least one of values.autoscaling.targetCPUUtilizationPercentage or values.autoscaling.targetMemoryUtilizationPercentage when autoscaling.enabled=true" -}}
+    {{- end -}}
+    {{- if and (not (empty .Values.autoscaling.targetCPUUtilizationPercentage)) (le (.Values.autoscaling.targetCPUUtilizationPercentage | int) 0) -}}
+      {{- fail "values.autoscaling.targetCPUUtilizationPercentage must be greater than 0 when set" -}}
+    {{- end -}}
+    {{- if and (not (empty .Values.autoscaling.targetMemoryUtilizationPercentage)) (le (.Values.autoscaling.targetMemoryUtilizationPercentage | int) 0) -}}
+      {{- fail "values.autoscaling.targetMemoryUtilizationPercentage must be greater than 0 when set" -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 {{- define "kitapp.validate.oauth2" -}}
   {{- if and .Values.oauth2.enabled (not .Values.oauth2.clientId) -}}
     {{- fail "values.oauth2.clientId is required when oauth2.enabled=true" -}}

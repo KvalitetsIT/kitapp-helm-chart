@@ -24,6 +24,13 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | nameOverride | string | "" | Override the chart name used for resource naming. |
 | fullnameOverride | string | "" | Fully override the generated full resource name. |
 | replicas | int | 2 | Number of pod replicas. |
+| autoscaling | object | see values.yaml | Horizontal Pod Autoscaler settings. When enabled, the chart renders an HPA targeting the Deployment and the Deployment `replicas` field is omitted so the autoscaler owns the replica count. |
+| autoscaling.enabled | bool | false | Enable HorizontalPodAutoscaler creation. |
+| autoscaling.minReplicas | int | 2 | Lower bound for the number of pod replicas. |
+| autoscaling.maxReplicas | int | 5 | Upper bound for the number of pod replicas. |
+| autoscaling.targetCPUUtilizationPercentage | int | 80 | Average CPU utilization target percentage across pods. Set to `null` to disable CPU-based autoscaling. |
+| autoscaling.targetMemoryUtilizationPercentage | string | null | Average memory utilization target percentage across pods. Set to `null` to disable memory-based autoscaling. |
+| autoscaling.behavior | object | {} | Optional HPA behavior tuning (scaleUp/scaleDown stabilization and policies). Requires autoscaling/v2-compatible clusters. |
 | strategy | object | see values.yaml | Deployment strategy configuration. |
 | strategy.type | string | RollingUpdate | Deployment strategy type. |
 | revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
@@ -228,6 +235,37 @@ readinessProbe:
 
 nodeSelector:
   kubernetes.io/os: linux
+```
+
+### Autoscaling
+
+Enable `autoscaling` to render a Kubernetes `HorizontalPodAutoscaler` targeting the chart's Deployment.
+When enabled, the Deployment `replicas` field is omitted so the HPA controls the replica count.
+Set one or both of the utilization targets.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "v2.15.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
 ```
 
 ### Advanced runtime

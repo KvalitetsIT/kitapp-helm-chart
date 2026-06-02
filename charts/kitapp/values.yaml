@@ -13,6 +13,40 @@ fullnameOverride: ""
 # @section -- Deployment
 replicas: 2
 
+# -- Horizontal Pod Autoscaler settings.
+# When enabled, the chart renders an HPA targeting the Deployment and the Deployment `replicas`
+# field is omitted so the autoscaler owns the replica count.
+# @default -- see values.yaml
+# @section -- Deployment
+autoscaling:
+  # -- Enable HorizontalPodAutoscaler creation.
+  # @default -- false
+  # @section -- Deployment
+  enabled: false
+  # -- Lower bound for the number of pod replicas.
+  # @default -- 2
+  # @section -- Deployment
+  minReplicas: 2
+  # -- Upper bound for the number of pod replicas.
+  # @default -- 5
+  # @section -- Deployment
+  maxReplicas: 5
+  # -- Average CPU utilization target percentage across pods.
+  # Set to `null` to disable CPU-based autoscaling.
+  # @default -- 80
+  # @section -- Deployment
+  targetCPUUtilizationPercentage: 80
+  # -- Average memory utilization target percentage across pods.
+  # Set to `null` to disable memory-based autoscaling.
+  # @default -- null
+  # @section -- Deployment
+  targetMemoryUtilizationPercentage: null
+  # -- Optional HPA behavior tuning (scaleUp/scaleDown stabilization and policies).
+  # Requires autoscaling/v2-compatible clusters.
+  # @default -- {}
+  # @section -- Deployment
+  behavior: {}
+
 # -- Deployment strategy configuration.
 # @default -- see values.yaml
 # @section -- Deployment
