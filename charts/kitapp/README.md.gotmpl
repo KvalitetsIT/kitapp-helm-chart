@@ -38,6 +38,16 @@ Covers `additionalApplicationPorts`, `env`/`extraEnvs`, `resources`, liveness/re
 {{ .Files.Get "ci/default-values.yaml" | trim }}
 ```
 
+### Autoscaling
+
+Enable `autoscaling` to render a Kubernetes `HorizontalPodAutoscaler` targeting the chart's Deployment.
+When enabled, the Deployment `replicas` field is omitted so the HPA controls the replica count.
+Set one or both of the utilization targets.
+
+```yaml
+{{ .Files.Get "ci/autoscaling-values.yaml" | trim }}
+```
+
 ### Advanced runtime
 
 Covers `command`/`args`, `envFrom`/`extraEnvFrom`, `startupProbe`, `tolerations`, and `affinity`.
