@@ -5,3 +5,4 @@ chart-dirs:
   - charts/
 all: true
 namespace: default
+release-label: ct
