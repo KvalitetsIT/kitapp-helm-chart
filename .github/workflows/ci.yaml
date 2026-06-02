@@ -86,5 +86,26 @@ jobs:
           kubectl apply -f https://raw.githubusercontent.com/istio/istio/1.29.1/manifests/charts/base/files/crd-all.gen.yaml
           wait_for_crd authorizationpolicies.security.istio.io
 
+      - name: Pre-create vector-audit-rules ConfigMap
+        run: |
+          kubectl apply -f - <<'EOF'
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: vector-audit-rules
+            namespace: default
+          data:
+            vector.yaml: |
+              sources:
+                audit_http_source:
+                  type: http_server
+                  address: "0.0.0.0:9001"
+              sinks:
+                blackhole:
+                  type: blackhole
+                  inputs:
+                    - audit_http_source
+          EOF
+
       - name: Run chart-testing (install)
         run: ct install --config ct.yaml
