@@ -1,6 +1,6 @@
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.23.0"
+  tag: "2.23.0"
   digest: sha256:b5d2ef3378e61138998cb4e60edf117000594f33b9be504825921190a7109e69
 
 applicationPort:
