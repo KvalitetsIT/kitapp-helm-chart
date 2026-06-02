@@ -2,8 +2,8 @@
   {{- if not .Values.image.repository -}}
     {{- fail "values.image.repository is required" -}}
   {{- end -}}
-  {{- if not .Values.image.tag -}}
-    {{- fail "values.image.tag is required" -}}
+  {{- if and (not .Values.image.tag) (not .Values.image.digest) -}}
+    {{- fail "one of values.image.tag or values.image.digest is required" -}}
   {{- end -}}
 {{- end -}}
 

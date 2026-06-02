@@ -53,7 +53,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 |-----|------|---------|-------------|
 | image | object | see values.yaml | Container image settings. |
 | image.repository | string | "" | Container image repository (required). |
-| image.tag | string | "" | Container image tag (required). |
+| image.tag | string | "" | Container image tag. Required when image.digest is empty. |
+| image.digest | string | "" | Container image digest (recommended). Required when image.tag is empty. When both image.tag and image.digest are set, the rendered image is `repository:tag@digest`. |
 | image.pullPolicy | string | IfNotPresent | Image pull policy. |
 | command | list | [] | Optional container command override. |
 | args | list | [] | Optional container args override. |
@@ -168,17 +169,47 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 ### Required values
 
-- `image.repository` and `image.tag` must be set
+- `image.repository` and one of `image.tag` or `image.digest` must be set
 - `applicationPort.port` must be set (defaults to `8080`)
 - when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
+
+### Image digests (recommended)
+
+Use `image.digest` to pin immutable images. `image.tag` remains supported for compatibility,
+and when both are set the rendered image becomes `repository:tag@digest`.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  digest: sha256:b5d2ef3378e61138998cb4e60edf117000594f33b9be504825921190a7109e69
+
+applicationPort:
+  name: http
+  port: 8080
+```
+
+### Image digests and tags
+
+When both `image.tag` and `image.digest` are set, the rendered image reference becomes `repository:tag@digest`.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "2.23.0"
+  digest: sha256:b5d2ef3378e61138998cb4e60edf117000594f33b9be504825921190a7109e69
+
+applicationPort:
+  name: http
+  port: 8080
+```
 
 ### Minimal
 
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -192,7 +223,7 @@ Covers `additionalApplicationPorts`, `env`/`extraEnvs`, `resources`, liveness/re
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -275,7 +306,7 @@ Covers `command`/`args`, `envFrom`/`extraEnvFrom`, `startupProbe`, `tolerations`
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -323,7 +354,7 @@ When `metrics.enabled=true`, the metrics port name is always `metrics`.
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   port: 8080
@@ -344,7 +375,7 @@ Use `extraVolumes` to append entries on top of a shared base without replacing i
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -399,7 +430,7 @@ The backend is automatically wired to the chart's own Service.
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -431,7 +462,7 @@ No ListenerSet or cert-manager is involved.
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: https
@@ -456,7 +487,7 @@ from an OIDC provider such as Keycloak.
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -510,7 +541,7 @@ Enable AppArmor only on clusters where it is available on the nodes.
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -550,7 +581,7 @@ Auto-injected metadata:
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -580,7 +611,7 @@ Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http
@@ -667,7 +698,7 @@ Events are enriched with Kubernetes pod metadata (`pod_name`, `pod_namespace`, `
 ```yaml
 image:
   repository: docker.io/mccutchen/go-httpbin
-  tag: "v2.15.0"
+  tag: "2.23.0"
 
 applicationPort:
   name: http

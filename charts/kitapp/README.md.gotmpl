@@ -19,10 +19,27 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 ### Required values
 
-- `image.repository` and `image.tag` must be set
+- `image.repository` and one of `image.tag` or `image.digest` must be set
 - `applicationPort.port` must be set (defaults to `8080`)
 - when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
+
+### Image digests (recommended)
+
+Use `image.digest` to pin immutable images. `image.tag` remains supported for compatibility,
+and when both are set the rendered image becomes `repository:tag@digest`.
+
+```yaml
+{{ .Files.Get "ci/digest-values.yaml" | trim }}
+```
+
+### Image digests and tags
+
+When both `image.tag` and `image.digest` are set, the rendered image reference becomes `repository:tag@digest`.
+
+```yaml
+{{ .Files.Get "ci/tag-and-digest-values.yaml" | trim }}
+```
 
 ### Minimal
 

@@ -43,6 +43,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
+{{- define "kitapp.image" -}}
+{{- $repository := .Values.image.repository -}}
+{{- $tag := .Values.image.tag -}}
+{{- $digest := .Values.image.digest -}}
+{{- if and $digest $tag -}}
+{{- printf "%s:%s@%s" $repository $tag $digest -}}
+{{- else if $digest -}}
+{{- printf "%s@%s" $repository $digest -}}
+{{- else -}}
+{{- printf "%s:%s" $repository $tag -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "kitapp.volumeMount" -}}
 - name: {{ .name }}
   mountPath: {{ .mountPath }}
