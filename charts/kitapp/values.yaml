@@ -217,6 +217,8 @@ containerSecurityContext:
       - ALL
   seccompProfile:
     type: RuntimeDefault
+  appArmorProfile:
+    type: RuntimeDefault
 
 # -- Primary application port exposed by the container and Service.
 # @default -- see values.yaml
