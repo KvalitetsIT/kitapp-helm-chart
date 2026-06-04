@@ -373,9 +373,9 @@ route:
   # When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all.
   # Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235
   # HTTPRoute only.
-  # @default -- true
+  # @default -- false
   # @section -- Route
-  exposeMetrics: true
+  exposeMetrics: false
 
   # -- Public hostname(s) for the HTTPRoute and ListenerSet.
   # The first hostname is also used to auto-populate oauth2-proxy redirect_url.
