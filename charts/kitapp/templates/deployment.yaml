@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 {{- $allVolumes := concat (.Values.volumes | default (list)) (.Values.extraVolumes | default (list)) }}
 metadata:
-  name: {{ include "kitapp.fullname" . }}
+  name: {{ include "kitapp.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}

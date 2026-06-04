@@ -17,7 +17,7 @@
         fieldRef:
           fieldPath: spec.nodeName
     - name: APP_LABEL
-      value: {{ include "kitapp.fullname" . | quote }}
+      value: {{ include "kitapp.name" . | quote }}
   args:
     - --watch-config
     - --config

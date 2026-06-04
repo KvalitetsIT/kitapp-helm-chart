@@ -1,18 +1,5 @@
 {{- define "kitapp.name" -}}
-{{- .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{- define "kitapp.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := include "kitapp.name" . -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+{{- .Values.nameOverride | default .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "kitapp.labels" -}}
@@ -29,14 +16,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "kitapp.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-{{- default (include "kitapp.fullname" .) .Values.serviceAccount.name -}}
+{{- default (include "kitapp.name" .) .Values.serviceAccount.name -}}
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.volumeClaimName" -}}
-{{- $defaultClaimName := printf "%s-%s" (include "kitapp.fullname" .) .volume.name -}}
+{{- $defaultClaimName := printf "%s-%s" (include "kitapp.name" .) .volume.name -}}
 {{- default $defaultClaimName .volume.volumeSpec.persistentVolumeClaim.claimName -}}
 {{- end -}}
 

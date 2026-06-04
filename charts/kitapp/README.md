@@ -21,8 +21,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| nameOverride | string | "" | Override the chart name used for resource naming. |
-| fullnameOverride | string | "" | Fully override the generated full resource name. |
+| nameOverride | string | "" | Override the release name used for resource naming and labels. |
 | replicas | int | 2 | Number of pod replicas. |
 | autoscaling | object | see values.yaml | Horizontal Pod Autoscaler settings. When enabled, the chart renders an HPA targeting the Deployment and the Deployment `replicas` field is omitted so the autoscaler owns the replica count. |
 | autoscaling.enabled | bool | false | Enable HorizontalPodAutoscaler creation. |

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "kitapp.fullname" . }}
+  name: {{ include "kitapp.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}

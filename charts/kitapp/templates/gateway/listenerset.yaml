@@ -2,7 +2,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: ListenerSet
 metadata:
-  name: {{ include "kitapp.fullname" . }}
+  name: {{ include "kitapp.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}

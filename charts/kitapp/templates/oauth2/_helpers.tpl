@@ -1,5 +1,5 @@
 {{- define "kitapp.oauth2.configMapName" -}}
-{{- printf "%s-oauth2" (include "kitapp.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-oauth2" (include "kitapp.name" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "kitapp.oauth2.injectorAnnotations" -}}

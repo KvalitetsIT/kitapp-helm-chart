@@ -1,12 +1,7 @@
-# -- Override the chart name used for resource naming.
+# -- Override the release name used for resource naming and labels.
 # @default -- ""
 # @section -- Deployment
 nameOverride: ""
-
-# -- Fully override the generated full resource name.
-# @default -- ""
-# @section -- Deployment
-fullnameOverride: ""
 
 # -- Number of pod replicas.
 # @default -- 2

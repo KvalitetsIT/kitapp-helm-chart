@@ -2,7 +2,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "kitapp.fullname" . }}
+  name: {{ include "kitapp.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}

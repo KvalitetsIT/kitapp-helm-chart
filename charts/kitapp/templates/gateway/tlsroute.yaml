@@ -2,7 +2,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: TLSRoute
 metadata:
-  name: {{ include "kitapp.fullname" . }}
+  name: {{ include "kitapp.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}
@@ -15,7 +15,7 @@ spec:
       group: gateway.networking.k8s.io
       sectionName: {{ .Values.route.gateway.sectionName | quote }}
     {{- else }}
-    - name: {{ include "kitapp.fullname" . | quote }}
+    - name: {{ include "kitapp.name" . | quote }}
       kind: ListenerSet
       group: gateway.networking.k8s.io
     {{- end }}
@@ -27,7 +27,7 @@ spec:
     - backendRefs:
         - group: ""
           kind: Service
-          name: {{ include "kitapp.fullname" . | quote }}
+          name: {{ include "kitapp.name" . | quote }}
           port: {{ .Values.route.port | default .Values.applicationPort.port | int }}
           weight: 1
 {{- end }}

@@ -5,13 +5,13 @@
 apiVersion: security.istio.io/v1
 kind: RequestAuthentication
 metadata:
-  name: {{ printf "%s-%s" (include "kitapp.fullname" $) $authName | quote }}
+  name: {{ printf "%s-%s" (include "kitapp.name" $) $authName | quote }}
   namespace: {{ $.Release.Namespace | quote }}
   labels:
     {{- include "kitapp.labels" $ | nindent 4 }}
 spec:
   targetRefs:
-    - name: {{ include "kitapp.fullname" $ | quote }}
+    - name: {{ include "kitapp.name" $ | quote }}
       kind: Service
       group: ""
   jwtRules:
