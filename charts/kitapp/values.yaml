@@ -553,6 +553,21 @@ audit:
       # @section -- Audit
       memory: 128Mi
 
+  # -- Security context applied to the Vector audit sidecar container.
+  # @default -- see values.yaml
+  # @section -- Audit
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+    appArmorProfile:
+      type: RuntimeDefault
+
   config:
     # -- Port the Vector HTTP source listens on inside the sidecar. The application sends
     # audit events to this port via HTTP POST. Used only for the CiliumNetworkPolicy egress rule.

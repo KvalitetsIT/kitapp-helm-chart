@@ -161,6 +161,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | audit.resources.requests.cpu | string | 50m | CPU request for the Vector audit sidecar. |
 | audit.resources.requests.memory | string | 64Mi | Memory request for the Vector audit sidecar. |
 | audit.resources.limits.memory | string | 128Mi | Memory limit for the Vector audit sidecar. |
+| audit.securityContext | object | see values.yaml | Security context applied to the Vector audit sidecar container. |
 | audit.config.httpPort | int | 9001 | Port the Vector HTTP source listens on inside the sidecar. The application sends audit events to this port via HTTP POST. Used only for the CiliumNetworkPolicy egress rule. |
 
 ## Usage

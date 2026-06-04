@@ -22,12 +22,10 @@
     - --watch-config
     - --config
     - /etc/vector/vector.yaml
+  {{- with (.Values.audit).securityContext }}
   securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-    readOnlyRootFilesystem: true
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- with (.Values.audit).resources }}
   resources:
     {{- toYaml . | nindent 4 }}

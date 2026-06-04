@@ -7,4 +7,4 @@ all: true
 namespace: default
 release-label: ct
 # We need to disable this. Since app armor isn't available in GitHub Actions.
-helm-extra-set-args: "--set containerSecurityContext.appArmorProfile=null"
+helm-extra-set-args: "--set containerSecurityContext.appArmorProfile=null --set audit.securityContext.appArmorProfile=null"
