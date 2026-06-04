@@ -39,7 +39,7 @@ spec:
       targetPort: {{ .Values.oauth2.proxyPort }}
       protocol: TCP
     {{- end }}
-    {{- if .Values.metrics.enabled }}
+    {{- if and .Values.metrics.enabled (ne (include "kitapp.metricsPort" . | int) (.Values.applicationPort.port | int)) }}
     - name: metrics
       port: {{ include "kitapp.metricsPort" . | int }}
       targetPort: metrics

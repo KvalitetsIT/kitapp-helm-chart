@@ -21,7 +21,7 @@ spec:
     matchNames:
       - {{ .Release.Namespace }}
   endpoints:
-    - port: metrics
+    - targetPort: {{ include "kitapp.metricsPort" . | int }}
       path: {{ .Values.metrics.path }}
       interval: {{ .Values.metrics.interval }}
 {{- end }}
