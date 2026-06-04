@@ -35,6 +35,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
+{{- define "kitapp.hasOwnMetricsPort" -}}
+{{- if and (not (empty .Values.metrics.port)) (ne (include "kitapp.metricsPort" .) (toString .Values.applicationPort.port)) -}}
+true
+{{- end -}}
+{{- end -}}
+
 {{- define "kitapp.image" -}}
 {{- $repository := .Values.image.repository -}}
 {{- $tag := .Values.image.tag -}}

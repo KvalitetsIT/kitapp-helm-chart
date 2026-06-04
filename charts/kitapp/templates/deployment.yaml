@@ -89,7 +89,7 @@ spec:
               containerPort: {{ .port }}
               protocol: {{ .protocol | default "TCP" }}
             {{- end }}
-            {{- if and .Values.metrics.enabled (not (empty .Values.metrics.port)) }}
+            {{- if and .Values.metrics.enabled (include "kitapp.hasOwnMetricsPort" .) }}
             - name: metrics
               containerPort: {{ include "kitapp.metricsPort" . | int }}
               protocol: TCP
