@@ -38,6 +38,19 @@
 {{- toYaml $def }}
 {{- end -}}
 
+{{- define "kitapp.oauth2.secretData" -}}
+{{- $secretName := include "kitapp.oauth2.effectiveSecretRef" . }}
+{{- $existing := (lookup "v1" "Secret" .Release.Namespace $secretName).data | default dict }}
+{{- $cookieSecret := index $existing "OAUTH2_PROXY_COOKIE_SECRET" | default "" | b64dec }}
+{{- if not $cookieSecret }}{{- $cookieSecret = randAlphaNum 32 | b64enc }}{{- end }}
+OAUTH2_PROXY_COOKIE_SECRET: {{ $cookieSecret | quote }}
+{{- if not ((.Values.oauth2.definition | default dict).publicClient | default false) }}
+{{- $clientSecret := index $existing "OAUTH2_PROXY_CLIENT_SECRET" | default "" | b64dec }}
+{{- if not $clientSecret }}{{- $clientSecret = randAlphaNum 32 }}{{- end }}
+OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | quote }}
+{{- end }}
+{{- end -}}
+
 {{- define "kitapp.oauth2.effectiveSecretRef" -}}
 {{- if .Values.oauth2.secretRef }}
 {{- .Values.oauth2.secretRef }}
