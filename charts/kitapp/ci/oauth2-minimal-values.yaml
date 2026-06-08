@@ -12,9 +12,9 @@ servicePort:
 oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  keycloakUrl: https://issuer.example.com
-  realm: portal
+  clientId: my-app
+  keycloakUrl: https://keycloak.example.com
+  realm: my-realm
 
 route:
   enabled: true
