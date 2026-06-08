@@ -1,0 +1,39 @@
+{{- if and .Values.oauth2.enabled .Values.oauth2.realm }}
+{{- $clientId := include "kitapp.oauth2.effectiveClientId" . }}
+{{- $secretName := include "kitapp.oauth2.effectiveSecretRef" . }}
+{{- $redirectUris := list }}
+{{- if and .Values.route.enabled .Values.route.hostnames }}
+{{- range .Values.route.hostnames }}
+{{- $redirectUris = append $redirectUris (printf "https://%s/*" .) }}
+{{- end }}
+{{- end }}
+apiVersion: keycloak.hostzero.com/v1beta1
+kind: KeycloakClient
+metadata:
+  name: {{ include "kitapp.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+spec:
+  clusterRealmRef:
+    name: {{ .Values.oauth2.realm }}
+  clientId: {{ $clientId }}
+  definition:
+    clientId: {{ $clientId }}
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: true
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    redirectUris: {{ toYaml $redirectUris | nindent 6 }}
+    webOrigins:
+      - "+"
+    attributes:
+      post.logout.redirect.uris: "+"
+    defaultClientScopes: {{ toYaml .Values.oauth2.scopes | nindent 6 }}
+  clientSecretRef:
+    name: {{ $secretName }}
+    clientIdKey: OAUTH2_PROXY_CLIENT_ID
+    clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
+    create: true
+{{- end }}

@@ -1,0 +1,19 @@
+image:
+  repository: ghcr.io/example/app
+  tag: latest
+
+applicationPort:
+  port: 8080
+
+route:
+  enabled: true
+  hostnames:
+    - app.example.com
+
+oauth2:
+  enabled: true
+  realm: my-realm
+  clientId: my-app
+  keycloakUrl: https://keycloak.example.com
+  # issuerUrl auto-constructed as https://keycloak.example.com/realms/my-realm
+  # secretRef auto-derived as <release>-keycloak-client
