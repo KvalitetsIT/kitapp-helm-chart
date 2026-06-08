@@ -15,4 +15,3 @@ oauth2:
   realm: my-realm
   clientId: my-app
   keycloakUrl: https://keycloak.example.com
-  # secretRef auto-derived as <release>-keycloak-client
