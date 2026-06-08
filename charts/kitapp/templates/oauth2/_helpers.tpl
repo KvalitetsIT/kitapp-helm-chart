@@ -14,6 +14,30 @@
 {{- printf "%s/realms/%s" .Values.oauth2.keycloakUrl .Values.oauth2.realm }}
 {{- end -}}
 
+{{- define "kitapp.oauth2.clientDefinition" -}}
+{{- $clientId := include "kitapp.oauth2.effectiveClientId" . }}
+{{- $defaults := dict
+    "enabled" true
+    "publicClient" false
+    "standardFlowEnabled" true
+    "directAccessGrantsEnabled" false
+    "serviceAccountsEnabled" false
+    "webOrigins" (list "+")
+    "attributes" (dict "post.logout.redirect.uris" "+")
+    "defaultClientScopes" (list "openid" "profile" "email")
+-}}
+{{- $def := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.definition | default dict) }}
+{{- $_ := set $def "clientId" $clientId }}
+{{- if not $def.redirectUris }}
+{{- $uris := list }}
+{{- range .Values.route.hostnames }}
+{{- $uris = append $uris (printf "https://%s/*" .) }}
+{{- end }}
+{{- if $uris }}{{- $_ := set $def "redirectUris" $uris }}{{- end }}
+{{- end }}
+{{- toYaml $def }}
+{{- end -}}
+
 {{- define "kitapp.oauth2.effectiveSecretRef" -}}
 {{- if .Values.oauth2.secretRef }}
 {{- .Values.oauth2.secretRef }}
