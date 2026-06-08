@@ -135,15 +135,17 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
 | oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
-| oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg). |
-| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to `clientId` when empty. |
-| oauth2.issuerUrl | string | "" | Reusable oauth2-proxy issuer URL used by generated oauth2-proxy.cfg (`oidc_issuer_url`). |
+| oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
+| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to effective clientId when empty. |
+| oauth2.keycloakUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk). The OIDC issuer URL is always constructed as `<keycloakUrl>/realms/<realm>`. |
 | oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
 | oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
 | oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |
 | oauth2.config.skipAuthRoutes | list | [] | URL path patterns that bypass authentication. |
 | oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
-| oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation (required when oauth2.enabled=true). |
+| oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation. Optional when oauth2.realm is set — auto-derived as `<release-name>-keycloak-client`. |
+| oauth2.realm | string | "" | Keycloak realm name. When set together with oauth2.enabled, a KeycloakClient CRD is provisioned using clusterRealmRef. The keycloak-operator creates the Keycloak client and syncs credentials into a Secret. oauth2.secretRef is auto-derived and does not need to be set. |
+| oauth2.scopes | list | [openid, profile, email] | OIDC scopes requested by oauth2-proxy and registered as defaultClientScopes on the KeycloakClient when oauth2.realm is set. |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
 
@@ -171,7 +173,7 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 - `image.repository` and one of `image.tag` or `image.digest` must be set
 - `applicationPort.port` must be set (defaults to `8080`)
-- when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
+- when `oauth2.enabled=true`: `oauth2.realm` and `oauth2.keycloakUrl` are required; all other oauth2 fields are optional or auto-derived
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
 ### Image digests (recommended)
@@ -593,8 +595,9 @@ servicePort:
 oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
+  clientId: my-app
+  keycloakUrl: https://keycloak.example.com
+  realm: my-realm
 
 route:
   enabled: true
@@ -624,8 +627,9 @@ oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
   image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
-  clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
+  clientId: my-app
+  keycloakUrl: https://keycloak.example.com
+  realm: my-realm
   config:
     emailDomains:
       - example.com

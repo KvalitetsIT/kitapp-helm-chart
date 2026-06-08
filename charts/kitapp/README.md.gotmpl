@@ -21,7 +21,7 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 - `image.repository` and one of `image.tag` or `image.digest` must be set
 - `applicationPort.port` must be set (defaults to `8080`)
-- when `oauth2.enabled=true`: `oauth2.secretRef`, `oauth2.clientId`, and `oauth2.issuerUrl` must be set
+- when `oauth2.enabled=true`: `oauth2.realm` and `oauth2.keycloakUrl` are required; all other oauth2 fields are optional or auto-derived
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
 ### Image digests (recommended)
