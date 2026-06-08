@@ -145,7 +145,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
 | oauth2.secretRef | string | "" | Existing Secret name referenced by injector annotation. Optional when oauth2.realm is set — auto-derived as `<release-name>-keycloak-client`. |
 | oauth2.realm | string | "" | Keycloak realm name. When set together with oauth2.enabled, a KeycloakClient CRD is provisioned using clusterRealmRef. The keycloak-operator creates the Keycloak client and syncs credentials into a Secret. oauth2.secretRef is auto-derived and does not need to be set. |
-| oauth2.scopes | list | [openid, profile, email] | OIDC scopes requested by oauth2-proxy and registered as defaultClientScopes on the KeycloakClient when oauth2.realm is set. |
+| oauth2.definition | object | {} | Keycloak ClientRepresentation fields merged into the KeycloakClient spec.definition. The chart provides sensible defaults (publicClient: false, standardFlowEnabled: true, defaultClientScopes: [openid, profile, email], webOrigins: [+], etc.) which are overridden field-by-field by anything set here. clientId and redirectUris are always auto-derived and cannot be overridden. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
 

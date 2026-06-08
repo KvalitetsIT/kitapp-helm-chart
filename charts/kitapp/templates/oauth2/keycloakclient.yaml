@@ -1,11 +1,24 @@
 {{- if and .Values.oauth2.enabled .Values.oauth2.realm (not .Values.oauth2.secretRef) }}
 {{- $clientId := include "kitapp.oauth2.effectiveClientId" . }}
 {{- $secretName := include "kitapp.oauth2.effectiveSecretRef" . }}
-{{- $redirectUris := list }}
-{{- if and .Values.route.enabled .Values.route.hostnames }}
+{{- $defaults := dict
+    "enabled" true
+    "publicClient" false
+    "standardFlowEnabled" true
+    "directAccessGrantsEnabled" false
+    "serviceAccountsEnabled" false
+    "webOrigins" (list "+")
+    "attributes" (dict "post.logout.redirect.uris" "+")
+    "defaultClientScopes" (list "openid" "profile" "email")
+-}}
+{{- $def := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.definition | default dict) }}
+{{- $_ := set $def "clientId" $clientId }}
+{{- if not $def.redirectUris }}
+{{- $uris := list }}
 {{- range .Values.route.hostnames }}
-{{- $redirectUris = append $redirectUris (printf "https://%s/*" .) }}
+{{- $uris = append $uris (printf "https://%s/*" .) }}
 {{- end }}
+{{- if $uris }}{{- $_ := set $def "redirectUris" $uris }}{{- end }}
 {{- end }}
 apiVersion: keycloak.hostzero.com/v1beta1
 kind: KeycloakClient
@@ -19,21 +32,12 @@ spec:
     name: {{ .Values.oauth2.realm }}
   clientId: {{ $clientId }}
   definition:
-    clientId: {{ $clientId }}
-    enabled: true
-    publicClient: false
-    standardFlowEnabled: true
-    directAccessGrantsEnabled: false
-    serviceAccountsEnabled: false
-    redirectUris: {{ toYaml $redirectUris | nindent 6 }}
-    webOrigins:
-      - "+"
-    attributes:
-      post.logout.redirect.uris: "+"
-    defaultClientScopes: {{ toYaml .Values.oauth2.scopes | nindent 6 }}
+    {{- toYaml $def | nindent 4 }}
+  {{- if not $def.publicClient }}
   clientSecretRef:
     name: {{ $secretName }}
     clientIdKey: OAUTH2_PROXY_CLIENT_ID
     clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
     create: true
+  {{- end }}
 {{- end }}
