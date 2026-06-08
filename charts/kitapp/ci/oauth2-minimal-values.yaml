@@ -13,7 +13,8 @@ oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
   clientId: portal
-  issuerUrl: https://issuer.example.com/realms/portal
+  keycloakUrl: https://issuer.example.com
+  realm: portal
 
 route:
   enabled: true

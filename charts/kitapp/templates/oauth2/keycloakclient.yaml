@@ -1,4 +1,4 @@
-{{- if and .Values.oauth2.enabled .Values.oauth2.realm }}
+{{- if and .Values.oauth2.enabled .Values.oauth2.realm (not .Values.oauth2.secretRef) }}
 {{- $clientId := include "kitapp.oauth2.effectiveClientId" . }}
 {{- $secretName := include "kitapp.oauth2.effectiveSecretRef" . }}
 {{- $redirectUris := list }}

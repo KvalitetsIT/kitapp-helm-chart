@@ -11,11 +11,7 @@
 {{- end -}}
 
 {{- define "kitapp.oauth2.effectiveIssuerUrl" -}}
-{{- if .Values.oauth2.issuerUrl }}
-{{- .Values.oauth2.issuerUrl }}
-{{- else if and .Values.oauth2.keycloakUrl .Values.oauth2.realm }}
 {{- printf "%s/realms/%s" .Values.oauth2.keycloakUrl .Values.oauth2.realm }}
-{{- end }}
 {{- end -}}
 
 {{- define "kitapp.oauth2.effectiveSecretRef" -}}

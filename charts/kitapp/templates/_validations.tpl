@@ -114,15 +114,11 @@
 {{- end -}}
 
 {{- define "kitapp.validate.oauth2" -}}
-  {{- if and .Values.oauth2.enabled (not .Values.oauth2.clientId) (not .Values.oauth2.realm) -}}
-    {{- fail "values.oauth2.clientId is required when oauth2.enabled=true (or set oauth2.realm to use Release.Name as client ID)" -}}
+  {{- if and .Values.oauth2.enabled (not .Values.oauth2.realm) -}}
+    {{- fail "values.oauth2.realm is required when oauth2.enabled=true" -}}
   {{- end -}}
-  {{- $hasIssuerUrl := or .Values.oauth2.issuerUrl (and .Values.oauth2.keycloakUrl .Values.oauth2.realm) -}}
-  {{- if and .Values.oauth2.enabled (not $hasIssuerUrl) -}}
-    {{- fail "values.oauth2.issuerUrl is required when oauth2.enabled=true (or set both oauth2.keycloakUrl and oauth2.realm to auto-construct it)" -}}
-  {{- end -}}
-  {{- if and .Values.oauth2.enabled (not .Values.oauth2.secretRef) (not .Values.oauth2.realm) -}}
-    {{- fail "values.oauth2.secretRef is required when oauth2.enabled=true (or set oauth2.realm to auto-provision a KeycloakClient)" -}}
+  {{- if and .Values.oauth2.enabled (not .Values.oauth2.keycloakUrl) -}}
+    {{- fail "values.oauth2.keycloakUrl is required when oauth2.enabled=true" -}}
   {{- end -}}
 {{- end -}}
 

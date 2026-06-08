@@ -455,17 +455,10 @@ oauth2:
   # @section -- OAuth2
   cookieName: ""
   # -- Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk).
-  # When set together with oauth2.realm, the OIDC issuer URL is auto-constructed as
-  # `<keycloakUrl>/realms/<realm>`. Takes precedence over oauth2.issuerUrl auto-construction.
+  # The OIDC issuer URL is always constructed as `<keycloakUrl>/realms/<realm>`.
   # @default -- ""
   # @section -- OAuth2
   keycloakUrl: ""
-  # -- OIDC issuer URL (`oidc_issuer_url` in oauth2-proxy.cfg).
-  # Optional when both oauth2.keycloakUrl and oauth2.realm are set — auto-constructed as
-  # `<keycloakUrl>/realms/<realm>`. Use this field to override for non-standard Keycloak paths.
-  # @default -- ""
-  # @section -- OAuth2
-  issuerUrl: ""
   # -- Structured oauth2-proxy config for commonly configured keys.
   # @default -- see values.yaml
   # @section -- OAuth2
