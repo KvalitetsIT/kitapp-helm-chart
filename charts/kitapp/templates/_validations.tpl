@@ -123,11 +123,6 @@
   {{- if and .Values.oauth2.enabled (not .Values.oauth2.provisionClient) (not .Values.oauth2.secretRef) -}}
     {{- fail "values.oauth2.secretRef is required when oauth2.provisionClient=false" -}}
   {{- end -}}
-  {{- if and .Values.oauth2.enabled .Values.oauth2.realm (not .Values.oauth2.secretRef) .Values.oauth2.provisionClient -}}
-    {{- if not (.Capabilities.APIVersions.Has "keycloak.hostzero.com/v1beta1/KeycloakClient") -}}
-      {{- fail "KeycloakClient CRD (keycloak.hostzero.com/v1beta1) not found. Install the keycloak-operator or set oauth2.secretRef to bring your own credentials, or set oauth2.provisionClient=false to manage the client externally." -}}
-    {{- end -}}
-  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.envNames" -}}
