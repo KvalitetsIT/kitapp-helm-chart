@@ -13,7 +13,7 @@ route:
 oauth2:
   enabled: true
   realm: my-realm
-  keycloakUrl: https://keycloak.example.com
+  issuerUrl: https://keycloak.example.com
   provisionClient: true
   definition:
     publicClient: true

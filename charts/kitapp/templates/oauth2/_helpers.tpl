@@ -2,7 +2,7 @@
 {{- printf "%s-oauth2" (include "kitapp.name" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "kitapp.oauth2.effectiveClientId" -}}
+{{- define "kitapp.oauth2.clientId" -}}
 {{- if .Values.oauth2.clientId }}
 {{- .Values.oauth2.clientId }}
 {{- else if .Values.oauth2.realm }}
@@ -10,12 +10,12 @@
 {{- end }}
 {{- end -}}
 
-{{- define "kitapp.oauth2.effectiveIssuerUrl" -}}
-{{- printf "%s/realms/%s" .Values.oauth2.keycloakUrl .Values.oauth2.realm }}
+{{- define "kitapp.oauth2.issuerUrl" -}}
+{{- printf "%s/realms/%s" .Values.oauth2.issuerUrl .Values.oauth2.realm }}
 {{- end -}}
 
 {{- define "kitapp.oauth2.clientDefinition" -}}
-{{- $clientId := include "kitapp.oauth2.effectiveClientId" . }}
+{{- $clientId := include "kitapp.oauth2.clientId" . }}
 {{- $defaults := dict
     "enabled" true
     "publicClient" false
@@ -39,10 +39,10 @@
 {{- end -}}
 
 {{- define "kitapp.oauth2.secretData" -}}
-{{- $secretName := include "kitapp.oauth2.effectiveSecretRef" . }}
+{{- $secretName := include "kitapp.oauth2.secretRef" . }}
 {{- $existing := (lookup "v1" "Secret" .Release.Namespace $secretName).data | default dict }}
 {{- $cookieSecret := index $existing "OAUTH2_PROXY_COOKIE_SECRET" | default "" | b64dec }}
-{{- if not $cookieSecret }}{{- $cookieSecret = randAlphaNum 32 | b64enc }}{{- end }}
+{{- if not $cookieSecret }}{{- $cookieSecret = randAlphaNum 32 }}{{- end }}
 OAUTH2_PROXY_COOKIE_SECRET: {{ $cookieSecret | b64enc }}
 {{- if not ((.Values.oauth2.definition | default dict).publicClient | default false) }}
 {{- $clientSecret := index $existing "OAUTH2_PROXY_CLIENT_SECRET" | default "" | b64dec }}
@@ -51,7 +51,7 @@ OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
 {{- end }}
 {{- end -}}
 
-{{- define "kitapp.oauth2.effectiveSecretRef" -}}
+{{- define "kitapp.oauth2.secretRef" -}}
 {{- if .Values.oauth2.secretRef }}
 {{- .Values.oauth2.secretRef }}
 {{- else if .Values.oauth2.provisionClient }}
@@ -62,7 +62,7 @@ OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
 {{- define "kitapp.oauth2.injectorAnnotations" -}}
 {{- $annotations := dict
       "oauth2-proxy.kitkube.dk/configmap" (include "kitapp.oauth2.configMapName" .)
-      "oauth2-proxy.kitkube.dk/secret" (include "kitapp.oauth2.effectiveSecretRef" .)
+      "oauth2-proxy.kitkube.dk/secret" (include "kitapp.oauth2.secretRef" .)
       "oauth2-proxy.kitkube.dk/configKey" "oauth2-proxy.cfg"
   -}}
 {{- with .Values.oauth2.image }}

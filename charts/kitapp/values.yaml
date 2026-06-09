@@ -450,15 +450,15 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   clientId: ""
-  # -- Cookie name used by oauth2-proxy. Defaults to effective clientId when empty.
+  # -- Cookie name used by oauth2-proxy. Defaults to clientId when empty.
   # @default -- ""
   # @section -- OAuth2
   cookieName: ""
   # -- Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk).
-  # The OIDC issuer URL is always constructed as `<keycloakUrl>/realms/<realm>`.
+  # The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`.
   # @default -- ""
   # @section -- OAuth2
-  keycloakUrl: ""
+  issuerUrl: ""
   # -- Structured oauth2-proxy config for commonly configured keys.
   # @default -- see values.yaml
   # @section -- OAuth2
@@ -491,7 +491,7 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   secretName: ""
-  # -- Keycloak realm name. Always used together with keycloakUrl to construct the OIDC issuer URL.
+  # -- Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL.
   # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
   # auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set.
   # When provisionClient=false (default), only the issuer URL is derived; the Keycloak client
@@ -500,7 +500,7 @@ oauth2:
   # @section -- OAuth2
   realm: ""
   # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
-  # Set to false to manage the Keycloak client externally while still using realm and keycloakUrl
+  # Set to false to manage the Keycloak client externally while still using realm and issuerUrl
   # for the issuer URL. Requires oauth2.secretRef to be set when false.
   # @default -- false
   # @section -- OAuth2

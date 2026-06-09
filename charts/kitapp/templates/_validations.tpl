@@ -117,8 +117,8 @@
   {{- if and .Values.oauth2.enabled (not .Values.oauth2.realm) -}}
     {{- fail "values.oauth2.realm is required when oauth2.enabled=true" -}}
   {{- end -}}
-  {{- if and .Values.oauth2.enabled (not .Values.oauth2.keycloakUrl) -}}
-    {{- fail "values.oauth2.keycloakUrl is required when oauth2.enabled=true" -}}
+  {{- if and .Values.oauth2.enabled (not .Values.oauth2.issuerUrl) -}}
+    {{- fail "values.oauth2.issuerUrl is required when oauth2.enabled=true" -}}
   {{- end -}}
   {{- if and .Values.oauth2.enabled (not .Values.oauth2.provisionClient) (not .Values.oauth2.secretRef) -}}
     {{- fail "values.oauth2.secretRef is required when oauth2.provisionClient=false" -}}

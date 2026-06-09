@@ -15,8 +15,8 @@ data:
 
     # Provider
     provider = "oidc"
-    client_id = {{ include "kitapp.oauth2.effectiveClientId" . | quote }}
-    oidc_issuer_url = {{ include "kitapp.oauth2.effectiveIssuerUrl" . | quote }}
+    client_id = {{ include "kitapp.oauth2.clientId" . | quote }}
+    oidc_issuer_url = {{ include "kitapp.oauth2.issuerUrl" . | quote }}
     scope = {{ (.Values.oauth2.definition | default dict).defaultClientScopes | default (list "openid" "profile" "email") | toJson }}
     insecure_oidc_allow_unverified_email = true
 
@@ -33,7 +33,7 @@ data:
     skip_provider_button = true
 
     # Cookie
-    cookie_name = {{ .Values.oauth2.cookieName | default (include "kitapp.oauth2.effectiveClientId" .) | quote }}
+    cookie_name = {{ .Values.oauth2.cookieName | default (include "kitapp.oauth2.clientId" .) | quote }}
     cookie_secure = true
     cookie_httponly = true
     cookie_samesite = "lax"

@@ -136,8 +136,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
 | oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
-| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to effective clientId when empty. |
-| oauth2.keycloakUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk). The OIDC issuer URL is always constructed as `<keycloakUrl>/realms/<realm>`. |
+| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
+| oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
 | oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
 | oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
 | oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |
@@ -145,8 +145,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
 | oauth2.secretRef | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
 | oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
-| oauth2.realm | string | "" | Keycloak realm name. Always used together with keycloakUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.secretRef must be set. |
-| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and keycloakUrl for the issuer URL. Requires oauth2.secretRef to be set when false. |
+| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.secretRef must be set. |
+| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.secretRef to be set when false. |
 | oauth2.definition | object | {} | Keycloak ClientRepresentation fields merged into the KeycloakClient spec.definition. The chart provides sensible defaults (publicClient: false, standardFlowEnabled: true, defaultClientScopes: [openid, profile, email], webOrigins: [+], etc.) which are overridden field-by-field by anything set here. clientId and redirectUris are always auto-derived and cannot be overridden. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
@@ -175,7 +175,7 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 - `image.repository` and one of `image.tag` or `image.digest` must be set
 - `applicationPort.port` must be set (defaults to `8080`)
-- when `oauth2.enabled=true`: `oauth2.realm` and `oauth2.keycloakUrl` are required; all other oauth2 fields are optional or auto-derived
+- when `oauth2.enabled=true`: `oauth2.realm` and `oauth2.issuerUrl` are required; all other oauth2 fields are optional or auto-derived
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
 ### Image digests (recommended)
@@ -598,7 +598,7 @@ oauth2:
   enabled: true
   secretRef: my-app-oauth2-proxy-envs
   clientId: my-app
-  keycloakUrl: https://keycloak.example.com
+  issuerUrl: https://keycloak.example.com
   realm: my-realm
 
 route:
@@ -630,7 +630,7 @@ oauth2:
   secretRef: my-app-oauth2-proxy-envs
   image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
   clientId: my-app
-  keycloakUrl: https://keycloak.example.com
+  issuerUrl: https://keycloak.example.com
   realm: my-realm
   config:
     emailDomains:

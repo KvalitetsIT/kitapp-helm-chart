@@ -10,12 +10,12 @@ metadata:
 spec:
   clusterRealmRef:
     name: {{ .Values.oauth2.realm }}
-  clientId: {{ include "kitapp.oauth2.effectiveClientId" . }}
+  clientId: {{ include "kitapp.oauth2.clientId" . }}
   definition:
     {{- include "kitapp.oauth2.clientDefinition" . | nindent 4 }}
   {{- if not $publicClient }}
   clientSecretRef:
-    name: {{ include "kitapp.oauth2.effectiveSecretRef" . }}
+    name: {{ include "kitapp.oauth2.secretRef" . }}
     clientIdKey: OAUTH2_PROXY_CLIENT_ID
     clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
     create: true

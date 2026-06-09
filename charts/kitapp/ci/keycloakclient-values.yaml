@@ -14,5 +14,5 @@ oauth2:
   enabled: true
   realm: my-realm
   clientId: my-app
-  keycloakUrl: https://keycloak.example.com
+  issuerUrl: https://keycloak.example.com
   provisionClient: true
