@@ -17,155 +17,155 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 ## Values
 
-### Service
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| additionalApplicationPorts | list | [] | Additional named application ports exposed on both container and Service. Each item supports name, port, and optional protocol. |
-| additionalServicePorts | list | [] | Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`. If `targetPort` is omitted, it defaults to the same value as `port`. |
-| applicationPort | object | see values.yaml | Primary application port exposed by the container and Service. |
-| applicationPort.name | string | http | Primary application port name. |
-| applicationPort.port | int | 8080 | Primary application container port. |
-| applicationPort.protocol | string | TCP | Primary application protocol. |
-| service | object | see values.yaml | Service settings for exposing the application. |
-| service.annotations | object | {} | Annotations for the Service. |
-| service.labels | object | see values.yaml | Labels for the Service. |
-| service.labels."istio.io/ingress-use-waypoint" | string | `"true"` | Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic). |
-| service.labels."istio.io/use-waypoint" | string | `"waypoint"` | Route traffic through the Istio waypoint proxy for L7 policy enforcement. |
-| service.type | string | ClusterIP | Kubernetes Service type. |
-| servicePort | object | see values.yaml | Primary Service port exposed by the Service. |
-| servicePort.name | string | null | Primary Service port name. If empty, falls back to applicationPort.name. |
-| servicePort.port | string | null | Primary Service port number. If empty, defaults to applicationPort.port. |
-| servicePort.protocol | string | null | Primary Service protocol. If empty, falls back to applicationPort.protocol. |
-
 ### Deployment
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
+| nameOverride | string | "" | Override the release name used for resource naming and labels. |
+| replicas | int | 2 | Number of pod replicas. |
 | autoscaling | object | see values.yaml | Horizontal Pod Autoscaler settings. When enabled, the chart renders an HPA targeting the Deployment and the Deployment `replicas` field is omitted so the autoscaler owns the replica count. |
-| autoscaling.behavior | object | {} | Optional HPA behavior tuning (scaleUp/scaleDown stabilization and policies). Requires autoscaling/v2-compatible clusters. |
 | autoscaling.enabled | bool | false | Enable HorizontalPodAutoscaler creation. |
-| autoscaling.maxReplicas | int | 5 | Upper bound for the number of pod replicas. |
 | autoscaling.minReplicas | int | 2 | Lower bound for the number of pod replicas. |
+| autoscaling.maxReplicas | int | 5 | Upper bound for the number of pod replicas. |
 | autoscaling.targetCPUUtilizationPercentage | int | 80 | Average CPU utilization target percentage across pods. Set to `null` to disable CPU-based autoscaling. |
 | autoscaling.targetMemoryUtilizationPercentage | string | null | Average memory utilization target percentage across pods. Set to `null` to disable memory-based autoscaling. |
-| imagePullSecrets | list | [] | Optional list of image pull secrets. |
-| nameOverride | string | "" | Override the release name used for resource naming and labels. |
-| nodeSelector | object | {} | Node selector labels for pod scheduling. |
-| podAnnotations | object | {} | Extra pod annotations. |
-| podLabels | object | {} | Extra labels to add to the pod. |
-| podSecurityContext | object | see values.yaml | Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup). |
-| replicas | int | 2 | Number of pod replicas. |
-| revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
-| serviceAccount | object | see values.yaml | Service account settings. |
-| serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
-| serviceAccount.automountServiceAccountToken | bool | false | Mount the ServiceAccount token into pods. |
-| serviceAccount.create | bool | false | Create a dedicated ServiceAccount. |
-| serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
+| autoscaling.behavior | object | {} | Optional HPA behavior tuning (scaleUp/scaleDown stabilization and policies). Requires autoscaling/v2-compatible clusters. |
 | strategy | object | see values.yaml | Deployment strategy configuration. |
 | strategy.type | string | RollingUpdate | Deployment strategy type. |
+| revisionHistoryLimit | int | 5 | Number of old ReplicaSets to retain for Deployment rollback history. |
+| imagePullSecrets | list | [] | Optional list of image pull secrets. |
+| podLabels | object | {} | Extra labels to add to the pod. |
+| podAnnotations | object | {} | Extra pod annotations. |
+| nodeSelector | object | {} | Node selector labels for pod scheduling. |
 | tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
+| affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
+| serviceAccount | object | see values.yaml | Service account settings. |
+| serviceAccount.create | bool | false | Create a dedicated ServiceAccount. |
+| serviceAccount.name | string | "" | Existing ServiceAccount name to use (or generated when empty and create=true). |
+| serviceAccount.annotations | object | {} | Annotations for the ServiceAccount. |
+| serviceAccount.automountServiceAccountToken | bool | false | Mount the ServiceAccount token into pods. |
+| podSecurityContext | object | see values.yaml | Security context applied to the pod (e.g. fsGroup, runAsUser, runAsGroup). |
 
 ### Runtime
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| args | list | [] | Optional container args override. |
-| command | list | [] | Optional container command override. |
-| containerSecurityContext | object | see values.yaml | Security context applied to the application container. |
-| env | list | [] | Environment variables for the container. |
-| envFrom | list | [] | Environment variable sources (ConfigMapRef/SecretRef) for the container. |
-| extraEnvFrom | list | [] | Additional environment variable sources appended after `envFrom`. Useful for overlay values files to extend envFrom without replacing shared base entries. |
-| extraEnvs | list | [] | Additional environment variables appended after `env`. Useful for overlay values files to extend env without replacing shared base entries. |
 | image | object | see values.yaml | Container image settings. |
-| image.digest | string | "" | Container image digest (recommended). Required when image.tag is empty. When both image.tag and image.digest are set, the rendered image is `repository:tag@digest`. |
-| image.pullPolicy | string | IfNotPresent | Image pull policy. |
 | image.repository | string | "" | Container image repository (required). |
 | image.tag | string | "" | Container image tag. Required when image.digest is empty. |
+| image.digest | string | "" | Container image digest (recommended). Required when image.tag is empty. When both image.tag and image.digest are set, the rendered image is `repository:tag@digest`. |
+| image.pullPolicy | string | IfNotPresent | Image pull policy. |
+| command | list | [] | Optional container command override. |
+| args | list | [] | Optional container args override. |
+| env | list | [] | Environment variables for the container. |
+| extraEnvs | list | [] | Additional environment variables appended after `env`. Useful for overlay values files to extend env without replacing shared base entries. |
+| envFrom | list | [] | Environment variable sources (ConfigMapRef/SecretRef) for the container. |
+| extraEnvFrom | list | [] | Additional environment variable sources appended after `envFrom`. Useful for overlay values files to extend envFrom without replacing shared base entries. |
+| resources | object | {} | Container resource requests and limits. |
 | livenessProbe | object | {} | Kubernetes liveness probe. |
 | readinessProbe | object | {} | Kubernetes readiness probe. |
-| resources | object | {} | Container resource requests and limits. |
 | startupProbe | object | {} | Kubernetes startup probe. |
+| containerSecurityContext | object | see values.yaml | Security context applied to the application container. |
 
-### Audit
+### Service
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| audit | object | see values.yaml | Audit log sidecar settings. When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads automatically when the ConfigMap changes — no pod restart needed. |
-| audit.config.httpPort | int | 9001 | Port the Vector HTTP source listens on inside the sidecar. The application sends audit events to this port via HTTP POST. Used only for the CiliumNetworkPolicy egress rule. |
-| audit.enabled | bool | false | Enable the Vector audit log sidecar. Requires the `vector-audit-rules` ConfigMap to exist in the namespace, deployed via projectDefaults.auditlog in the tenant chart. |
-| audit.image.pullPolicy | string | IfNotPresent | Image pull policy. |
-| audit.image.repository | string | timberio/vector | Vector container image repository. |
-| audit.image.tag | string | 0.55.0-distroless-libc | Vector container image tag. |
-| audit.resources | object | see values.yaml | Resource requests and limits for the Vector audit sidecar container. |
-| audit.resources.limits.memory | string | 128Mi | Memory limit for the Vector audit sidecar. |
-| audit.resources.requests.cpu | string | 50m | CPU request for the Vector audit sidecar. |
-| audit.resources.requests.memory | string | 64Mi | Memory request for the Vector audit sidecar. |
-| audit.securityContext | object | see values.yaml | Security context applied to the Vector audit sidecar container. |
+| applicationPort | object | see values.yaml | Primary application port exposed by the container and Service. |
+| applicationPort.name | string | http | Primary application port name. |
+| applicationPort.port | int | 8080 | Primary application container port. |
+| applicationPort.protocol | string | TCP | Primary application protocol. |
+| additionalApplicationPorts | list | [] | Additional named application ports exposed on both container and Service. Each item supports name, port, and optional protocol. |
+| servicePort | object | see values.yaml | Primary Service port exposed by the Service. |
+| servicePort.name | string | null | Primary Service port name. If empty, falls back to applicationPort.name. |
+| servicePort.port | string | null | Primary Service port number. If empty, defaults to applicationPort.port. |
+| servicePort.protocol | string | null | Primary Service protocol. If empty, falls back to applicationPort.protocol. |
+| additionalServicePorts | list | [] | Additional Service-only ports. Each item supports `name`, `port`, optional `targetPort`, and optional `protocol`. If `targetPort` is omitted, it defaults to the same value as `port`. |
+| service | object | see values.yaml | Service settings for exposing the application. |
+| service.type | string | ClusterIP | Kubernetes Service type. |
+| service.annotations | object | {} | Annotations for the Service. |
+| service.labels | object | see values.yaml | Labels for the Service. |
+| service.labels."istio.io/use-waypoint" | string | `"waypoint"` | Route traffic through the Istio waypoint proxy for L7 policy enforcement. |
+| service.labels."istio.io/ingress-use-waypoint" | string | `"true"` | Apply waypoint enforcement to ingress traffic only (not east-west mesh traffic). |
 
 ### Persistence
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| extraVolumes | list | [] | Additional structured volume definitions appended after `volumes`. Use to share common volumes in base values and extend per environment overlays. |
 | volumes | list | [] | Structured volume definitions. Each entry defines both the container mount and the pod volume source. |
+| extraVolumes | list | [] | Additional structured volume definitions appended after `volumes`. Use to share common volumes in base values and extend per environment overlays. |
 
 ### Metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics | object | see values.yaml | Metrics settings for optional metrics port and ServiceMonitor. |
-| metrics.annotations | object | {} | Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
 | metrics.enabled | bool | false | Enable metrics port exposure on container and Service. The metrics port name is always `metrics` when enabled. |
+| metrics.port | string | null | Metrics port number. If empty, uses applicationPort.port. |
+| metrics.path | string | /metrics | Metrics scrape path. |
 | metrics.interval | string | 30s | ServiceMonitor scrape interval. |
 | metrics.labels | object | {} | Extra labels for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
-| metrics.path | string | /metrics | Metrics scrape path. |
-| metrics.port | string | null | Metrics port number. If empty, uses applicationPort.port. |
-
-### OAuth2
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
-| oauth2.clientDefinition | object | `{"attributes":{"post.logout.redirect.uris":"+"},"defaultClientScopes":["openid","profile","email"],"directAccessGrantsEnabled":false,"enabled":true,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":true,"webOrigins":["+"]}` | Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition. clientId and redirectUris are always auto-derived. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
-| oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
-| oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
-| oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |
-| oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
-| oauth2.config.skipAuthRoutes | list | [] | URL path patterns that bypass authentication. |
-| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
-| oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
-| oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
-| oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
-| oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
-| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.secretRef to be set when false. |
-| oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
-| oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
-| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.secretRef must be set. |
-| oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
-| oauth2.secretRef | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
-| oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
-| oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
+| metrics.annotations | object | {} | Extra annotations for the ServiceMonitor (when metrics.enabled=true and ServiceMonitor CRD is installed). |
 
 ### Route
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | route | object | see values.yaml | Gateway API route settings. |
-| route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
-| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only. |
 | route.enabled | bool | false | Enable Gateway API resources (HTTPRoute or TLSRoute, ListenerSet, and optional policies). |
+| route.type | string | HTTPRoute | Route type. Supports HTTPRoute or TLSRoute. |
 | route.exposeMetrics | bool | false | Expose the /metrics path via the HTTPRoute. Set to false to block external access to metrics. When false, a PathPrefix /metrics rule with no backends is prepended before the catch-all. Istio returns 404 for empty backendRefs: https://github.com/istio/istio/blob/2ca2c3cbf76713c720d22b57e6995bdd5ad65153/pilot/pkg/config/kube/gateway/conversion.go#L231-L235 HTTPRoute only. |
+| route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
+| route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
 | route.gateway | object | see values.yaml | Gateway attachment settings. |
 | route.gateway.name | string | ingressgateway | Name of the Gateway to attach to. |
 | route.gateway.namespace | string | istio-ingress | Namespace of the Gateway. |
 | route.gateway.sectionName | string | "" | If set, skip ListenerSet creation and attach the route directly to this Gateway listener section. |
-| route.hostnames | list | [] | Public hostname(s) for the HTTPRoute and ListenerSet. The first hostname is also used to auto-populate oauth2-proxy redirect_url. |
-| route.port | string | null | Backend port for the auto-generated catch-all rule. Defaults to applicationPort.port, or 4180 when oauth2.enabled=true. |
-| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
+| route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only. |
 | route.rules | list | [] | Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only. |
-| route.type | string | HTTPRoute | Route type. Supports HTTPRoute or TLSRoute. |
+| route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
+| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
+
+### OAuth2
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
+| oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
+| oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
+| oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
+| oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
+| oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
+| oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
+| oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
+| oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
+| oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
+| oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |
+| oauth2.config.skipAuthRoutes | list | [] | URL path patterns that bypass authentication. |
+| oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
+| oauth2.secretRef | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
+| oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
+| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.secretRef must be set. |
+| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.secretRef to be set when false. |
+| oauth2.clientDefinition | object | `{"attributes":{"post.logout.redirect.uris":"+"},"defaultClientScopes":["openid","profile","email"],"directAccessGrantsEnabled":false,"enabled":true,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":true,"webOrigins":["+"]}` | Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition. clientId and redirectUris are always auto-derived. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
+| oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
+| oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
+
+### Audit
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| audit | object | see values.yaml | Audit log sidecar settings. When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads automatically when the ConfigMap changes — no pod restart needed. |
+| audit.enabled | bool | false | Enable the Vector audit log sidecar. Requires the `vector-audit-rules` ConfigMap to exist in the namespace, deployed via projectDefaults.auditlog in the tenant chart. |
+| audit.image.repository | string | timberio/vector | Vector container image repository. |
+| audit.image.tag | string | 0.55.0-distroless-libc | Vector container image tag. |
+| audit.image.pullPolicy | string | IfNotPresent | Image pull policy. |
+| audit.resources | object | see values.yaml | Resource requests and limits for the Vector audit sidecar container. |
+| audit.resources.requests.cpu | string | 50m | CPU request for the Vector audit sidecar. |
+| audit.resources.requests.memory | string | 64Mi | Memory request for the Vector audit sidecar. |
+| audit.resources.limits.memory | string | 128Mi | Memory limit for the Vector audit sidecar. |
+| audit.securityContext | object | see values.yaml | Security context applied to the Vector audit sidecar container. |
+| audit.config.httpPort | int | 9001 | Port the Vector HTTP source listens on inside the sidecar. The application sends audit events to this port via HTTP POST. Used only for the CiliumNetworkPolicy egress rule. |
 
 ## Usage
 
