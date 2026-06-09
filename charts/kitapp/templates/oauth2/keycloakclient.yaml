@@ -1,4 +1,4 @@
-{{- if and .Values.oauth2.enabled .Values.oauth2.realm (not .Values.oauth2.secretRef) }}
+{{- if and .Values.oauth2.enabled .Values.oauth2.realm (not .Values.oauth2.secretRef) (.Capabilities.APIVersions.Has "keycloak.hostzero.com/v1beta1/KeycloakClient") }}
 {{- $publicClient := (.Values.oauth2.definition | default dict).publicClient | default false }}
 apiVersion: keycloak.hostzero.com/v1beta1
 kind: KeycloakClient
