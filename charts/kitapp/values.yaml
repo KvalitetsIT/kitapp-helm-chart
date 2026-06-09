@@ -486,9 +486,11 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   secretRef: ""
-  # -- Keycloak realm name. When set together with oauth2.enabled, a KeycloakClient CRD is
-  # provisioned using clusterRealmRef. The keycloak-operator creates the Keycloak client and
-  # syncs credentials into a Secret. oauth2.secretRef is auto-derived and does not need to be set.
+  # -- Keycloak realm name. Always used together with keycloakUrl to construct the OIDC issuer URL.
+  # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
+  # auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set.
+  # When provisionClient=false (default), only the issuer URL is derived; the Keycloak client
+  # and credentials must be managed externally and oauth2.secretRef must be set.
   # @default -- ""
   # @section -- OAuth2
   realm: ""
