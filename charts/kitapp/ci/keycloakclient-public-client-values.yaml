@@ -15,5 +15,5 @@ oauth2:
   realm: my-realm
   issuerUrl: https://keycloak.example.com
   provisionClient: true
-  definition:
+  clientDefinition:
     publicClient: true

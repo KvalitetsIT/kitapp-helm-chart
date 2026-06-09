@@ -26,7 +26,7 @@
     "attributes" (dict "post.logout.redirect.uris" "+")
     "defaultClientScopes" (list "openid" "profile" "email")
 -}}
-{{- $def := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.definition | default dict) }}
+{{- $def := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.clientDefinition | default dict) }}
 {{- $_ := set $def "clientId" $clientId }}
 {{- if not $def.redirectUris }}
 {{- $uris := list }}
@@ -44,7 +44,7 @@
 {{- $cookieSecret := index $existing "OAUTH2_PROXY_COOKIE_SECRET" | default "" | b64dec }}
 {{- if not $cookieSecret }}{{- $cookieSecret = randAlphaNum 32 }}{{- end }}
 OAUTH2_PROXY_COOKIE_SECRET: {{ $cookieSecret | b64enc }}
-{{- if not ((.Values.oauth2.definition | default dict).publicClient | default false) }}
+{{- if not ((.Values.oauth2.clientDefinition | default dict).publicClient | default false) }}
 {{- $clientSecret := index $existing "OAUTH2_PROXY_CLIENT_SECRET" | default "" | b64dec }}
 {{- if not $clientSecret }}{{- $clientSecret = randAlphaNum 32 }}{{- end }}
 OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}

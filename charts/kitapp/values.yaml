@@ -513,7 +513,7 @@ oauth2:
   # on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret.
   # @default -- {}
   # @section -- OAuth2
-  definition: {}
+  clientDefinition: {}
   # -- Optional sidecar resource annotation settings.
   # @default -- see values.yaml
   # @section -- OAuth2
