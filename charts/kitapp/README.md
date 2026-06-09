@@ -137,7 +137,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
 | oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
 | oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
-| oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
+| oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.example.com). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
 | oauth2.config | object | see values.yaml | Structured oauth2-proxy config for commonly configured keys. |
 | oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
 | oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |

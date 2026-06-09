@@ -454,7 +454,7 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   cookieName: ""
-  # -- Base Keycloak URL (e.g. https://keycloak.hosting.kitkube.dk).
+  # -- Base Keycloak URL (e.g. https://keycloak.example.com).
   # The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`.
   # @default -- ""
   # @section -- OAuth2
