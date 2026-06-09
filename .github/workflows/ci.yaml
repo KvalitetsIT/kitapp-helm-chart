@@ -58,7 +58,7 @@ jobs:
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
 
       - name: Run chart-testing (lint)
-        run: ct lint --config ct.yaml --helm-extra-args "--api-versions keycloak.hostzero.com/v1beta1/KeycloakClient"
+        run: ct lint --config ct.yaml
 
       - name: Kubernetes KinD Cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
