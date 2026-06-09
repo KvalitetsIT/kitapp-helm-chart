@@ -22,6 +22,7 @@
   {{- range .Values.route.hostnames -}}{{- $uris = append $uris (printf "https://%s/*" .) -}}{{- end -}}
   {{- $_ := set $def "redirectUris" $uris -}}
 {{- end -}}
+{{- $_ := set $def "defaultClientScopes" (without $def.defaultClientScopes "openid") -}}
 {{- toYaml $def -}}
 {{- end -}}
 
