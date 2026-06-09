@@ -481,11 +481,16 @@ oauth2:
   # @default -- {}
   # @section -- OAuth2
   rawConfig: {}
-  # -- Existing Secret name referenced by injector annotation.
-  # Optional when oauth2.realm is set — auto-derived as `<release-name>-keycloak-client`.
+  # -- Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own).
+  # Required when provisionClient=false. Mutually exclusive with secretName.
   # @default -- ""
   # @section -- OAuth2
   secretRef: ""
+  # -- Name for the auto-generated oauth2-proxy Secret when provisionClient=true.
+  # Defaults to `<release-name>-keycloak-client`.
+  # @default -- ""
+  # @section -- OAuth2
+  secretName: ""
   # -- Keycloak realm name. Always used together with keycloakUrl to construct the OIDC issuer URL.
   # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
   # auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set.
