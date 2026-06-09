@@ -495,9 +495,9 @@ oauth2:
   # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
   # Set to false to manage the Keycloak client externally while still using realm and keycloakUrl
   # for the issuer URL. Requires oauth2.secretRef to be set when false.
-  # @default -- true
+  # @default -- false
   # @section -- OAuth2
-  provisionClient: true
+  provisionClient: false
   # -- Keycloak ClientRepresentation fields merged into the KeycloakClient spec.definition.
   # The chart provides sensible defaults (publicClient: false, standardFlowEnabled: true,
   # defaultClientScopes: [openid, profile, email], webOrigins: [+], etc.) which are
