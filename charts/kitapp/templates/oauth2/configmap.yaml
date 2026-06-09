@@ -17,7 +17,7 @@ data:
     provider = "oidc"
     client_id = {{ include "kitapp.oauth2.clientId" . | quote }}
     oidc_issuer_url = {{ include "kitapp.oauth2.issuerUrl" . | quote }}
-    scope = {{ (.Values.oauth2.clientDefinition | default dict).defaultClientScopes | default (list "openid" "profile" "email") | toJson }}
+    scope = {{ .Values.oauth2.clientDefinition.defaultClientScopes | toJson }}
     insecure_oidc_allow_unverified_email = true
 
     # Authentication

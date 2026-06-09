@@ -15,27 +15,14 @@
 {{- end -}}
 
 {{- define "kitapp.oauth2.clientDefinition" -}}
-{{- $clientId := include "kitapp.oauth2.clientId" . }}
-{{- $defaults := dict
-    "enabled" true
-    "publicClient" false
-    "standardFlowEnabled" true
-    "directAccessGrantsEnabled" false
-    "serviceAccountsEnabled" false
-    "webOrigins" (list "+")
-    "attributes" (dict "post.logout.redirect.uris" "+")
-    "defaultClientScopes" (list "openid" "profile" "email")
--}}
-{{- $def := mergeOverwrite (deepCopy $defaults) (.Values.oauth2.clientDefinition | default dict) }}
-{{- $_ := set $def "clientId" $clientId }}
-{{- if not $def.redirectUris }}
-{{- $uris := list }}
-{{- range .Values.route.hostnames }}
-{{- $uris = append $uris (printf "https://%s/*" .) }}
-{{- end }}
-{{- if $uris }}{{- $_ := set $def "redirectUris" $uris }}{{- end }}
-{{- end }}
-{{- toYaml $def }}
+{{- $def := .Values.oauth2.clientDefinition | deepCopy -}}
+{{- $_ := set $def "clientId" (include "kitapp.oauth2.clientId" .) -}}
+{{- if and (not $def.redirectUris) .Values.route.hostnames -}}
+  {{- $uris := list -}}
+  {{- range .Values.route.hostnames -}}{{- $uris = append $uris (printf "https://%s/*" .) -}}{{- end -}}
+  {{- $_ := set $def "redirectUris" $uris -}}
+{{- end -}}
+{{- toYaml $def -}}
 {{- end -}}
 
 {{- define "kitapp.oauth2.secretData" -}}
@@ -44,7 +31,7 @@
 {{- $cookieSecret := index $existing "OAUTH2_PROXY_COOKIE_SECRET" | default "" | b64dec }}
 {{- if not $cookieSecret }}{{- $cookieSecret = randAlphaNum 32 }}{{- end }}
 OAUTH2_PROXY_COOKIE_SECRET: {{ $cookieSecret | b64enc }}
-{{- if not ((.Values.oauth2.clientDefinition | default dict).publicClient | default false) }}
+{{- if not .Values.oauth2.clientDefinition.publicClient }}
 {{- $clientSecret := index $existing "OAUTH2_PROXY_CLIENT_SECRET" | default "" | b64dec }}
 {{- if not $clientSecret }}{{- $clientSecret = randAlphaNum 32 }}{{- end }}
 OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}

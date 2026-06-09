@@ -505,15 +505,24 @@ oauth2:
   # @default -- false
   # @section -- OAuth2
   provisionClient: false
-  # -- Keycloak ClientRepresentation fields merged into the KeycloakClient spec.definition.
-  # The chart provides sensible defaults (publicClient: false, standardFlowEnabled: true,
-  # defaultClientScopes: [openid, profile, email], webOrigins: [+], etc.) which are
-  # overridden field-by-field by anything set here. clientId and redirectUris are always
-  # auto-derived and cannot be overridden. Setting publicClient: true skips clientSecretRef
-  # on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret.
-  # @default -- {}
+  # -- Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition.
+  # clientId and redirectUris are always auto-derived. Setting publicClient: true skips
+  # clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret.
   # @section -- OAuth2
-  clientDefinition: {}
+  clientDefinition:
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: true
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    webOrigins:
+      - "+"
+    attributes:
+      post.logout.redirect.uris: "+"
+    defaultClientScopes:
+      - openid
+      - profile
+      - email
   # -- Optional sidecar resource annotation settings.
   # @default -- see values.yaml
   # @section -- OAuth2

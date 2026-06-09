@@ -1,5 +1,5 @@
 {{- if and .Values.oauth2.enabled .Values.oauth2.realm .Values.oauth2.provisionClient }}
-{{- $publicClient := (.Values.oauth2.clientDefinition | default dict).publicClient | default false }}
+{{- $publicClient := .Values.oauth2.clientDefinition.publicClient | default false }}
 apiVersion: keycloak.hostzero.com/v1beta1
 kind: KeycloakClient
 metadata:
