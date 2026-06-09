@@ -1,0 +1,23 @@
+{{- if and .Values.oauth2.enabled .Values.oauth2.realm .Values.oauth2.provisionClient }}
+{{- $publicClient := .Values.oauth2.clientDefinition.publicClient | default false }}
+apiVersion: keycloak.hostzero.com/v1beta1
+kind: KeycloakClient
+metadata:
+  name: {{ include "kitapp.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kitapp.labels" . | nindent 4 }}
+spec:
+  clusterRealmRef:
+    name: {{ .Values.oauth2.realm }}
+  clientId: {{ include "kitapp.oauth2.clientId" . }}
+  definition:
+    {{- include "kitapp.oauth2.clientDefinition" . | nindent 4 }}
+  {{- if not $publicClient }}
+  clientSecretRef:
+    name: {{ include "kitapp.oauth2.secretRef" . }}
+    clientIdKey: OAUTH2_PROXY_CLIENT_ID
+    clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
+    create: true
+  {{- end }}
+{{- end }}

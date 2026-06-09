@@ -445,15 +445,17 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   upstream: ""
-  # -- OIDC client ID (`client_id` in oauth2-proxy.cfg).
+  # -- OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set).
+  # Optional when oauth2.realm is set — defaults to Release.Name.
   # @default -- ""
   # @section -- OAuth2
   clientId: ""
-  # -- Cookie name used by oauth2-proxy. Defaults to `clientId` when empty.
+  # -- Cookie name used by oauth2-proxy. Defaults to clientId when empty.
   # @default -- ""
   # @section -- OAuth2
   cookieName: ""
-  # -- Reusable oauth2-proxy issuer URL used by generated oauth2-proxy.cfg (`oidc_issuer_url`).
+  # -- Base Keycloak URL (e.g. https://keycloak.example.com).
+  # The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`.
   # @default -- ""
   # @section -- OAuth2
   issuerUrl: ""
@@ -479,10 +481,48 @@ oauth2:
   # @default -- {}
   # @section -- OAuth2
   rawConfig: {}
-  # -- Existing Secret name referenced by injector annotation (required when oauth2.enabled=true).
+  # -- Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own).
+  # Required when provisionClient=false. Mutually exclusive with secretName.
   # @default -- ""
   # @section -- OAuth2
   secretRef: ""
+  # -- Name for the auto-generated oauth2-proxy Secret when provisionClient=true.
+  # Defaults to `<release-name>-keycloak-client`.
+  # @default -- ""
+  # @section -- OAuth2
+  secretName: ""
+  # -- Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL.
+  # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
+  # auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set.
+  # When provisionClient=false (default), only the issuer URL is derived; the Keycloak client
+  # and credentials must be managed externally and oauth2.secretRef must be set.
+  # @default -- ""
+  # @section -- OAuth2
+  realm: ""
+  # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
+  # Set to false to manage the Keycloak client externally while still using realm and issuerUrl
+  # for the issuer URL. Requires oauth2.secretRef to be set when false.
+  # @default -- false
+  # @section -- OAuth2
+  provisionClient: false
+  # -- Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition.
+  # clientId and redirectUris are always auto-derived. Setting publicClient: true skips
+  # clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret.
+  # @section -- OAuth2
+  clientDefinition:
+    enabled: true
+    publicClient: false
+    standardFlowEnabled: true
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    webOrigins:
+      - "+"
+    attributes:
+      post.logout.redirect.uris: "+"
+    defaultClientScopes:
+      - openid
+      - profile
+      - email
   # -- Optional sidecar resource annotation settings.
   # @default -- see values.yaml
   # @section -- OAuth2
