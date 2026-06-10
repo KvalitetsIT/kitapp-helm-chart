@@ -143,10 +143,10 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.config.allowedGroups | list | [] | Groups allowed to authenticate. Empty means no group restriction. |
 | oauth2.config.skipAuthRoutes | list | [] | URL path patterns that bypass authentication. |
 | oauth2.rawConfig | object | {} | Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg. Use for any oauth2-proxy setting not covered by the structured keys above. |
-| oauth2.secretRef | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
+| oauth2.existingSecret | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
 | oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
-| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.secretRef must be set. |
-| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.secretRef to be set when false. |
+| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.existingSecret does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.existingSecret must be set. |
+| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.existingSecret to be set when false. ArgoCD users: see the README for a required ignoreDifferences workaround. |
 | oauth2.clientDefinition | object | `{"attributes":{"post.logout.redirect.uris":"+"},"defaultClientScopes":["openid","profile","email"],"directAccessGrantsEnabled":false,"enabled":true,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":true,"webOrigins":["+"]}` | Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition. clientId and redirectUris are always auto-derived. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
@@ -596,7 +596,7 @@ servicePort:
 
 oauth2:
   enabled: true
-  secretRef: my-app-oauth2-proxy-envs
+  existingSecret: my-app-oauth2-proxy-envs
   clientId: my-app
   issuerUrl: https://keycloak.example.com
   realm: my-realm
@@ -627,7 +627,7 @@ servicePort:
 
 oauth2:
   enabled: true
-  secretRef: my-app-oauth2-proxy-envs
+  existingSecret: my-app-oauth2-proxy-envs
   image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
   clientId: my-app
   issuerUrl: https://keycloak.example.com
@@ -659,6 +659,46 @@ route:
     namespace: istio-ingress
   clusterIssuer: letsencrypt-prod-istio
 ```
+
+### Keycloak client provisioning
+
+Set `oauth2.provisionClient=true` to have the chart create a `KeycloakClient` CRD and
+auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
+
+```yaml
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "2.23.0"
+
+applicationPort:
+  port: 8080
+
+route:
+  enabled: true
+  hostnames:
+    - app.example.com
+
+oauth2:
+  enabled: true
+  realm: my-realm
+  clientId: my-app
+  issuerUrl: https://keycloak.example.com
+  provisionClient: true
+```
+
+> [!NOTE]
+> Helm's `lookup` function is unavailable during ArgoCD template rendering, so the
+> auto-generated Secret receives new random values on every sync. Add an
+> `ignoreDifferences` rule to your ArgoCD `Application` to prevent spurious pod restarts:
+>
+> ```yaml
+> ignoreDifferences:
+>   - group: ""
+>     kind: Secret
+>     name: <release-name>-keycloak-client  # or oauth2.secretName if overridden
+>     jsonPointers:
+>       - /data
+> ```
 
 ### Route + OAuth2
 
