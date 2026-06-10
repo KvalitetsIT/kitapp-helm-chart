@@ -11,7 +11,7 @@ servicePort:
 
 oauth2:
   enabled: true
-  secretRef: my-app-oauth2-proxy-envs
+  existingSecret: my-app-oauth2-proxy-envs
   clientId: my-app
   issuerUrl: https://keycloak.example.com
   realm: my-realm
