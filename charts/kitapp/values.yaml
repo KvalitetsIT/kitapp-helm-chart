@@ -485,7 +485,7 @@ oauth2:
   # Required when provisionClient=false. Mutually exclusive with secretName.
   # @default -- ""
   # @section -- OAuth2
-  secretRef: ""
+  existingSecret: ""
   # -- Name for the auto-generated oauth2-proxy Secret when provisionClient=true.
   # Defaults to `<release-name>-keycloak-client`.
   # @default -- ""
@@ -493,15 +493,27 @@ oauth2:
   secretName: ""
   # -- Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL.
   # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
-  # auto-generates the oauth2-proxy Secret — oauth2.secretRef does not need to be set.
+  # auto-generates the oauth2-proxy Secret — oauth2.existingSecret does not need to be set.
   # When provisionClient=false (default), only the issuer URL is derived; the Keycloak client
-  # and credentials must be managed externally and oauth2.secretRef must be set.
+  # and credentials must be managed externally and oauth2.existingSecret must be set.
   # @default -- ""
   # @section -- OAuth2
   realm: ""
   # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
   # Set to false to manage the Keycloak client externally while still using realm and issuerUrl
-  # for the issuer URL. Requires oauth2.secretRef to be set when false.
+  # for the issuer URL. Requires oauth2.existingSecret to be set when false.
+  #
+  # ArgoCD note: Helm's `lookup` function is unavailable during ArgoCD rendering, so the
+  # auto-generated Secret receives new random values on every sync. Add an ignoreDifferences
+  # rule for the Secret to prevent spurious pod restarts:
+  #
+  #   ignoreDifferences:
+  #     - group: ""
+  #       kind: Secret
+  #       name: <release-name>-keycloak-client  # or oauth2.secretName if set
+  #       jsonPointers:
+  #         - /data
+  #
   # @default -- false
   # @section -- OAuth2
   provisionClient: false
