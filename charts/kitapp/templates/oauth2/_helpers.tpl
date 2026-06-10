@@ -40,8 +40,8 @@ OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
 {{- end -}}
 
 {{- define "kitapp.oauth2.secretRef" -}}
-{{- if .Values.oauth2.secretRef }}
-{{- .Values.oauth2.secretRef }}
+{{- if .Values.oauth2.existingSecret }}
+{{- .Values.oauth2.existingSecret }}
 {{- else if .Values.oauth2.provisionClient }}
 {{- .Values.oauth2.secretName | default (printf "%s-keycloak-client" (include "kitapp.name" .)) }}
 {{- end }}

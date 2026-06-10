@@ -1,4 +1,4 @@
-{{- if .Values.route.enabled }}
+{{- if and .Values.route.enabled (eq .Values.route.type "HTTPRoute") }}
 {{- range $authName, $auth := .Values.route.requestAuthentications }}
 {{- if $auth }}
 ---

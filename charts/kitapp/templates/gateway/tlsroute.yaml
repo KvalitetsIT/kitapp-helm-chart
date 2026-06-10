@@ -28,6 +28,6 @@ spec:
         - group: ""
           kind: Service
           name: {{ include "kitapp.name" . | quote }}
-          port: {{ .Values.route.port | default .Values.applicationPort.port | int }}
+          port: {{ include "kitapp.gateway.resolvedPort" . }}
           weight: 1
 {{- end }}

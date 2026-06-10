@@ -165,6 +165,29 @@ Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 {{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
 ```
 
+### Keycloak client provisioning
+
+Set `oauth2.provisionClient=true` to have the chart create a `KeycloakClient` CRD and
+auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
+
+```yaml
+{{ .Files.Get "ci/keycloakclient-values.yaml" | trim }}
+```
+
+> [!NOTE]
+> Helm's `lookup` function is unavailable during ArgoCD template rendering, so the
+> auto-generated Secret receives new random values on every sync. Add an
+> `ignoreDifferences` rule to your ArgoCD `Application` to prevent spurious pod restarts:
+>
+> ```yaml
+> ignoreDifferences:
+>   - group: ""
+>     kind: Secret
+>     name: <release-name>-keycloak-client  # or oauth2.secretName if overridden
+>     jsonPointers:
+>       - /data
+> ```
+
 ### Route + OAuth2
 
 When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
