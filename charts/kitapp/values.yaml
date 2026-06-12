@@ -502,6 +502,8 @@ oauth2:
   # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
   # Set to false to manage the Keycloak client externally while still using realm and issuerUrl
   # for the issuer URL. Requires oauth2.existingSecret to be set when false.
+  # **Requires the Keycloak Operator** to be installed in the cluster — see the README's
+  # [Keycloak client provisioning](#keycloak-client-provisioning) section.
   # ArgoCD users: see the README for a required ignoreDifferences workaround.
   # @default -- false
   # @section -- OAuth2

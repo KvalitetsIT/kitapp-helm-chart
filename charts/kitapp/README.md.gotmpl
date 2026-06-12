@@ -167,6 +167,12 @@ Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 
 ### Keycloak client provisioning
 
+> [!IMPORTANT]
+> This feature requires the [Keycloak Operator](https://www.keycloak.org/operator/installation) to be
+> installed in the cluster. The operator registers the `KeycloakClient` CRD that this chart creates.
+> Without it, `helm install` succeeds but Kubernetes will reject the manifest with
+> `no matches for kind "KeycloakClient"`.
+
 Set `oauth2.provisionClient=true` to have the chart create a `KeycloakClient` CRD and
 auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
 

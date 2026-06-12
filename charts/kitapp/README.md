@@ -146,7 +146,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.existingSecret | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
 | oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
 | oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.existingSecret does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.existingSecret must be set. |
-| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.existingSecret to be set when false. ArgoCD users: see the README for a required ignoreDifferences workaround. |
+| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.existingSecret to be set when false. **Requires the Keycloak Operator** to be installed in the cluster — see the README's [Keycloak client provisioning](#keycloak-client-provisioning) section. ArgoCD users: see the README for a required ignoreDifferences workaround. |
 | oauth2.clientDefinition | object | `{"attributes":{"post.logout.redirect.uris":"+"},"defaultClientScopes":["openid","profile","email"],"directAccessGrantsEnabled":false,"enabled":true,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":true,"webOrigins":["+"]}` | Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition. clientId and redirectUris are always auto-derived. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
 | oauth2.providerCA | object | see values.yaml | Optional provider CA annotation settings. |
@@ -661,6 +661,12 @@ route:
 ```
 
 ### Keycloak client provisioning
+
+> [!IMPORTANT]
+> This feature requires the [Keycloak Operator](https://www.keycloak.org/operator/installation) to be
+> installed in the cluster. The operator registers the `KeycloakClient` CRD that this chart creates.
+> Without it, `helm install` succeeds but Kubernetes will reject the manifest with
+> `no matches for kind "KeycloakClient"`.
 
 Set `oauth2.provisionClient=true` to have the chart create a `KeycloakClient` CRD and
 auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
