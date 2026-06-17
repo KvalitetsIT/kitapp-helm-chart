@@ -123,6 +123,9 @@
   {{- if and .Values.oauth2.enabled (not .Values.oauth2.provisionClient) (not .Values.oauth2.existingSecret) -}}
     {{- fail "values.oauth2.existingSecret is required when oauth2.provisionClient=false" -}}
   {{- end -}}
+  {{- if and .Values.oauth2.enabled .Values.oauth2.provisionClient (not (.Capabilities.APIVersions.Has "keycloak.hostzero.com/v1beta1")) -}}
+    {{- fail "oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) — install the Hostzero Keycloak operator or set provisionClient=false" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.envNames" -}}
