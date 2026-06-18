@@ -47,35 +47,6 @@ OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
 {{- end }}
 {{- end -}}
 
-{{- define "kitapp.oauth2.stableConfigToml" -}}
-{{- $config := .Values.oauth2.config | default dict | deepCopy -}}
-{{- $legacyAliases := dict "emailDomains" "email_domains" "allowedGroups" "allowed_groups" "skipAuthRoutes" "skip_auth_routes" -}}
-{{- range $legacy, $canonical := $legacyAliases }}
-{{- if hasKey $config $legacy }}
-{{- $_ := set $config $canonical (get $config $legacy) -}}
-{{- $_ := unset $config $legacy -}}
-{{- end }}
-{{- end }}
-{{- $_ := set $config "http_address" (get $config "http_address" | default (printf "0.0.0.0:%d" (.Values.oauth2.proxyPort | int))) -}}
-{{- $_ := set $config "upstreams" (get $config "upstreams" | default (list (.Values.oauth2.upstream | default (printf "http://127.0.0.1:%d" (.Values.applicationPort.port | int))))) -}}
-{{- $_ := set $config "client_id" (get $config "client_id" | default (include "kitapp.oauth2.clientId" .)) -}}
-{{- $_ := set $config "oidc_issuer_url" (get $config "oidc_issuer_url" | default (include "kitapp.oauth2.issuerUrl" .)) -}}
-{{- $_ := set $config "scope" (get $config "scope" | default (.Values.oauth2.clientDefinition.defaultClientScopes | join " ")) -}}
-{{- $_ := set $config "cookie_name" (get $config "cookie_name" | default (.Values.oauth2.cookieName | default (include "kitapp.oauth2.clientId" .))) -}}
-{{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
-{{- $_ := set $config "cookie_domains" (get $config "cookie_domains" | default .Values.route.hostnames) -}}
-{{- $_ := set $config "redirect_url" (get $config "redirect_url" | default (printf "https://%s/oauth2/callback" (first .Values.route.hostnames))) -}}
-{{- $_ := set $config "whitelist_domains" (get $config "whitelist_domains" | default .Values.route.hostnames) -}}
-{{- end }}
-{{- range $key, $value := (.Values.oauth2.rawConfig | default dict) }}
-{{- $_ := set $config $key $value -}}
-{{- end }}
-{{- range $key, $value := $config }}
-{{- if kindIs "invalid" $value }}{{- $_ := unset $config $key -}}{{- end }}
-{{- end }}
-{{- toToml $config -}}
-{{- end -}}
-
 {{- define "kitapp.oauth2.injectorAnnotations" -}}
 {{- $annotations := dict
       "oauth2-proxy.kitkube.dk/configmap" (include "kitapp.oauth2.configMapName" .)

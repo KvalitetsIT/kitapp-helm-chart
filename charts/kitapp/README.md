@@ -138,20 +138,12 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
 | oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
 | oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.example.com). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
-| oauth2.config | object | see values.yaml | Stable oauth2-proxy config rendered as TOML. Standardize on oauth2-proxy TOML key names here (for example `email_domains`, `cookie_secure`). Keys set to null are omitted unless the chart derives a default for them. Legacy aliases `emailDomains`, `allowedGroups`, and `skipAuthRoutes` are still accepted and translated. |
-| oauth2.config.http_address | string | null | Address and port oauth2-proxy binds to. Defaults to `0.0.0.0:<oauth2.proxyPort>` when null. |
-| oauth2.config.upstreams | string | null | Upstream URLs. Defaults to `http://127.0.0.1:<applicationPort.port>` or oauth2.upstream when null. |
-| oauth2.config.client_id | string | null | OAuth2 client ID. Defaults to oauth2.clientId, or the release name when oauth2.realm is set. |
-| oauth2.config.oidc_issuer_url | string | null | OIDC issuer URL. Defaults to `<oauth2.issuerUrl>/realms/<oauth2.realm>` when null. |
+| oauth2.config | object | see values.yaml | Configurable oauth2-proxy settings. Commonly changed options are exposed here as named fields; everything else can be added via `oauth2.rawConfig`. |
+| oauth2.config.emailDomains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
+| oauth2.config.allowedGroups | string | null | Groups allowed to authenticate. Null means no group restriction is rendered. |
+| oauth2.config.skipAuthRoutes | string | null | URL path patterns that bypass authentication. Null means no skip-auth routes are rendered. |
 | oauth2.config.scope | string | null | OIDC scopes. Defaults to oauth2.clientDefinition.defaultClientScopes joined by spaces. |
-| oauth2.config.email_domains | list | ["*"] | Email domains allowed to authenticate. Use ["*"] to allow any domain. |
-| oauth2.config.allowed_groups | string | null | Groups allowed to authenticate. Null means no group restriction is rendered. |
-| oauth2.config.skip_auth_routes | string | null | URL path patterns that bypass authentication. Null means no skip-auth routes are rendered. |
-| oauth2.config.cookie_name | string | null | Cookie name. Defaults to oauth2.cookieName, oauth2.clientId, or the release name when null. |
-| oauth2.config.cookie_domains | string | null | Cookie domains. Defaults to route.hostnames when route.enabled=true and null. |
-| oauth2.config.redirect_url | string | null | Redirect URL. Defaults to `https://<first route hostname>/oauth2/callback` when route.enabled=true and null. |
-| oauth2.config.whitelist_domains | string | null | Whitelist domains. Defaults to route.hostnames when route.enabled=true and null. |
-| oauth2.rawConfig | object | {} | Additional stable oauth2-proxy TOML key/value pairs merged after oauth2.config. Prefer oauth2.config for normal overrides; rawConfig remains for compatibility and overlays. Set a value to null here to remove it from the rendered stable config. |
+| oauth2.rawConfig | object | {} | Additional oauth2-proxy TOML key/value pairs appended after the base config. Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`). Keys that are hardcoded or derived by the chart are silently omitted to prevent duplicate-key errors. |
 | oauth2.useAlphaConfig | bool | false | Enable oauth2-proxy alpha config via oauth2-proxy-injector. When true, the chart renders a hardcoded `oauth2-proxy-alpha.yaml` ConfigMap key and annotates the pod with `oauth2-proxy.kitkube.dk/useAlphaConfig: "true"`. |
 | oauth2.alphaConfig | object | {} | Raw oauth2-proxy alpha config YAML rendered as `oauth2-proxy-alpha.yaml` when useAlphaConfig=true. |
 | oauth2.existingSecret | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
@@ -644,11 +636,11 @@ oauth2:
   issuerUrl: https://keycloak.example.com
   realm: my-realm
   config:
-    email_domains:
+    emailDomains:
       - example.com
-    allowed_groups:
+    allowedGroups:
       - admins
-    skip_auth_routes:
+    skipAuthRoutes:
       - ^/healthz$
   sidecar:
     requests:

@@ -459,84 +459,41 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   issuerUrl: ""
-  # -- Stable oauth2-proxy config rendered as TOML.
-  # Standardize on oauth2-proxy TOML key names here (for example `email_domains`, `cookie_secure`).
-  # Keys set to null are omitted unless the chart derives a default for them. Legacy aliases
-  # `emailDomains`, `allowedGroups`, and `skipAuthRoutes` are still accepted and translated.
+  # -- Configurable oauth2-proxy settings. Commonly changed options are exposed here as
+  # named fields; everything else can be added via `oauth2.rawConfig`.
   # @default -- see values.yaml
   # @section -- OAuth2
   config:
-    # -- Address and port oauth2-proxy binds to. Defaults to `0.0.0.0:<oauth2.proxyPort>` when null.
-    # @default -- null
-    # @section -- OAuth2
-    http_address: null
-    # -- Upstream URLs. Defaults to `http://127.0.0.1:<applicationPort.port>` or oauth2.upstream when null.
-    # @default -- null
-    # @section -- OAuth2
-    upstreams: null
-    reverse_proxy: true
-    provider: oidc
-    # -- OAuth2 client ID. Defaults to oauth2.clientId, or the release name when oauth2.realm is set.
-    # @default -- null
-    # @section -- OAuth2
-    client_id: null
-    # -- OIDC issuer URL. Defaults to `<oauth2.issuerUrl>/realms/<oauth2.realm>` when null.
-    # @default -- null
-    # @section -- OAuth2
-    oidc_issuer_url: null
-    # -- OIDC scopes. Defaults to oauth2.clientDefinition.defaultClientScopes joined by spaces.
-    # @default -- null
-    # @section -- OAuth2
-    scope: null
-    insecure_oidc_allow_unverified_email: true
     # -- Email domains allowed to authenticate. Use ["*"] to allow any domain.
     # @default -- ["*"]
     # @section -- OAuth2
-    email_domains:
+    emailDomains:
       - "*"
     # -- Groups allowed to authenticate. Null means no group restriction is rendered.
     # @default -- null
     # @section -- OAuth2
-    allowed_groups: null
+    allowedGroups: null
     # -- URL path patterns that bypass authentication. Null means no skip-auth routes are rendered.
     # @default -- null
     # @section -- OAuth2
-    skip_auth_routes: null
-    skip_auth_preflight: true
-    skip_jwt_bearer_tokens: true
-    skip_provider_button: true
-    # -- Cookie name. Defaults to oauth2.cookieName, oauth2.clientId, or the release name when null.
+    skipAuthRoutes: null
+    # -- OIDC scopes. Defaults to oauth2.clientDefinition.defaultClientScopes joined by spaces.
     # @default -- null
     # @section -- OAuth2
-    cookie_name: null
-    cookie_secure: true
-    cookie_httponly: true
-    cookie_samesite: lax
-    session_store_type: cookie
-    code_challenge_method: S256
-    # -- Cookie domains. Defaults to route.hostnames when route.enabled=true and null.
-    # @default -- null
-    # @section -- OAuth2
-    cookie_domains: null
-    # -- Redirect URL. Defaults to `https://<first route hostname>/oauth2/callback` when route.enabled=true and null.
-    # @default -- null
-    # @section -- OAuth2
-    redirect_url: null
-    # -- Whitelist domains. Defaults to route.hostnames when route.enabled=true and null.
-    # @default -- null
-    # @section -- OAuth2
-    whitelist_domains: null
-    pass_authorization_header: true
-    pass_access_token: true
-    pass_user_headers: true
-    set_xauthrequest: true
-    standard_logging: true
-    auth_logging: true
-    request_logging: true
-    errors_to_info_log: true
-  # -- Additional stable oauth2-proxy TOML key/value pairs merged after oauth2.config.
-  # Prefer oauth2.config for normal overrides; rawConfig remains for compatibility and overlays.
-  # Set a value to null here to remove it from the rendered stable config.
+    scope: null
+    insecureOidcAllowUnverifiedEmail: true
+    codeChallengeMethod: S256
+    cookieSecure: true
+    cookieHttponly: true
+    cookieSamesite: lax
+    sessionStoreType: cookie
+    passAuthorizationHeader: true
+    passAccessToken: true
+    passUserHeaders: true
+    setXauthrequest: true
+  # -- Additional oauth2-proxy TOML key/value pairs appended after the base config.
+  # Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`).
+  # Keys that are hardcoded or derived by the chart are silently omitted to prevent duplicate-key errors.
   # @default -- {}
   # @section -- OAuth2
   rawConfig: {}

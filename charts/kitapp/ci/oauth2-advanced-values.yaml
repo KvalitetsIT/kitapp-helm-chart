@@ -17,11 +17,11 @@ oauth2:
   issuerUrl: https://keycloak.example.com
   realm: my-realm
   config:
-    email_domains:
+    emailDomains:
       - example.com
-    allowed_groups:
+    allowedGroups:
       - admins
-    skip_auth_routes:
+    skipAuthRoutes:
       - ^/healthz$
   sidecar:
     requests:
