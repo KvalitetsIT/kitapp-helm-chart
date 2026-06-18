@@ -1,6 +1,6 @@
 {{- define "kitapp.oauth2.alpha.provider" -}}
 id: default
-provider: oidc
+provider: keycloak-oidc
 clientID: {{ include "kitapp.oauth2.clientId" . }}
 scope: {{ .Values.oauth2.config.scope }}
 oidcConfig:
