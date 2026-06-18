@@ -1,0 +1,34 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "2.23.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+servicePort:
+  port: 8080
+
+oauth2:
+  enabled: true
+  existingSecret: my-app-oauth2-proxy-envs
+  clientId: my-app
+  issuerUrl: https://keycloak.example.com
+  realm: my-realm
+  useAlphaConfig: true
+  alphaConfig:
+    upstreamConfig:
+      proxyRawPath: true
+      upstreams:
+        - id: app
+          path: /
+          uri: http://127.0.0.1:8080
+
+route:
+  enabled: true
+  hostnames:
+    - my-app.example.com
+  gateway:
+    name: ingressgateway
+    namespace: istio-ingress
+  clusterIssuer: letsencrypt-prod-istio

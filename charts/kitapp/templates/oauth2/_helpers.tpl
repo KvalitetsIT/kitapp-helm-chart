@@ -22,7 +22,11 @@
   {{- range .Values.route.hostnames -}}{{- $uris = append $uris (printf "https://%s/*" .) -}}{{- end -}}
   {{- $_ := set $def "redirectUris" $uris -}}
 {{- end -}}
+{{- if $def.defaultClientScopes }}
 {{- $_ := set $def "defaultClientScopes" (without $def.defaultClientScopes "openid") -}}
+{{- else }}
+{{- $_ := set $def "defaultClientScopes" (without (splitList " " .Values.oauth2.config.scope) "openid") -}}
+{{- end -}}
 {{- toYaml $def -}}
 {{- end -}}
 
@@ -55,6 +59,9 @@ OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
   -}}
 {{- with .Values.oauth2.image }}
 {{- $_ := set $annotations "oauth2-proxy.kitkube.dk/image" . -}}
+{{- end }}
+{{- if .Values.oauth2.useAlphaConfig }}
+{{- $_ := set $annotations "oauth2-proxy.kitkube.dk/useAlphaConfig" "true" -}}
 {{- end }}
 {{- with .Values.oauth2.sidecar.requests.cpu }}
 {{- $_ := set $annotations "oauth2-proxy.kitkube.dk/sidecar.requests.cpu" . -}}

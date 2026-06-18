@@ -1,4 +1,5 @@
 {{- if .Values.oauth2.enabled }}
+{{- $derived := include "kitapp.oauth2.alpha.derived" . | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,63 +9,74 @@ metadata:
     {{- include "kitapp.labels" . | nindent 4 }}
 data:
   oauth2-proxy.cfg: |
-    # Server
-    http_address = {{ printf "0.0.0.0:%d" (.Values.oauth2.proxyPort | int) | quote }}
-    upstreams = {{ list (.Values.oauth2.upstream | default (printf "http://127.0.0.1:%d" (.Values.applicationPort.port | int))) | toJson }}
+    {{- if not .Values.oauth2.useAlphaConfig }}
+    http_address = "0.0.0.0:{{ .Values.oauth2.proxyPort }}"
+    {{- end }}
     reverse_proxy = true
+    {{- if not .Values.oauth2.useAlphaConfig }}
 
-    # Provider
-    provider = "oidc"
-    client_id = {{ include "kitapp.oauth2.clientId" . | quote }}
-    oidc_issuer_url = {{ include "kitapp.oauth2.issuerUrl" . | quote }}
-    scope = {{ .Values.oauth2.clientDefinition.defaultClientScopes | join " " | quote }}
-    insecure_oidc_allow_unverified_email = true
+    upstreams = {{ list (.Values.oauth2.upstream | default (printf "http://127.0.0.1:%d/" (.Values.applicationPort.port | int))) | toJson }}
+    {{- end }}
 
-    # Authentication
-    email_domains = {{ .Values.oauth2.config.emailDomains | toJson }}
-    {{- with .Values.oauth2.config.allowedGroups }}
-    allowed_groups = {{ . | toJson }}
+    standard_logging = true
+    request_logging = true
+    auth_logging = true
+    errors_to_info_log = true
+    {{- if not .Values.oauth2.useAlphaConfig }}
+
+    provider = "keycloak-oidc"
+    client_id = "{{ include "kitapp.oauth2.clientId" . }}"
+    oidc_issuer_url = "{{ include "kitapp.oauth2.issuerUrl" . }}"
+    scope = "{{ .Values.oauth2.config.scope }}"
+    insecure_oidc_allow_unverified_email = {{ .Values.oauth2.config.insecureOidcAllowUnverifiedEmail }}
+    code_challenge_method = "{{ .Values.oauth2.config.codeChallengeMethod }}"
     {{- end }}
-    {{- with .Values.oauth2.config.skipAuthRoutes }}
-    skip_auth_routes = {{ . | toJson }}
-    {{- end }}
+
+    skip_provider_button = true
     skip_auth_preflight = true
     skip_jwt_bearer_tokens = true
-    skip_provider_button = true
 
-    # Cookie
-    cookie_name = {{ .Values.oauth2.cookieName | default (include "kitapp.oauth2.clientId" .) | quote }}
-    cookie_secure = true
-    cookie_httponly = true
-    cookie_samesite = "lax"
-    session_store_type = "cookie"
-    code_challenge_method = "S256"
-    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
-    cookie_domains = {{ .Values.route.hostnames | toJson }}
+    email_domains = {{ .Values.oauth2.config.emailDomains | toJson }}
+    {{- if .Values.oauth2.config.allowedGroups }}
+    allowed_groups = {{ .Values.oauth2.config.allowedGroups | toJson }}
     {{- end }}
-    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
+    {{- if .Values.oauth2.config.skipAuthRoutes }}
+    skip_auth_routes = {{ .Values.oauth2.config.skipAuthRoutes | toJson }}
+    {{- end }}
+    {{- if not .Values.oauth2.useAlphaConfig }}
 
-    # Redirect
-    redirect_url = {{ printf "https://%s/oauth2/callback" (first .Values.route.hostnames) | quote }}
+    pass_authorization_header = {{ .Values.oauth2.config.passAuthorizationHeader }}
+    pass_access_token = {{ .Values.oauth2.config.passAccessToken }}
+    pass_user_headers = {{ .Values.oauth2.config.passUserHeaders }}
+    set_xauthrequest = {{ .Values.oauth2.config.setXauthrequest }}
+    {{- end }}
+
+    {{- if and .Values.route.enabled (not (empty .Values.route.hostnames)) }}
+    redirect_url = "https://{{ first .Values.route.hostnames }}/oauth2/callback"
+    cookie_domains = {{ .Values.route.hostnames | toJson }}
     whitelist_domains = {{ .Values.route.hostnames | toJson }}
     {{- end }}
 
-    # Headers
-    pass_authorization_header = true
-    pass_access_token = true
-    pass_user_headers = true
-    set_xauthrequest = true
+    cookie_name = "{{ .Values.oauth2.cookieName | default (include "kitapp.oauth2.clientId" .) }}"
+    cookie_secure = {{ .Values.oauth2.config.cookieSecure }}
+    cookie_httponly = {{ .Values.oauth2.config.cookieHttponly }}
+    cookie_samesite = "{{ .Values.oauth2.config.cookieSamesite }}"
 
-    # Logging
-    standard_logging = true
-    auth_logging = true
-    request_logging = true
-    errors_to_info_log = true
-    {{- with .Values.oauth2.rawConfig }}
-
-    # Additional
-    {{- range $k, $v := . }}
-    {{ $k }} = {{ $v | toJson }}
+    session_store_type = "{{ .Values.oauth2.config.sessionStoreType }}"
+    {{- with omit (.Values.oauth2.rawConfig | default dict)
+          "http_address" "reverse_proxy" "upstreams"
+          "standard_logging" "request_logging" "auth_logging" "errors_to_info_log"
+          "provider" "client_id" "oidc_issuer_url" "scope" "insecure_oidc_allow_unverified_email" "code_challenge_method"
+          "skip_provider_button" "skip_auth_preflight" "skip_jwt_bearer_tokens"
+          "email_domains" "allowed_groups" "skip_auth_routes"
+          "pass_authorization_header" "pass_access_token" "pass_user_headers" "set_xauthrequest"
+          "redirect_url" "cookie_domains" "whitelist_domains"
+          "cookie_name" "cookie_secure" "cookie_httponly" "cookie_samesite"
+          "session_store_type" }}
+    {{- toToml . | trim | nindent 4 }}
     {{- end }}
-    {{- end }}
+  {{- if .Values.oauth2.useAlphaConfig }}
+  oauth2-proxy-alpha.yaml: |
+    {{- mergeOverwrite $derived (.Values.oauth2.alphaConfig | default dict) | toYaml | nindent 4 }}
+  {{- end }}
 {{- end }}

@@ -459,7 +459,8 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   issuerUrl: ""
-  # -- Structured oauth2-proxy config for commonly configured keys.
+  # -- Configurable oauth2-proxy settings. Commonly changed options are exposed here as
+  # named fields; everything else can be added via `oauth2.rawConfig`.
   # @default -- see values.yaml
   # @section -- OAuth2
   config:
@@ -468,19 +469,45 @@ oauth2:
     # @section -- OAuth2
     emailDomains:
       - "*"
-    # -- Groups allowed to authenticate. Empty means no group restriction.
-    # @default -- []
+    # -- Groups allowed to authenticate. Null means no group restriction is rendered.
+    # @default -- null
     # @section -- OAuth2
-    allowedGroups: []
-    # -- URL path patterns that bypass authentication.
-    # @default -- []
+    allowedGroups: null
+    # -- URL path patterns that bypass authentication. Null means no skip-auth routes are rendered.
+    # @default -- null
     # @section -- OAuth2
-    skipAuthRoutes: []
-  # -- Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg.
-  # Use for any oauth2-proxy setting not covered by the structured keys above.
+    skipAuthRoutes: null
+    # -- OIDC scopes requested in the OAuth2 authorization request.
+    # Also used to derive clientDefinition.defaultClientScopes when not explicitly set.
+    # @default -- "openid profile email"
+    # @section -- OAuth2
+    scope: "openid profile email"
+    insecureOidcAllowUnverifiedEmail: true
+    codeChallengeMethod: S256
+    cookieSecure: true
+    cookieHttponly: true
+    cookieSamesite: lax
+    sessionStoreType: cookie
+    passAuthorizationHeader: true
+    passAccessToken: true
+    passUserHeaders: true
+    setXauthrequest: true
+  # -- Additional oauth2-proxy TOML key/value pairs appended after the base config.
+  # Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`).
+  # Keys that are hardcoded or derived by the chart are silently omitted to prevent duplicate-key errors.
   # @default -- {}
   # @section -- OAuth2
   rawConfig: {}
+  # -- Enable oauth2-proxy alpha config via oauth2-proxy-injector.
+  # When true, the chart renders a hardcoded `oauth2-proxy-alpha.yaml` ConfigMap key and annotates
+  # the pod with `oauth2-proxy.kitkube.dk/useAlphaConfig: "true"`.
+  # @default -- false
+  # @section -- OAuth2
+  useAlphaConfig: false
+  # -- Raw oauth2-proxy alpha config YAML rendered as `oauth2-proxy-alpha.yaml` when useAlphaConfig=true.
+  # @default -- {}
+  # @section -- OAuth2
+  alphaConfig: {}
   # -- Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own).
   # Required when provisionClient=false. Mutually exclusive with secretName.
   # @default -- ""
@@ -522,10 +549,10 @@ oauth2:
       - "+"
     attributes:
       post.logout.redirect.uris: "+"
-    defaultClientScopes:
-      - openid
-      - profile
-      - email
+    # -- Override the Keycloak client scopes. Defaults to oauth2.config.scope (minus openid, which Keycloak handles implicitly).
+    # @default -- null
+    # @section -- OAuth2
+    defaultClientScopes: null
   # -- Optional sidecar resource annotation settings.
   # @default -- see values.yaml
   # @section -- OAuth2
