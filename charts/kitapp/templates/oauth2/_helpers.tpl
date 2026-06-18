@@ -25,7 +25,7 @@
 {{- if $def.defaultClientScopes }}
 {{- $_ := set $def "defaultClientScopes" (without $def.defaultClientScopes "openid") -}}
 {{- else }}
-{{- $_ := set $def "defaultClientScopes" (splitList " " .Values.oauth2.config.scope | without "openid") -}}
+{{- $_ := set $def "defaultClientScopes" (without (splitList " " .Values.oauth2.config.scope) "openid") -}}
 {{- end -}}
 {{- toYaml $def -}}
 {{- end -}}
