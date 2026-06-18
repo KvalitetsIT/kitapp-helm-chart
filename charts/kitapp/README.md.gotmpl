@@ -21,7 +21,7 @@ This chart deploys a generic Kubernetes `Deployment` with a `Service` and option
 
 - `image.repository` and one of `image.tag` or `image.digest` must be set
 - `applicationPort.port` must be set (defaults to `8080`)
-- when `oauth2.enabled=true`: `oauth2.realm` and `oauth2.keycloakUrl` are required; all other oauth2 fields are optional or auto-derived
+- when `oauth2.enabled=true`: `oauth2.realm` and `oauth2.issuerUrl` are required; all other oauth2 fields are optional or auto-derived
 - when `route.enabled=true`: `route.hostnames` and `route.gateway.name` must be set
 
 ### Image digests (recommended)
@@ -163,6 +163,12 @@ Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 
 ```yaml
 {{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
+```
+
+Enable `oauth2.useAlphaConfig` to render a same-ConfigMap `oauth2-proxy-alpha.yaml` key and opt the injector into passing `--alpha-config`. The alpha config key is intentionally fixed; put alpha YAML under `oauth2.alphaConfig`.
+
+```yaml
+{{ .Files.Get "ci/oauth2-alpha-values.yaml" | trim }}
 ```
 
 ### Keycloak client provisioning

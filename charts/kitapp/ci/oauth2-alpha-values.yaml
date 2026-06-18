@@ -12,27 +12,17 @@ servicePort:
 oauth2:
   enabled: true
   existingSecret: my-app-oauth2-proxy-envs
-  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
   clientId: my-app
   issuerUrl: https://keycloak.example.com
   realm: my-realm
-  config:
-    email_domains:
-      - example.com
-    allowed_groups:
-      - admins
-    skip_auth_routes:
-      - ^/healthz$
-  sidecar:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-  providerCA:
-    configMap: oidc-provider-ca
-    key: ca.crt
+  useAlphaConfig: true
+  alphaConfig:
+    upstreamConfig:
+      proxyRawPath: true
+      upstreams:
+        - id: app
+          path: /
+          uri: http://127.0.0.1:8080
 
 route:
   enabled: true

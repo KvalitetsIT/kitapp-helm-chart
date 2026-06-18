@@ -459,28 +459,97 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   issuerUrl: ""
-  # -- Structured oauth2-proxy config for commonly configured keys.
+  # -- Stable oauth2-proxy config rendered as TOML.
+  # Standardize on oauth2-proxy TOML key names here (for example `email_domains`, `cookie_secure`).
+  # Keys set to null are omitted unless the chart derives a default for them. Legacy aliases
+  # `emailDomains`, `allowedGroups`, and `skipAuthRoutes` are still accepted and translated.
   # @default -- see values.yaml
   # @section -- OAuth2
   config:
+    # -- Address and port oauth2-proxy binds to. Defaults to `0.0.0.0:<oauth2.proxyPort>` when null.
+    # @default -- null
+    # @section -- OAuth2
+    http_address: null
+    # -- Upstream URLs. Defaults to `http://127.0.0.1:<applicationPort.port>` or oauth2.upstream when null.
+    # @default -- null
+    # @section -- OAuth2
+    upstreams: null
+    reverse_proxy: true
+    provider: oidc
+    # -- OAuth2 client ID. Defaults to oauth2.clientId, or the release name when oauth2.realm is set.
+    # @default -- null
+    # @section -- OAuth2
+    client_id: null
+    # -- OIDC issuer URL. Defaults to `<oauth2.issuerUrl>/realms/<oauth2.realm>` when null.
+    # @default -- null
+    # @section -- OAuth2
+    oidc_issuer_url: null
+    # -- OIDC scopes. Defaults to oauth2.clientDefinition.defaultClientScopes joined by spaces.
+    # @default -- null
+    # @section -- OAuth2
+    scope: null
+    insecure_oidc_allow_unverified_email: true
     # -- Email domains allowed to authenticate. Use ["*"] to allow any domain.
     # @default -- ["*"]
     # @section -- OAuth2
-    emailDomains:
+    email_domains:
       - "*"
-    # -- Groups allowed to authenticate. Empty means no group restriction.
-    # @default -- []
+    # -- Groups allowed to authenticate. Null means no group restriction is rendered.
+    # @default -- null
     # @section -- OAuth2
-    allowedGroups: []
-    # -- URL path patterns that bypass authentication.
-    # @default -- []
+    allowed_groups: null
+    # -- URL path patterns that bypass authentication. Null means no skip-auth routes are rendered.
+    # @default -- null
     # @section -- OAuth2
-    skipAuthRoutes: []
-  # -- Raw TOML key/value pairs appended verbatim to oauth2-proxy.cfg.
-  # Use for any oauth2-proxy setting not covered by the structured keys above.
+    skip_auth_routes: null
+    skip_auth_preflight: true
+    skip_jwt_bearer_tokens: true
+    skip_provider_button: true
+    # -- Cookie name. Defaults to oauth2.cookieName, oauth2.clientId, or the release name when null.
+    # @default -- null
+    # @section -- OAuth2
+    cookie_name: null
+    cookie_secure: true
+    cookie_httponly: true
+    cookie_samesite: lax
+    session_store_type: cookie
+    code_challenge_method: S256
+    # -- Cookie domains. Defaults to route.hostnames when route.enabled=true and null.
+    # @default -- null
+    # @section -- OAuth2
+    cookie_domains: null
+    # -- Redirect URL. Defaults to `https://<first route hostname>/oauth2/callback` when route.enabled=true and null.
+    # @default -- null
+    # @section -- OAuth2
+    redirect_url: null
+    # -- Whitelist domains. Defaults to route.hostnames when route.enabled=true and null.
+    # @default -- null
+    # @section -- OAuth2
+    whitelist_domains: null
+    pass_authorization_header: true
+    pass_access_token: true
+    pass_user_headers: true
+    set_xauthrequest: true
+    standard_logging: true
+    auth_logging: true
+    request_logging: true
+    errors_to_info_log: true
+  # -- Additional stable oauth2-proxy TOML key/value pairs merged after oauth2.config.
+  # Prefer oauth2.config for normal overrides; rawConfig remains for compatibility and overlays.
+  # Set a value to null here to remove it from the rendered stable config.
   # @default -- {}
   # @section -- OAuth2
   rawConfig: {}
+  # -- Enable oauth2-proxy alpha config via oauth2-proxy-injector.
+  # When true, the chart renders a hardcoded `oauth2-proxy-alpha.yaml` ConfigMap key and annotates
+  # the pod with `oauth2-proxy.kitkube.dk/useAlphaConfig: "true"`.
+  # @default -- false
+  # @section -- OAuth2
+  useAlphaConfig: false
+  # -- Raw oauth2-proxy alpha config YAML rendered as `oauth2-proxy-alpha.yaml` when useAlphaConfig=true.
+  # @default -- {}
+  # @section -- OAuth2
+  alphaConfig: {}
   # -- Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own).
   # Required when provisionClient=false. Mutually exclusive with secretName.
   # @default -- ""
