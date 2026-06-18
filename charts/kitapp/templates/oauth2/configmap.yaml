@@ -18,10 +18,10 @@ data:
     auth_logging = true
     errors_to_info_log = true
 
-    provider = "oidc"
+    provider = "keycloak-oidc"
     client_id = "{{ include "kitapp.oauth2.clientId" . }}"
     oidc_issuer_url = "{{ include "kitapp.oauth2.issuerUrl" . }}"
-    scope = "{{ .Values.oauth2.config.scope | default (.Values.oauth2.clientDefinition.defaultClientScopes | join " ") }}"
+    scope = "{{ .Values.oauth2.config.scope }}"
     insecure_oidc_allow_unverified_email = {{ .Values.oauth2.config.insecureOidcAllowUnverifiedEmail }}
     code_challenge_method = "{{ .Values.oauth2.config.codeChallengeMethod }}"
 

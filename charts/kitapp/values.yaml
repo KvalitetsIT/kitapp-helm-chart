@@ -477,10 +477,11 @@ oauth2:
     # @default -- null
     # @section -- OAuth2
     skipAuthRoutes: null
-    # -- OIDC scopes. Defaults to oauth2.clientDefinition.defaultClientScopes joined by spaces.
-    # @default -- null
+    # -- OIDC scopes requested in the OAuth2 authorization request.
+    # Also used to derive clientDefinition.defaultClientScopes when not explicitly set.
+    # @default -- "openid profile email"
     # @section -- OAuth2
-    scope: null
+    scope: "openid profile email"
     insecureOidcAllowUnverifiedEmail: true
     codeChallengeMethod: S256
     cookieSecure: true
@@ -548,10 +549,10 @@ oauth2:
       - "+"
     attributes:
       post.logout.redirect.uris: "+"
-    defaultClientScopes:
-      - openid
-      - profile
-      - email
+    # -- Override the Keycloak client scopes. Defaults to oauth2.config.scope (minus openid, which Keycloak handles implicitly).
+    # @default -- null
+    # @section -- OAuth2
+    defaultClientScopes: null
   # -- Optional sidecar resource annotation settings.
   # @default -- see values.yaml
   # @section -- OAuth2

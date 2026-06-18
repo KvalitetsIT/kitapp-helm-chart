@@ -22,7 +22,11 @@
   {{- range .Values.route.hostnames -}}{{- $uris = append $uris (printf "https://%s/*" .) -}}{{- end -}}
   {{- $_ := set $def "redirectUris" $uris -}}
 {{- end -}}
+{{- if $def.defaultClientScopes }}
 {{- $_ := set $def "defaultClientScopes" (without $def.defaultClientScopes "openid") -}}
+{{- else }}
+{{- $_ := set $def "defaultClientScopes" (splitList " " .Values.oauth2.config.scope | without "openid") -}}
+{{- end -}}
 {{- toYaml $def -}}
 {{- end -}}
 
