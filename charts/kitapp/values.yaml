@@ -436,7 +436,9 @@ oauth2:
   # @default -- 4180
   # @section -- OAuth2
   proxyPort: 4180
-  # -- Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`.
+  # -- oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`.
+  # When useAlphaConfig=true and this is empty, the image is pinned to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0`
+  # because alpha config structure can change between minor releases.
   # @default -- ""
   # @section -- OAuth2
   image: ""

@@ -57,8 +57,10 @@ OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
       "oauth2-proxy.kitkube.dk/secret" (include "kitapp.oauth2.secretRef" .)
       "oauth2-proxy.kitkube.dk/configKey" "oauth2-proxy.cfg"
   -}}
-{{- with .Values.oauth2.image }}
-{{- $_ := set $annotations "oauth2-proxy.kitkube.dk/image" . -}}
+{{- if .Values.oauth2.image }}
+{{- $_ := set $annotations "oauth2-proxy.kitkube.dk/image" .Values.oauth2.image -}}
+{{- else if .Values.oauth2.useAlphaConfig }}
+{{- $_ := set $annotations "oauth2-proxy.kitkube.dk/image" "ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0" -}}
 {{- end }}
 {{- if .Values.oauth2.useAlphaConfig }}
 {{- $_ := set $annotations "oauth2-proxy.kitkube.dk/useAlphaConfig" "true" -}}

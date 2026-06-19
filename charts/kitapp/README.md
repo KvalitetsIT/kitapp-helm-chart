@@ -133,7 +133,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
 | oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
 | oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
-| oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
+| oauth2.image | string | "" | oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. When useAlphaConfig=true and this is empty, the image is pinned to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0` because alpha config structure can change between minor releases. |
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
 | oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
 | oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
@@ -665,6 +665,11 @@ route:
 ```
 
 Enable `oauth2.useAlphaConfig` to render a same-ConfigMap `oauth2-proxy-alpha.yaml` key and opt the injector into passing `--alpha-config`. The alpha config key is intentionally fixed; put alpha YAML under `oauth2.alphaConfig`.
+
+> [!WARNING]
+> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0`
+> unless `oauth2.image` is set explicitly. The alpha config schema can change between minor releases of oauth2-proxy,
+> so pinning prevents unexpected breakage on injector upgrades. Override `oauth2.image` to use a different version.
 
 ```yaml
 image:
