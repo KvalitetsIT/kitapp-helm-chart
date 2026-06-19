@@ -11,6 +11,3 @@ route:
   type: TLSRoute
   hostnames:
     - app.local
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress

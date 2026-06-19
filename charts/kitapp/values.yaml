@@ -417,7 +417,7 @@ route:
   # @section -- Route
   authorizationPolicies: {}
 
-  # -- Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic.
+  # -- Istio RequestAuthentication resources keyed by name. HTTPRoute only - requires decrypted traffic.
   # Use to require and validate JWTs from an OIDC provider (e.g. Keycloak).
   # @default -- {}
   # @section -- Route
@@ -436,7 +436,10 @@ oauth2:
   # @default -- 4180
   # @section -- OAuth2
   proxyPort: 4180
-  # -- Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`.
+  # -- oauth2-proxy image passed to the injector annotation `oauth2-proxy.kitkube.dk/image`.
+  # When useAlphaConfig=true and this is empty, the image is automatically pinned to
+  # `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0` because the alpha config schema can change
+  # between minor releases. Set explicitly to override the pinned version.
   # @default -- ""
   # @section -- OAuth2
   image: ""
@@ -445,8 +448,9 @@ oauth2:
   # @default -- ""
   # @section -- OAuth2
   upstream: ""
-  # -- OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set).
-  # Optional when oauth2.realm is set — defaults to Release.Name.
+  # -- OIDC client ID. Used as `client_id` in the stable TOML config and `providers[0].clientID` in
+  # the alpha YAML config. Also used as the Keycloak client ID when realm is set.
+  # Optional when oauth2.realm is set - defaults to Release.Name.
   # @default -- ""
   # @section -- OAuth2
   clientId: ""
@@ -520,7 +524,7 @@ oauth2:
   secretName: ""
   # -- Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL.
   # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
-  # auto-generates the oauth2-proxy Secret — oauth2.existingSecret does not need to be set.
+  # auto-generates the oauth2-proxy Secret - oauth2.existingSecret does not need to be set.
   # When provisionClient=false (default), only the issuer URL is derived; the Keycloak client
   # and credentials must be managed externally and oauth2.existingSecret must be set.
   # @default -- ""
@@ -529,7 +533,7 @@ oauth2:
   # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
   # Set to false to manage the Keycloak client externally while still using realm and issuerUrl
   # for the issuer URL. Requires oauth2.existingSecret to be set when false.
-  # **Requires the Keycloak Operator** to be installed in the cluster — see the README's
+  # **Requires the Keycloak Operator** to be installed in the cluster - see the README's
   # [Keycloak client provisioning](#keycloak-client-provisioning) section.
   # ArgoCD users: see the README for a required ignoreDifferences workaround.
   # @default -- false
@@ -573,7 +577,7 @@ oauth2:
 # -- Audit log sidecar settings.
 # When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap
 # deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads
-# automatically when the ConfigMap changes — no pod restart needed.
+# automatically when the ConfigMap changes - no pod restart needed.
 # @default -- see values.yaml
 # @section -- Audit
 audit:

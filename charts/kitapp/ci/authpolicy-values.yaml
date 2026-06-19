@@ -10,10 +10,6 @@ route:
   enabled: true
   hostnames:
     - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
   authorizationPolicies:
     block-metrics:
       action: DENY

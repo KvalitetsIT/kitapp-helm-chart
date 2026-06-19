@@ -80,7 +80,7 @@
       {{- fail "values.route.type must be HTTPRoute or TLSRoute" -}}
     {{- end -}}
     {{- if and (eq .Values.route.type "TLSRoute") .Values.oauth2.enabled -}}
-      {{- fail "oauth2 cannot be used with route.type=TLSRoute (TLS passthrough — gateway cannot inspect HTTP)" -}}
+      {{- fail "oauth2 cannot be used with route.type=TLSRoute (TLS passthrough - gateway cannot inspect HTTP)" -}}
     {{- end -}}
     {{- if empty .Values.route.hostnames -}}
       {{- fail "values.route.hostnames is required when route.enabled=true" -}}
@@ -124,7 +124,7 @@
     {{- fail "values.oauth2.existingSecret is required when oauth2.provisionClient=false" -}}
   {{- end -}}
   {{- if and .Values.oauth2.enabled .Values.oauth2.provisionClient (not (.Capabilities.APIVersions.Has "keycloak.hostzero.com/v1beta1")) -}}
-    {{- fail "oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) — install the Hostzero Keycloak operator or set provisionClient=false" -}}
+    {{- fail "oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) - install the Hostzero Keycloak operator or set provisionClient=false" -}}
   {{- end -}}
 {{- end -}}
 

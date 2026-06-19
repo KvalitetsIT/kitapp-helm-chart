@@ -124,7 +124,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | route.clusterIssuer | string | letsencrypt-prod-istio | Cert-manager ClusterIssuer for auto-TLS on the ListenerSet. HTTPRoute only. |
 | route.rules | list | [] | Explicit HTTPRoute rules prepended before the catch-all. HTTPRoute only. |
 | route.authorizationPolicies | object | {} | Istio AuthorizationPolicy resources keyed by name. Supports IP-based (remoteIpBlocks), path-based, and source-identity (principals) rules. |
-| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only — requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
+| route.requestAuthentications | object | {} | Istio RequestAuthentication resources keyed by name. HTTPRoute only - requires decrypted traffic. Use to require and validate JWTs from an OIDC provider (e.g. Keycloak). |
 
 ### OAuth2
 
@@ -133,9 +133,9 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
 | oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
 | oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
-| oauth2.image | string | "" | Optional oauth2-proxy image override. Renders injector annotation `oauth2-proxy.kitkube.dk/image`. |
+| oauth2.image | string | "" | oauth2-proxy image passed to the injector annotation `oauth2-proxy.kitkube.dk/image`. When useAlphaConfig=true and this is empty, the image is automatically pinned to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0` because the alpha config schema can change between minor releases. Set explicitly to override the pinned version. |
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
-| oauth2.clientId | string | "" | OIDC client ID (`client_id` in oauth2-proxy.cfg and the Keycloak client ID when realm is set). Optional when oauth2.realm is set — defaults to Release.Name. |
+| oauth2.clientId | string | "" | OIDC client ID. Used as `client_id` in the stable TOML config and `providers[0].clientID` in the alpha YAML config. Also used as the Keycloak client ID when realm is set. Optional when oauth2.realm is set - defaults to Release.Name. |
 | oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
 | oauth2.issuerUrl | string | "" | Base Keycloak URL (e.g. https://keycloak.example.com). The OIDC issuer URL is always constructed as `<issuerUrl>/realms/<realm>`. |
 | oauth2.config | object | see values.yaml | Configurable oauth2-proxy settings. Commonly changed options are exposed here as named fields; everything else can be added via `oauth2.rawConfig`. |
@@ -148,8 +148,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.alphaConfig | object | {} | Raw oauth2-proxy alpha config YAML rendered as `oauth2-proxy-alpha.yaml` when useAlphaConfig=true. |
 | oauth2.existingSecret | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
 | oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
-| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.existingSecret does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.existingSecret must be set. |
-| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.existingSecret to be set when false. **Requires the Keycloak Operator** to be installed in the cluster — see the README's [Keycloak client provisioning](#keycloak-client-provisioning) section. ArgoCD users: see the README for a required ignoreDifferences workaround. |
+| oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret - oauth2.existingSecret does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.existingSecret must be set. |
+| oauth2.provisionClient | bool | false | When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret. Set to false to manage the Keycloak client externally while still using realm and issuerUrl for the issuer URL. Requires oauth2.existingSecret to be set when false. **Requires the Keycloak Operator** to be installed in the cluster - see the README's [Keycloak client provisioning](#keycloak-client-provisioning) section. ArgoCD users: see the README for a required ignoreDifferences workaround. |
 | oauth2.clientDefinition | object | `{"attributes":{"post.logout.redirect.uris":"+"},"defaultClientScopes":null,"directAccessGrantsEnabled":false,"enabled":true,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":true,"webOrigins":["+"]}` | Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition. clientId and redirectUris are always auto-derived. Setting publicClient: true skips clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret. |
 | oauth2.clientDefinition.defaultClientScopes | string | null | Override the Keycloak client scopes. Defaults to oauth2.config.scope (minus openid, which Keycloak handles implicitly). |
 | oauth2.sidecar | object | see values.yaml | Optional sidecar resource annotation settings. |
@@ -159,7 +159,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| audit | object | see values.yaml | Audit log sidecar settings. When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads automatically when the ConfigMap changes — no pod restart needed. |
+| audit | object | see values.yaml | Audit log sidecar settings. When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads automatically when the ConfigMap changes - no pod restart needed. |
 | audit.enabled | bool | false | Enable the Vector audit log sidecar. Requires the `vector-audit-rules` ConfigMap to exist in the namespace, deployed via projectDefaults.auditlog in the tenant chart. |
 | audit.image.repository | string | timberio/vector | Vector container image repository. |
 | audit.image.tag | string | 0.55.0-distroless-libc | Vector container image tag. |
@@ -448,10 +448,6 @@ route:
   enabled: true
   hostnames:
     - app.local
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
 ```
 
 To skip ListenerSet creation and attach directly to an existing Gateway listener, set `route.gateway.sectionName`:
@@ -481,9 +477,6 @@ route:
   type: TLSRoute
   hostnames:
     - app.local
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
 ```
 
 ### Authorization policies and JWT validation
@@ -505,10 +498,6 @@ route:
   enabled: true
   hostnames:
     - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
   authorizationPolicies:
     block-metrics:
       action: DENY
@@ -577,7 +566,7 @@ containerSecurityContext:
     type: RuntimeDefault
 ```
 
-### OAuth2 proxy injector integration
+### OAuth
 
 Enable `oauth2` to add the injector opt-in label and required annotations automatically.
 
@@ -600,6 +589,8 @@ servicePort:
 
 oauth2:
   enabled: true
+  # Remember to create the referenced secret `my-app-oauth2-proxy-envs`
+  # with the necessary environment variables (e.g. OAUTH2_PROXY_CLIENT_SECRET and OAUTH2_PROXY_COOKIE_SECRET) for oauth2-proxy to function.
   existingSecret: my-app-oauth2-proxy-envs
   clientId: my-app
   issuerUrl: https://keycloak.example.com
@@ -609,10 +600,6 @@ route:
   enabled: true
   hostnames:
     - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
 ```
 
 Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
@@ -658,13 +645,31 @@ route:
   enabled: true
   hostnames:
     - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
 ```
 
+#### Alpha config
+
 Enable `oauth2.useAlphaConfig` to render a same-ConfigMap `oauth2-proxy-alpha.yaml` key and opt the injector into passing `--alpha-config`. The alpha config key is intentionally fixed; put alpha YAML under `oauth2.alphaConfig`.
+
+The chart auto-derives `server`, `providers`, `upstreamConfig`, and `injectRequestHeaders` from your existing `oauth2.*` values. `oauth2.alphaConfig` is deep-merged on top - except `providers`, which is an array and gets replaced entirely if set.
+
+> [!NOTE]
+> Use `alphaConfig.defaultProvider` to merge extra fields into the single auto-derived provider without
+> replacing the entire array. Ideal for fields like `additionalClaims` or `profileURL`:
+>
+> ```yaml
+> oauth2:
+>   alphaConfig:
+>     defaultProvider:
+>       additionalClaims:
+>         - department
+>         - employee_id
+> ```
+
+> [!WARNING]
+> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0`
+> unless `oauth2.image` is set explicitly. The alpha config schema can change between minor releases of oauth2-proxy,
+> so pinning prevents unexpected breakage on injector upgrades. Override `oauth2.image` to use a different version.
 
 ```yaml
 image:
@@ -697,19 +702,14 @@ route:
   enabled: true
   hostnames:
     - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
 ```
 
-### Keycloak client provisioning
+#### Keycloak client provisioning
 
 > [!IMPORTANT]
 > This feature requires the [Keycloak Operator](https://www.keycloak.org/operator/installation) to be
 > installed in the cluster. The operator registers the `KeycloakClient` CRD that this chart creates.
-> Without it, `helm install` succeeds but Kubernetes will reject the manifest with
-> `no matches for kind "KeycloakClient"`.
+> Without it the operator, the chart install will fail with `"oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) - install the Hostzero Keycloak operator or set provisionClient=false"`
 
 Set `oauth2.provisionClient=true` to have the chart create a `KeycloakClient` CRD and
 auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
@@ -749,7 +749,7 @@ oauth2:
 >       - /data
 > ```
 
-### Route + OAuth2
+#### Route + OAuth2
 
 When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
 - Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`

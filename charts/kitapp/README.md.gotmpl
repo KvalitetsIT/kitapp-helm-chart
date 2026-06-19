@@ -146,7 +146,7 @@ Enable AppArmor only on clusters where it is available on the nodes.
 {{ .Files.Get "ci/security-values.yaml" | trim }}
 ```
 
-### OAuth2 proxy injector integration
+### OAuth
 
 Enable `oauth2` to add the injector opt-in label and required annotations automatically.
 
@@ -165,19 +165,40 @@ Use `oauth2.sidecar` and `oauth2.providerCA` for advanced injector annotations:
 {{ .Files.Get "ci/oauth2-advanced-values.yaml" | trim }}
 ```
 
+#### Alpha config
+
 Enable `oauth2.useAlphaConfig` to render a same-ConfigMap `oauth2-proxy-alpha.yaml` key and opt the injector into passing `--alpha-config`. The alpha config key is intentionally fixed; put alpha YAML under `oauth2.alphaConfig`.
+
+The chart auto-derives `server`, `providers`, `upstreamConfig`, and `injectRequestHeaders` from your existing `oauth2.*` values. `oauth2.alphaConfig` is deep-merged on top - except `providers`, which is an array and gets replaced entirely if set.
+
+> [!NOTE]
+> Use `alphaConfig.defaultProvider` to merge extra fields into the single auto-derived provider without
+> replacing the entire array. Ideal for fields like `additionalClaims` or `profileURL`:
+>
+> ```yaml
+> oauth2:
+>   alphaConfig:
+>     defaultProvider:
+>       additionalClaims:
+>         - department
+>         - employee_id
+> ```
+
+> [!WARNING]
+> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0`
+> unless `oauth2.image` is set explicitly. The alpha config schema can change between minor releases of oauth2-proxy,
+> so pinning prevents unexpected breakage on injector upgrades. Override `oauth2.image` to use a different version.
 
 ```yaml
 {{ .Files.Get "ci/oauth2-alpha-values.yaml" | trim }}
 ```
 
-### Keycloak client provisioning
+#### Keycloak client provisioning
 
 > [!IMPORTANT]
 > This feature requires the [Keycloak Operator](https://www.keycloak.org/operator/installation) to be
 > installed in the cluster. The operator registers the `KeycloakClient` CRD that this chart creates.
-> Without it, `helm install` succeeds but Kubernetes will reject the manifest with
-> `no matches for kind "KeycloakClient"`.
+> Without it the operator, the chart install will fail with `"oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) - install the Hostzero Keycloak operator or set provisionClient=false"`
 
 Set `oauth2.provisionClient=true` to have the chart create a `KeycloakClient` CRD and
 auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
@@ -200,7 +221,7 @@ auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
 >       - /data
 > ```
 
-### Route + OAuth2
+#### Route + OAuth2
 
 When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
 - Routes the HTTPRoute catch-all rule to the oauth2-proxy sidecar port `4180`
