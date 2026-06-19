@@ -10,7 +10,3 @@ route:
   enabled: true
   hostnames:
     - app.local
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio

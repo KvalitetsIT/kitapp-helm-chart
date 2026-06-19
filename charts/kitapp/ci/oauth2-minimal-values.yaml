@@ -11,6 +11,8 @@ servicePort:
 
 oauth2:
   enabled: true
+  # Remember to create the referenced secret `my-app-oauth2-proxy-envs`
+  # with the necessary environment variables (e.g. OAUTH2_PROXY_CLIENT_SECRET and OAUTH2_PROXY_COOKIE_SECRET) for oauth2-proxy to function.
   existingSecret: my-app-oauth2-proxy-envs
   clientId: my-app
   issuerUrl: https://keycloak.example.com
@@ -20,7 +22,3 @@ route:
   enabled: true
   hostnames:
     - my-app.example.com
-  gateway:
-    name: ingressgateway
-    namespace: istio-ingress
-  clusterIssuer: letsencrypt-prod-istio
