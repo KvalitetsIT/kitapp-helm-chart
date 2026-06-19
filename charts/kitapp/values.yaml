@@ -508,7 +508,10 @@ oauth2:
   # @default -- false
   # @section -- OAuth2
   useAlphaConfig: false
-  # -- Raw oauth2-proxy alpha config YAML rendered as `oauth2-proxy-alpha.yaml` when useAlphaConfig=true.
+  # -- Alpha config overrides merged into the auto-derived `oauth2-proxy-alpha.yaml`. Only applies when useAlphaConfig=true.
+  # Special key `defaultProvider` merges extra fields (e.g. additionalClaims, profileURL) into the
+  # single auto-derived provider without replacing the entire providers array.
+  # Set `providers` directly to fully replace the providers array (raw override).
   # @default -- {}
   # @section -- OAuth2
   alphaConfig: {}

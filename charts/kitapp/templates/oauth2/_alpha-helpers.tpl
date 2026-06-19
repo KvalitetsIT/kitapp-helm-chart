@@ -19,6 +19,12 @@ uri: {{ .Values.oauth2.upstream | default (printf "http://127.0.0.1:%d" (.Values
 
 {{- define "kitapp.oauth2.alpha.derived" -}}
 {{- $provider := include "kitapp.oauth2.alpha.provider" . | fromYaml }}
+{{- $alphaConfig := (.Values.oauth2.alphaConfig | default dict) }}
+{{- if not (index $alphaConfig "providers") }}
+{{- with (index $alphaConfig "defaultProvider") }}
+{{- $provider = mergeOverwrite $provider . }}
+{{- end }}
+{{- end }}
 {{- $upstream := include "kitapp.oauth2.alpha.upstream" . | fromYaml }}
 {{- $headers := list }}
 {{- if .Values.oauth2.config.passUserHeaders }}
