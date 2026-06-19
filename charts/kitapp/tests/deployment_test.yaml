@@ -1,0 +1,80 @@
+suite: test deployment
+templates:
+  - templates/deployment.yaml
+set:
+  image.repository: ghcr.io/example/app
+  image.tag: v1.0.0
+
+tests:
+  - it: should render a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: should use the image from values
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/example/app:v1.0.0
+
+  - it: should default to 2 replicas
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+
+  - it: should override replicas
+    set:
+      replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should omit replicas field when autoscaling is enabled
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should apply default pod security context
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+
+  - it: should apply default container security context
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - contains:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop
+          content: ALL
+
+  - it: should set standard labels
+    asserts:
+      - isSubset:
+          path: metadata.labels
+          content:
+            app.kubernetes.io/name: RELEASE-NAME
+            app.kubernetes.io/instance: RELEASE-NAME
+
+  - it: should use pod anti-affinity by default
+    asserts:
+      - exists:
+          path: spec.template.spec.affinity.podAntiAffinity
+
+  - it: should inject audit init container when audit is enabled
+    values:
+      - ../ci/audit-values.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: vector-audit
+          any: true

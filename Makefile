@@ -1,10 +1,24 @@
-all: lint docs
+MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+CHART_TESTING_TAG := v3.14.0
+HELM_DOCS_TAG     := v1.14.2
+HELM_UNITTEST_TAG := 4.2.0-1.1.0
+
+.PHONY: all lint docs test test-update-snapshot release
+
+all: lint docs test
 
 lint:
-	docker run --rm --name chart-testing -w /data -v $(PWD):/data quay.io/helmpack/chart-testing:v3.14.0 ct lint --config /data/ct.yaml
+	docker run --rm --name chart-testing -w /data -v $(MAKEFILE_DIR):/data quay.io/helmpack/chart-testing:$(CHART_TESTING_TAG) ct lint --config /data/ct.yaml
 
 docs:
-	docker run --rm --name helm-docs -v "$(PWD):/helm-docs" jnorwood/helm-docs:v1.14.2 --sort-values-order file --chart-search-root charts/ --output-file README.md
+	docker run --rm --name helm-docs -v "$(MAKEFILE_DIR):/helm-docs" jnorwood/helm-docs:$(HELM_DOCS_TAG) --sort-values-order file --chart-search-root charts/ --output-file README.md
+
+test:
+	docker run --rm -v $(MAKEFILE_DIR):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_TAG) charts/kitapp
+
+test-update-snapshot:
+	docker run --rm -v $(MAKEFILE_DIR):/apps helmunittest/helm-unittest:$(HELM_UNITTEST_TAG) -u charts/kitapp
 
 release:
 	@test -n "$(VERSION)" || (echo "Usage: make release VERSION=x.y.z" && exit 1)

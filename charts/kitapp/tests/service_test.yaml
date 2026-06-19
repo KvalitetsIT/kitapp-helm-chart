@@ -1,0 +1,33 @@
+suite: test service
+templates:
+  - templates/service.yaml
+set:
+  image.repository: ghcr.io/example/app
+  image.tag: v1.0.0
+
+tests:
+  - it: should render a ClusterIP Service
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: should expose the application port
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            port: 8080
+          any: true
+
+  - it: should expose additional application ports
+    set:
+      additionalApplicationPorts:
+        - name: grpc
+          port: 9090
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 2
