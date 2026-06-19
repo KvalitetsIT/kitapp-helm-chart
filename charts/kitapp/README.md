@@ -707,7 +707,7 @@ route:
 #### Keycloak client provisioning
 
 > [!IMPORTANT]
-> This feature requires the [Keycloak Operator](https://www.keycloak.org/operator/installation) to be
+> This feature requires the [Keycloak Operator](https://github.com/Hostzero-GmbH/keycloak-operator) to be
 > installed in the cluster. The operator registers the `KeycloakClient` CRD that this chart creates.
 > Without it the operator, the chart install will fail with `"oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) - install the Hostzero Keycloak operator or set provisionClient=false"`
 
