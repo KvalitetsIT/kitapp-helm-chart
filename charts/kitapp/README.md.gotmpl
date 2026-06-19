@@ -171,6 +171,23 @@ Enable `oauth2.useAlphaConfig` to render a same-ConfigMap `oauth2-proxy-alpha.ya
 {{ .Files.Get "ci/oauth2-alpha-values.yaml" | trim }}
 ```
 
+> [!NOTE]
+> `alphaConfig.defaultProvider` merges extra fields into the single auto-derived provider without
+> replacing the entire `providers` array. Use it for fields like `additionalClaims` or `profileURL`:
+>
+> ```yaml
+> oauth2:
+>   useAlphaConfig: true
+>   alphaConfig:
+>     defaultProvider:
+>       additionalClaims:
+>         - department
+>         - employee_id
+> ```
+>
+> To replace the providers array entirely, set `alphaConfig.providers` directly — but you must then
+> supply the full provider entry yourself.
+
 ### Keycloak client provisioning
 
 > [!IMPORTANT]

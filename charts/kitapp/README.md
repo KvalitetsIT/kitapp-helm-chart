@@ -145,7 +145,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.config.scope | string | "openid profile email" | OIDC scopes requested in the OAuth2 authorization request. Also used to derive clientDefinition.defaultClientScopes when not explicitly set. |
 | oauth2.rawConfig | object | {} | Additional oauth2-proxy TOML key/value pairs appended after the base config. Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`). Keys that are hardcoded or derived by the chart are silently omitted to prevent duplicate-key errors. |
 | oauth2.useAlphaConfig | bool | false | Enable oauth2-proxy alpha config via oauth2-proxy-injector. When true, the chart renders a hardcoded `oauth2-proxy-alpha.yaml` ConfigMap key and annotates the pod with `oauth2-proxy.kitkube.dk/useAlphaConfig: "true"`. |
-| oauth2.alphaConfig | object | {} | Raw oauth2-proxy alpha config YAML rendered as `oauth2-proxy-alpha.yaml` when useAlphaConfig=true. |
+| oauth2.alphaConfig | object | {} | Alpha config overrides merged into the auto-derived `oauth2-proxy-alpha.yaml`. Only applies when useAlphaConfig=true. Special key `defaultProvider` merges extra fields (e.g. additionalClaims, profileURL) into the single auto-derived provider without replacing the entire providers array. Set `providers` directly to fully replace the providers array (raw override). |
 | oauth2.existingSecret | string | "" | Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own). Required when provisionClient=false. Mutually exclusive with secretName. |
 | oauth2.secretName | string | "" | Name for the auto-generated oauth2-proxy Secret when provisionClient=true. Defaults to `<release-name>-keycloak-client`. |
 | oauth2.realm | string | "" | Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL. When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and auto-generates the oauth2-proxy Secret — oauth2.existingSecret does not need to be set. When provisionClient=false (default), only the issuer URL is derived; the Keycloak client and credentials must be managed externally and oauth2.existingSecret must be set. |
@@ -702,6 +702,23 @@ route:
     namespace: istio-ingress
   clusterIssuer: letsencrypt-prod-istio
 ```
+
+> [!NOTE]
+> `alphaConfig.defaultProvider` merges extra fields into the single auto-derived provider without
+> replacing the entire `providers` array. Use it for fields like `additionalClaims` or `profileURL`:
+>
+> ```yaml
+> oauth2:
+>   useAlphaConfig: true
+>   alphaConfig:
+>     defaultProvider:
+>       additionalClaims:
+>         - department
+>         - employee_id
+> ```
+>
+> To replace the providers array entirely, set `alphaConfig.providers` directly — but you must then
+> supply the full provider entry yourself.
 
 ### Keycloak client provisioning
 

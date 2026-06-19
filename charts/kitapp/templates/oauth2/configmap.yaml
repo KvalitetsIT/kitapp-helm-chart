@@ -77,6 +77,6 @@ data:
     {{- end }}
   {{- if .Values.oauth2.useAlphaConfig }}
   oauth2-proxy-alpha.yaml: |
-    {{- mergeOverwrite $derived (.Values.oauth2.alphaConfig | default dict) | toYaml | nindent 4 }}
+    {{- mergeOverwrite $derived (omit (.Values.oauth2.alphaConfig | default dict) "defaultProvider") | toYaml | nindent 4 }}
   {{- end }}
 {{- end }}
