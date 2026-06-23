@@ -491,6 +491,14 @@ oauth2:
     cookieSecure: true
     cookieHttponly: true
     cookieSamesite: lax
+    # -- How long before the cookie expires.
+    # @default -- "8h"
+    # @section -- OAuth2
+    cookieExpire: "8h"
+    # -- Refresh the cookie when this much time remains before expiry. Empty string disables refresh.
+    # @default -- "1h"
+    # @section -- OAuth2
+    cookieRefresh: "1h"
     sessionStoreType: cookie
     passAuthorizationHeader: true
     passAccessToken: true
