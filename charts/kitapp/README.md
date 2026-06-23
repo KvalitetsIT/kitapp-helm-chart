@@ -143,6 +143,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.config.allowedGroups | string | null | Groups allowed to authenticate. Null means no group restriction is rendered. |
 | oauth2.config.skipAuthRoutes | string | null | URL path patterns that bypass authentication. Null means no skip-auth routes are rendered. |
 | oauth2.config.scope | string | "openid profile email" | OIDC scopes requested in the OAuth2 authorization request. Also used to derive clientDefinition.defaultClientScopes when not explicitly set. |
+| oauth2.config.cookieExpire | string | "8h" | How long before the cookie expires. |
+| oauth2.config.cookieRefresh | string | "1h" | Refresh the cookie when this much time remains before expiry. Empty string disables refresh. |
 | oauth2.rawConfig | object | {} | Additional oauth2-proxy TOML key/value pairs appended after the base config. Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`). Keys that are hardcoded or derived by the chart are silently omitted to prevent duplicate-key errors. |
 | oauth2.useAlphaConfig | bool | false | Enable oauth2-proxy alpha config via oauth2-proxy-injector. When true, the chart renders a hardcoded `oauth2-proxy-alpha.yaml` ConfigMap key and annotates the pod with `oauth2-proxy.kitkube.dk/useAlphaConfig: "true"`. |
 | oauth2.alphaConfig | object | {} | Alpha config overrides merged into the auto-derived `oauth2-proxy-alpha.yaml`. Only applies when useAlphaConfig=true. Special key `defaultProvider` merges extra fields (e.g. additionalClaims, profileURL) into the single auto-derived provider without replacing the entire providers array. Set `providers` directly to fully replace the providers array (raw override). |

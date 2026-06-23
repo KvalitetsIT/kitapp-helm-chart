@@ -61,6 +61,8 @@ data:
     cookie_secure = {{ .Values.oauth2.config.cookieSecure }}
     cookie_httponly = {{ .Values.oauth2.config.cookieHttponly }}
     cookie_samesite = "{{ .Values.oauth2.config.cookieSamesite }}"
+    cookie_expire = "{{ .Values.oauth2.config.cookieExpire }}"
+    cookie_refresh = "{{ .Values.oauth2.config.cookieRefresh }}"
 
     session_store_type = "{{ .Values.oauth2.config.sessionStoreType }}"
     {{- with omit (.Values.oauth2.rawConfig | default dict)
@@ -71,7 +73,7 @@ data:
           "email_domains" "allowed_groups" "skip_auth_routes"
           "pass_authorization_header" "pass_access_token" "pass_user_headers" "set_xauthrequest"
           "redirect_url" "cookie_domains" "whitelist_domains"
-          "cookie_name" "cookie_secure" "cookie_httponly" "cookie_samesite"
+          "cookie_name" "cookie_secure" "cookie_httponly" "cookie_samesite" "cookie_expire" "cookie_refresh"
           "session_store_type" }}
     {{- toToml . | trim | nindent 4 }}
     {{- end }}
