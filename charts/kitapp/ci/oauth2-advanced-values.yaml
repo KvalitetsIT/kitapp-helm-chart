@@ -12,7 +12,7 @@ servicePort:
 oauth2:
   enabled: true
   existingSecret: my-app-oauth2-proxy-envs
-  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
+  image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
   clientId: my-app
   issuerUrl: https://keycloak.example.com
   realm: my-realm

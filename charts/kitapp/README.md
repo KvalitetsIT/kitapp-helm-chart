@@ -133,7 +133,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2 | object | see values.yaml | OAuth2 proxy injector integration. Adds required pod label and annotations for the KvalitetsIT oauth2-proxy-injector webhook. |
 | oauth2.enabled | bool | false | Enable oauth2-proxy sidecar injection metadata on the pod. |
 | oauth2.proxyPort | int | 4180 | Port oauth2-proxy listens on. Used for `http_address` in oauth2-proxy.cfg, the Service port, and the gateway backend port. |
-| oauth2.image | string | "" | oauth2-proxy image passed to the injector annotation `oauth2-proxy.kitkube.dk/image`. When useAlphaConfig=true and this is empty, the image is automatically pinned to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0` because the alpha config schema can change between minor releases. Set explicitly to override the pinned version. |
+| oauth2.image | string | "" | oauth2-proxy image passed to the injector annotation `oauth2-proxy.kitkube.dk/image`. When useAlphaConfig=true and this is empty, the image is automatically pinned to `quay.io/oauth2-proxy/oauth2-proxy:v7.15.0` because the alpha config schema can change between minor releases. Set explicitly to override the pinned version. |
 | oauth2.upstream | string | "" | Dedicated upstream URL for oauth2-proxy. This is always used for `upstreams` in oauth2-proxy.cfg. Defaults to `http://127.0.0.1:<applicationPort.port>` when empty. |
 | oauth2.clientId | string | "" | OIDC client ID. Used as `client_id` in the stable TOML config and `providers[0].clientID` in the alpha YAML config. Also used as the Keycloak client ID when realm is set. Optional when oauth2.realm is set - defaults to Release.Name. |
 | oauth2.cookieName | string | "" | Cookie name used by oauth2-proxy. Defaults to clientId when empty. |
@@ -630,7 +630,7 @@ servicePort:
 oauth2:
   enabled: true
   existingSecret: my-app-oauth2-proxy-envs
-  image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
+  image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
   clientId: my-app
   issuerUrl: https://keycloak.example.com
   realm: my-realm
@@ -678,7 +678,7 @@ The chart auto-derives `server`, `providers`, `upstreamConfig`, and `injectReque
 > ```
 
 > [!WARNING]
-> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0`
+> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `quay.io/oauth2-proxy/oauth2-proxy:v7.15.0`
 > unless `oauth2.image` is set explicitly. The alpha config schema can change between minor releases of oauth2-proxy,
 > so pinning prevents unexpected breakage on injector upgrades. Override `oauth2.image` to use a different version.
 
