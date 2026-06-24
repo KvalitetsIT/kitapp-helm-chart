@@ -18,6 +18,6 @@ spec:
     name: {{ include "kitapp.oauth2.secretRef" . }}
     clientIdKey: OAUTH2_PROXY_CLIENT_ID
     clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
-    create: true
+    create: false
   {{- end }}
 {{- end }}
