@@ -486,10 +486,25 @@ oauth2:
     # @default -- "openid profile email"
     # @section -- OAuth2
     scope: "openid profile email"
+    # -- Allow users whose email address is unverified by the OIDC provider.
+    # @default -- true
+    # @section -- OAuth2
     insecureOidcAllowUnverifiedEmail: true
+    # -- PKCE challenge method used in the authorization request. S256 is strongly recommended.
+    # @default -- S256
+    # @section -- OAuth2
     codeChallengeMethod: S256
+    # -- Require the session cookie to be sent over HTTPS only.
+    # @default -- true
+    # @section -- OAuth2
     cookieSecure: true
+    # -- Set the HttpOnly flag on the session cookie, preventing JavaScript access.
+    # @default -- true
+    # @section -- OAuth2
     cookieHttponly: true
+    # -- SameSite policy for the session cookie. One of strict, lax, or none.
+    # @default -- lax
+    # @section -- OAuth2
     cookieSamesite: lax
     # -- How long before the cookie expires.
     # @default -- "8h"
@@ -499,10 +514,25 @@ oauth2:
     # @default -- "1h"
     # @section -- OAuth2
     cookieRefresh: "1h"
+    # -- Backend session storage type. Use cookie for stateless deployments or redis for server-side sessions.
+    # @default -- cookie
+    # @section -- OAuth2
     sessionStoreType: cookie
+    # -- Forward the OIDC ID token to the upstream as a Bearer Authorization header.
+    # @default -- true
+    # @section -- OAuth2
     passAuthorizationHeader: true
+    # -- Forward the OAuth2 access token to the upstream as X-Forwarded-Access-Token.
+    # @default -- true
+    # @section -- OAuth2
     passAccessToken: true
+    # -- Forward user info claims (X-Forwarded-User, X-Forwarded-Email, X-Forwarded-Preferred-Username) to the upstream.
+    # @default -- true
+    # @section -- OAuth2
     passUserHeaders: true
+    # -- Set X-Auth-Request-* response headers for use by an auth_request proxy in front of oauth2-proxy.
+    # @default -- true
+    # @section -- OAuth2
     setXauthrequest: true
   # -- Additional oauth2-proxy TOML key/value pairs appended after the base config.
   # Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`).
@@ -523,27 +553,47 @@ oauth2:
   # @default -- {}
   # @section -- OAuth2
   alphaConfig: {}
-  # -- Name of a pre-existing Secret to use for oauth2-proxy credentials (bring your own).
-  # Required when provisionClient=false. Mutually exclusive with secretName.
+  # -- Name of a pre-existing Secret containing oauth2-proxy credentials.
+  # Behaviour depends on provisionClient:
+  #
+  # provisionClient=false (default): required. You manage the Keycloak client externally.
+  # The secret must contain OAUTH2_PROXY_COOKIE_SECRET and, unless publicClient=true,
+  # OAUTH2_PROXY_CLIENT_ID and OAUTH2_PROXY_CLIENT_SECRET. Mutually exclusive with secretName.
+  #
+  # provisionClient=true: optional. The chart skips generating the Secret. You must ensure
+  # the secret exists in the cluster with all required keys (OAUTH2_PROXY_COOKIE_SECRET,
+  # OAUTH2_PROXY_CLIENT_ID, OAUTH2_PROXY_CLIENT_SECRET) before deploying. The Keycloak operator
+  # reads the client secret from this secret and registers it with Keycloak, but does not write
+  # into it. The recommended way to provision this secret is via templates.sealedSecrets in the
+  # KvalitetsIT templates chart (https://github.com/KvalitetsIT/helm-templates-chart).
+  # See the README's [Using an existing secret with client provisioning](#using-an-existing-secret-with-client-provisioning) section.
   # @default -- ""
   # @section -- OAuth2
   existingSecret: ""
-  # -- Name for the auto-generated oauth2-proxy Secret when provisionClient=true.
+  # -- Name for the auto-generated oauth2-proxy Secret.
+  # Only applies when provisionClient=true and existingSecret is not set.
   # Defaults to `<release-name>-keycloak-client`.
   # @default -- ""
   # @section -- OAuth2
   secretName: ""
   # -- Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL.
-  # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef) and
-  # auto-generates the oauth2-proxy Secret - oauth2.existingSecret does not need to be set.
-  # When provisionClient=false (default), only the issuer URL is derived; the Keycloak client
-  # and credentials must be managed externally and oauth2.existingSecret must be set.
+  # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef).
+  # When provisionClient=false (default), only the issuer URL is derived; oauth2.existingSecret must be set.
   # @default -- ""
   # @section -- OAuth2
   realm: ""
-  # -- When true, provisions a KeycloakClient CRD and auto-generates the oauth2-proxy Secret.
-  # Set to false to manage the Keycloak client externally while still using realm and issuerUrl
-  # for the issuer URL. Requires oauth2.existingSecret to be set when false.
+  # -- When true, provisions a KeycloakClient CRD to register the application in Keycloak.
+  #
+  # When existingSecret is not set: the chart generates the Secret (named by secretName, defaulting to
+  # `<release>-keycloak-client`) containing OAUTH2_PROXY_COOKIE_SECRET and OAUTH2_PROXY_CLIENT_SECRET;
+  # the Keycloak operator writes the client credentials into it.
+  #
+  # When existingSecret is set: the chart does not generate the Secret. You must pre-create it with all
+  # required keys. The operator reads the client secret from it and registers the value with Keycloak,
+  # but does not write into it. See oauth2.existingSecret for the required keys.
+  #
+  # Set to false to manage the Keycloak client externally while still deriving the OIDC issuer URL
+  # from realm and issuerUrl. Requires oauth2.existingSecret to be set when false.
   # **Requires the Keycloak Operator** to be installed in the cluster - see the README's
   # [Keycloak client provisioning](#keycloak-client-provisioning) section.
   # ArgoCD users: see the README for a required ignoreDifferences workaround.

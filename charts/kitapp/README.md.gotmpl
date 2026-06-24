@@ -221,6 +221,30 @@ auto-generate the oauth2-proxy Secret instead of pointing at a pre-existing one.
 >       - /data
 > ```
 
+##### Using an existing secret with client provisioning
+
+Set `oauth2.existingSecret` alongside `provisionClient=true` to keep the Keycloak client
+provisioning while supplying the secret yourself. The chart skips generating the Secret;
+you must ensure it exists in the cluster with all required keys before deploying.
+
+| Key | Required | Description |
+|-----|----------|-------------|
+| `OAUTH2_PROXY_COOKIE_SECRET` | yes | 16, 24, or 32-byte random value, base64-encoded. Used to encrypt the session cookie. |
+| `OAUTH2_PROXY_CLIENT_ID` | yes | Keycloak client ID. Must match `oauth2.clientId` (or the release name when unset). |
+| `OAUTH2_PROXY_CLIENT_SECRET` | yes (unless `publicClient=true`) | Keycloak client secret. The Keycloak operator reads this and registers the value with Keycloak. |
+
+The recommended way to provision this secret is via [`templates.sealedSecrets`](https://github.com/KvalitetsIT/helm-templates-chart)
+in the [KvalitetsIT templates chart](https://github.com/KvalitetsIT/helm-templates-chart).
+
+> [!WARNING]
+> The chart cannot validate that the secret exists or contains the correct keys at render time -
+> ArgoCD dry-run does not check secret contents. If the secret is missing or incomplete when the
+> `KeycloakClient` is reconciled, the operator will fail and oauth2-proxy will start without valid credentials.
+
+```yaml
+{{ .Files.Get "ci/keycloakclient-provision-external-secret-values.yaml" | trim }}
+```
+
 #### Route + OAuth2
 
 When both `route.enabled=true` and `oauth2.enabled=true`, the chart automatically:
