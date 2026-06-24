@@ -486,10 +486,25 @@ oauth2:
     # @default -- "openid profile email"
     # @section -- OAuth2
     scope: "openid profile email"
+    # -- Allow users whose email address is unverified by the OIDC provider.
+    # @default -- true
+    # @section -- OAuth2
     insecureOidcAllowUnverifiedEmail: true
+    # -- PKCE challenge method used in the authorization request. S256 is strongly recommended.
+    # @default -- S256
+    # @section -- OAuth2
     codeChallengeMethod: S256
+    # -- Require the session cookie to be sent over HTTPS only.
+    # @default -- true
+    # @section -- OAuth2
     cookieSecure: true
+    # -- Set the HttpOnly flag on the session cookie, preventing JavaScript access.
+    # @default -- true
+    # @section -- OAuth2
     cookieHttponly: true
+    # -- SameSite policy for the session cookie. One of strict, lax, or none.
+    # @default -- lax
+    # @section -- OAuth2
     cookieSamesite: lax
     # -- How long before the cookie expires.
     # @default -- "8h"
@@ -499,10 +514,25 @@ oauth2:
     # @default -- "1h"
     # @section -- OAuth2
     cookieRefresh: "1h"
+    # -- Backend session storage type. Use cookie for stateless deployments or redis for server-side sessions.
+    # @default -- cookie
+    # @section -- OAuth2
     sessionStoreType: cookie
+    # -- Forward the OIDC ID token to the upstream as a Bearer Authorization header.
+    # @default -- true
+    # @section -- OAuth2
     passAuthorizationHeader: true
+    # -- Forward the OAuth2 access token to the upstream as X-Forwarded-Access-Token.
+    # @default -- true
+    # @section -- OAuth2
     passAccessToken: true
+    # -- Forward user info claims (X-Forwarded-User, X-Forwarded-Email, X-Forwarded-Preferred-Username) to the upstream.
+    # @default -- true
+    # @section -- OAuth2
     passUserHeaders: true
+    # -- Set X-Auth-Request-* response headers for use by an auth_request proxy in front of oauth2-proxy.
+    # @default -- true
+    # @section -- OAuth2
     setXauthrequest: true
   # -- Additional oauth2-proxy TOML key/value pairs appended after the base config.
   # Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`).

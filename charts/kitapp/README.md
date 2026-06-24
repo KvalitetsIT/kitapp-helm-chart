@@ -143,8 +143,18 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | oauth2.config.allowedGroups | string | null | Groups allowed to authenticate. Null means no group restriction is rendered. |
 | oauth2.config.skipAuthRoutes | string | null | URL path patterns that bypass authentication. Null means no skip-auth routes are rendered. |
 | oauth2.config.scope | string | "openid profile email" | OIDC scopes requested in the OAuth2 authorization request. Also used to derive clientDefinition.defaultClientScopes when not explicitly set. |
+| oauth2.config.insecureOidcAllowUnverifiedEmail | bool | true | Allow users whose email address is unverified by the OIDC provider. |
+| oauth2.config.codeChallengeMethod | string | S256 | PKCE challenge method used in the authorization request. S256 is strongly recommended. |
+| oauth2.config.cookieSecure | bool | true | Require the session cookie to be sent over HTTPS only. |
+| oauth2.config.cookieHttponly | bool | true | Set the HttpOnly flag on the session cookie, preventing JavaScript access. |
+| oauth2.config.cookieSamesite | string | lax | SameSite policy for the session cookie. One of strict, lax, or none. |
 | oauth2.config.cookieExpire | string | "8h" | How long before the cookie expires. |
 | oauth2.config.cookieRefresh | string | "1h" | Refresh the cookie when this much time remains before expiry. Empty string disables refresh. |
+| oauth2.config.sessionStoreType | string | cookie | Backend session storage type. Use cookie for stateless deployments or redis for server-side sessions. |
+| oauth2.config.passAuthorizationHeader | bool | true | Forward the OIDC ID token to the upstream as a Bearer Authorization header. |
+| oauth2.config.passAccessToken | bool | true | Forward the OAuth2 access token to the upstream as X-Forwarded-Access-Token. |
+| oauth2.config.passUserHeaders | bool | true | Forward user info claims (X-Forwarded-User, X-Forwarded-Email, X-Forwarded-Preferred-Username) to the upstream. |
+| oauth2.config.setXauthrequest | bool | true | Set X-Auth-Request-* response headers for use by an auth_request proxy in front of oauth2-proxy. |
 | oauth2.rawConfig | object | {} | Additional oauth2-proxy TOML key/value pairs appended after the base config. Use for settings not exposed in `oauth2.config` (e.g. `redis_connection_url`, `upstream_timeout`). Keys that are hardcoded or derived by the chart are silently omitted to prevent duplicate-key errors. |
 | oauth2.useAlphaConfig | bool | false | Enable oauth2-proxy alpha config via oauth2-proxy-injector. When true, the chart renders a hardcoded `oauth2-proxy-alpha.yaml` ConfigMap key and annotates the pod with `oauth2-proxy.kitkube.dk/useAlphaConfig: "true"`. |
 | oauth2.alphaConfig | object | {} | Alpha config overrides merged into the auto-derived `oauth2-proxy-alpha.yaml`. Only applies when useAlphaConfig=true. Special key `defaultProvider` merges extra fields (e.g. additionalClaims, profileURL) into the single auto-derived provider without replacing the entire providers array. Set `providers` directly to fully replace the providers array (raw override). |
@@ -803,7 +813,6 @@ applicationPort:
 
 audit:
   enabled: true
-  tenantName: test-tenant
 ```
 
 ----------------------------------------------
