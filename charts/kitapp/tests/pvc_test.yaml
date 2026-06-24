@@ -1,0 +1,21 @@
+suite: test persistent volume claim
+templates:
+  - templates/pvc.yaml
+set:
+  image.repository: ghcr.io/example/app
+  image.tag: v1.0.0
+
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a PVC when a PVC volume is defined
+    values:
+      - ../ci/persistence-values.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PersistentVolumeClaim

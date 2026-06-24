@@ -1,0 +1,41 @@
+suite: test horizontal pod autoscaler
+templates:
+  - templates/hpa.yaml
+set:
+  image.repository: ghcr.io/example/app
+  image.tag: v1.0.0
+
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render HPA when autoscaling is enabled
+    values:
+      - ../ci/autoscaling-values.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+
+  - it: should set min and max replicas
+    values:
+      - ../ci/autoscaling-values.yaml
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 5
+
+  - it: should configure CPU utilization metric
+    values:
+      - ../ci/autoscaling-values.yaml
+    asserts:
+      - equal:
+          path: spec.metrics[0].type
+          value: Resource
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: cpu

@@ -1,0 +1,28 @@
+suite: test oauth2 configmap
+templates:
+  - templates/oauth2/configmap.yaml
+set:
+  image.repository: ghcr.io/example/app
+  image.tag: v1.0.0
+
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ConfigMap when oauth2 is enabled
+    values:
+      - ../ci/oauth2-minimal-values.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+
+  - it: should include the alpha config key when useAlphaConfig is set
+    values:
+      - ../ci/oauth2-alpha-values.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - exists:
+          path: data["oauth2-proxy-alpha.yaml"]

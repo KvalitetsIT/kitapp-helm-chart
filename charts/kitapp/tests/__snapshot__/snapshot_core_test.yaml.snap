@@ -1,0 +1,1107 @@
+advanced values:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: node-role
+                        operator: In
+                        values:
+                          - application
+                  weight: 50
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - envFrom:
+                - secretRef:
+                    name: my-app-secrets
+                    optional: true
+                - configMapRef:
+                    name: my-app-config
+                    optional: true
+              image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              startupProbe:
+                failureThreshold: 30
+                httpGet:
+                  path: /
+                  port: http
+                periodSeconds: 10
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+          tolerations:
+            - effect: NoSchedule
+              key: dedicated
+              operator: Equal
+              value: app
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+audit:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+            audit.kitkube.dk/vector-sidecar: "true"
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          initContainers:
+            - args:
+                - --watch-config
+                - --config
+                - /etc/vector/vector.yaml
+              env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: NODE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+                - name: APP_LABEL
+                  value: RELEASE-NAME
+              image: timberio/vector:0.55.0-distroless-libc
+              imagePullPolicy: IfNotPresent
+              name: vector-audit
+              resources:
+                limits:
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+              restartPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              volumeMounts:
+                - mountPath: /etc/vector
+                  name: vector-audit-rules
+                  readOnly: true
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+          volumes:
+            - configMap:
+                name: vector-audit-rules
+                optional: true
+              name: vector-audit-rules
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+autoscaling:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:v2.15.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              resources:
+                limits:
+                  cpu: 300m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      maxReplicas: 5
+      metrics:
+        - resource:
+            name: cpu
+            target:
+              averageUtilization: 80
+              type: Utilization
+          type: Resource
+        - resource:
+            name: memory
+            target:
+              averageUtilization: 80
+              type: Utilization
+          type: Resource
+      minReplicas: 2
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: RELEASE-NAME
+  3: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+default values:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - env:
+                - name: EXAMPLE
+                  value: hello
+                - name: LOG_LEVEL
+                  value: debug
+              image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: http
+                initialDelaySeconds: 10
+                periodSeconds: 20
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+                - containerPort: 9090
+                  name: actuator
+                  protocol: TCP
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              resources:
+                limits:
+                  cpu: 300m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          nodeSelector:
+            kubernetes.io/os: linux
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+        - name: actuator
+          port: 9090
+          protocol: TCP
+          targetPort: actuator
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+image digest only:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin@sha256:b5d2ef3378e61138998cb4e60edf117000594f33b9be504825921190a7109e69
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+image tag and digest:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0@sha256:b5d2ef3378e61138998cb4e60edf117000594f33b9be504825921190a7109e69
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+metrics:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+                - containerPort: 9090
+                  name: metrics
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: RELEASE-NAME-prometheus-ingress
+      namespace: NAMESPACE
+    spec:
+      ingress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: monitoring
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: infrastructure
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      policyTypes:
+        - Ingress
+  3: |
+    apiVersion: monitoring.coreos.com/v1
+    kind: ServiceMonitor
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        release: kube-prometheus-stack
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      endpoints:
+        - interval: 30s
+          path: /metrics
+          targetPort: 9090
+      namespaceSelector:
+        matchNames:
+          - NAMESPACE
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+  4: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+        - name: metrics
+          port: 9090
+          protocol: TCP
+          targetPort: metrics
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+minimal values:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+persistence:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              volumeMounts:
+                - mountPath: /data
+                  name: app-data
+                - mountPath: /etc/app/config.yaml
+                  name: app-config
+                  readOnly: true
+                  subPath: config.yaml
+                - mountPath: /tmp
+                  name: tmp
+                - mountPath: /cache
+                  name: shared-cache
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+          volumes:
+            - name: app-data
+              persistentVolumeClaim:
+                claimName: RELEASE-NAME-app-data
+            - configMap:
+                name: my-app-config
+                optional: true
+              name: app-config
+            - emptyDir: {}
+              name: tmp
+            - emptyDir: {}
+              name: shared-cache
+  2: |
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME-app-data
+      namespace: NAMESPACE
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+  3: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+security:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations: null
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+          serviceAccountName: RELEASE-NAME
+  2: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+  3: |
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      annotations:
+        this-is-a-key: this-is-a-value
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
