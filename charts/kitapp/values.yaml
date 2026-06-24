@@ -570,12 +570,7 @@ oauth2:
   # @section -- OAuth2
   realm: ""
   # -- When true, provisions a KeycloakClient CRD to register the application in Keycloak.
-  # The chart does not generate the Secret - you must pre-create it via oauth2.existingSecret
-  # with all required keys. The operator reads the client secret from it and registers the value
-  # with Keycloak, but does not write into it. See oauth2.existingSecret for the required keys.
-  #
-  # Set to false to manage the Keycloak client externally while still deriving the OIDC issuer URL
-  # from realm and issuerUrl.
+  # Requires oauth2.existingSecret to be set.
   # **Requires the Keycloak Operator** to be installed in the cluster - see the README's
   # [Keycloak client provisioning](#keycloak-client-provisioning) section.
   # @default -- false
