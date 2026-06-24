@@ -7,10 +7,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kitapp.labels" . | nindent 4 }}
-  annotations:
-    {{- if not .Values.oauth2.existingSecret }}
-    checksum/oauth2-secret: {{ include (print $.Template.BasePath "/oauth2/secret.yaml") . | sha256sum }}
-    {{- end }}
 spec:
   clusterRealmRef:
     name: {{ .Values.oauth2.realm }}
