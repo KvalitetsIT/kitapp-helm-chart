@@ -565,7 +565,7 @@ oauth2:
   existingSecret: ""
   # -- Keycloak realm name. Always used together with issuerUrl to construct the OIDC issuer URL.
   # When provisionClient=true, also provisions a KeycloakClient CRD (clusterRealmRef).
-  # When provisionClient=false (default), only the issuer URL is derived; oauth2.existingSecret must be set.
+  # When provisionClient=false (default), only the issuer URL is derived.
   # @default -- ""
   # @section -- OAuth2
   realm: ""
@@ -583,7 +583,7 @@ oauth2:
   provisionClient: false
   # -- Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition.
   # clientId and redirectUris are always auto-derived. Setting publicClient: true skips
-  # clientSecretRef on the KeycloakClient and OAUTH2_PROXY_CLIENT_SECRET in the generated Secret.
+  # clientSecretRef on the KeycloakClient and omits OAUTH2_PROXY_CLIENT_SECRET from the required secret keys.
   # @section -- OAuth2
   clientDefinition:
     enabled: true
