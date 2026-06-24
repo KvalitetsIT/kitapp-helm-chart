@@ -24,4 +24,7 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: prometheus
+      ports:
+        - port: {{ include "kitapp.metricsPort" . | int }}
+          protocol: TCP
 {{- end }}
