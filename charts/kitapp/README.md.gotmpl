@@ -185,7 +185,7 @@ The chart auto-derives `server`, `providers`, `upstreamConfig`, and `injectReque
 > ```
 
 > [!WARNING]
-> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0`
+> When `useAlphaConfig=true`, the chart pins the injected oauth2-proxy image to `quay.io/oauth2-proxy/oauth2-proxy:v7.15.0`
 > unless `oauth2.image` is set explicitly. The alpha config schema can change between minor releases of oauth2-proxy,
 > so pinning prevents unexpected breakage on injector upgrades. Override `oauth2.image` to use a different version.
 

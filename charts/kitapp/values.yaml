@@ -438,7 +438,7 @@ oauth2:
   proxyPort: 4180
   # -- oauth2-proxy image passed to the injector annotation `oauth2-proxy.kitkube.dk/image`.
   # When useAlphaConfig=true and this is empty, the image is automatically pinned to
-  # `ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0` because the alpha config schema can change
+  # `quay.io/oauth2-proxy/oauth2-proxy:v7.15.0` because the alpha config schema can change
   # between minor releases. Set explicitly to override the pinned version.
   # @default -- ""
   # @section -- OAuth2

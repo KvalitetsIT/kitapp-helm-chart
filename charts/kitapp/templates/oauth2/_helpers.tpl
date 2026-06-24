@@ -37,7 +37,7 @@
       "oauth2-proxy.kitkube.dk/configKey" "oauth2-proxy.cfg"
   -}}
 {{- /* Pin to a known-good version when alpha config is enabled - alpha schema can change between minor releases */ -}}
-{{- $defaultImage := ternary "ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0" "" .Values.oauth2.useAlphaConfig }}
+{{- $defaultImage := ternary "quay.io/oauth2-proxy/oauth2-proxy:v7.15.0" "" .Values.oauth2.useAlphaConfig }}
 {{- with .Values.oauth2.image | default $defaultImage }}
 {{- $_ := set $annotations "oauth2-proxy.kitkube.dk/image" . -}}
 {{- end }}
