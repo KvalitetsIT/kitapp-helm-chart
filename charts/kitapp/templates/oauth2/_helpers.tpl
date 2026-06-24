@@ -30,14 +30,10 @@
 {{- toYaml $def -}}
 {{- end -}}
 
-{{- define "kitapp.oauth2.secretRef" -}}
-{{- .Values.oauth2.existingSecret }}
-{{- end -}}
-
 {{- define "kitapp.oauth2.injectorAnnotations" -}}
 {{- $annotations := dict
       "oauth2-proxy.kitkube.dk/configmap" (include "kitapp.oauth2.configMapName" .)
-      "oauth2-proxy.kitkube.dk/secret" (include "kitapp.oauth2.secretRef" .)
+      "oauth2-proxy.kitkube.dk/secret" .Values.oauth2.existingSecret
       "oauth2-proxy.kitkube.dk/configKey" "oauth2-proxy.cfg"
   -}}
 {{- /* Pin to a known-good version when alpha config is enabled - alpha schema can change between minor releases */ -}}
