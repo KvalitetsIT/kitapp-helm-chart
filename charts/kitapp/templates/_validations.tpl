@@ -176,6 +176,17 @@
   {{- end -}}
 {{- end -}}
 
+{{- define "kitapp.validate.oauth2RawConfig" -}}
+  {{- if and .Values.oauth2.enabled .Values.oauth2.rawConfig -}}
+    {{- if hasKey .Values.oauth2.rawConfig "cookie_secret" -}}
+      {{- fail "oauth2.rawConfig must not contain 'cookie_secret' - use oauth2.existingSecret or provisionClient to manage credentials" -}}
+    {{- end -}}
+    {{- if hasKey .Values.oauth2.rawConfig "client_secret" -}}
+      {{- fail "oauth2.rawConfig must not contain 'client_secret' - use oauth2.existingSecret or provisionClient to manage credentials" -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 {{- define "kitapp.validate.envFromRefs" -}}
 {{- $allEnvFrom := concat (.Values.envFrom | default (list)) (.Values.extraEnvFrom | default (list)) -}}
 {{- $seen := dict -}}
