@@ -16,3 +16,4 @@ oauth2:
   clientId: my-app
   issuerUrl: https://keycloak.example.com
   provisionClient: true
+  existingSecret: my-app-oauth2-proxy-envs

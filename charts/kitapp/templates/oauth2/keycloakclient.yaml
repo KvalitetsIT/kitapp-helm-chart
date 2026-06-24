@@ -15,7 +15,7 @@ spec:
     {{- include "kitapp.oauth2.clientDefinition" . | nindent 4 }}
   {{- if not $publicClient }}
   clientSecretRef:
-    name: {{ include "kitapp.oauth2.secretRef" . }}
+    name: {{ .Values.oauth2.existingSecret }}
     clientIdKey: OAUTH2_PROXY_CLIENT_ID
     clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
     create: false
