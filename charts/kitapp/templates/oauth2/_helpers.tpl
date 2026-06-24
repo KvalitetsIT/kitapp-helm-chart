@@ -30,25 +30,8 @@
 {{- toYaml $def -}}
 {{- end -}}
 
-{{- define "kitapp.oauth2.secretData" -}}
-{{- $secretName := include "kitapp.oauth2.secretRef" . }}
-{{- $existing := (lookup "v1" "Secret" .Release.Namespace $secretName).data | default dict }}
-{{- $cookieSecret := index $existing "OAUTH2_PROXY_COOKIE_SECRET" | default "" | b64dec }}
-{{- if not $cookieSecret }}{{- $cookieSecret = randAlphaNum 32 }}{{- end }}
-OAUTH2_PROXY_COOKIE_SECRET: {{ $cookieSecret | b64enc }}
-{{- if not .Values.oauth2.clientDefinition.publicClient }}
-{{- $clientSecret := index $existing "OAUTH2_PROXY_CLIENT_SECRET" | default "" | b64dec }}
-{{- if not $clientSecret }}{{- $clientSecret = randAlphaNum 32 }}{{- end }}
-OAUTH2_PROXY_CLIENT_SECRET: {{ $clientSecret | b64enc }}
-{{- end }}
-{{- end -}}
-
 {{- define "kitapp.oauth2.secretRef" -}}
-{{- if .Values.oauth2.existingSecret }}
 {{- .Values.oauth2.existingSecret }}
-{{- else if .Values.oauth2.provisionClient }}
-{{- .Values.oauth2.secretName | default (printf "%s-keycloak-client" (include "kitapp.name" .)) }}
-{{- end }}
 {{- end -}}
 
 {{- define "kitapp.oauth2.injectorAnnotations" -}}

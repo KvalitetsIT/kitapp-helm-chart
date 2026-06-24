@@ -15,5 +15,6 @@ oauth2:
   realm: my-realm
   issuerUrl: https://keycloak.example.com
   provisionClient: true
+  existingSecret: my-app-oauth2-proxy-envs
   clientDefinition:
     publicClient: true
