@@ -729,9 +729,19 @@ The secret must exist in the cluster before deploying and contain the following 
 
 | Key | Required | Description |
 |-----|----------|-------------|
-| `OAUTH2_PROXY_COOKIE_SECRET` | yes | 16, 24, or 32-byte random value, base64-encoded. Used to encrypt the session cookie. |
+| `OAUTH2_PROXY_COOKIE_SECRET` | yes | 16, 24, or 32-byte URL-safe base64 value. Used to encrypt the session cookie. |
 | `OAUTH2_PROXY_CLIENT_ID` | yes | Keycloak client ID. Must match `oauth2.clientId` (or the release name when unset). |
 | `OAUTH2_PROXY_CLIENT_SECRET` | yes (unless `publicClient=true`) | Keycloak client secret. The Keycloak operator reads this and registers the value with Keycloak. |
+
+Generate the values with:
+
+```sh
+# OAUTH2_PROXY_COOKIE_SECRET
+dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64 | tr -d -- '\n' | tr -- '+/' '-_'; echo
+
+# OAUTH2_PROXY_CLIENT_SECRET
+openssl rand -base64 32
+```
 
 The recommended way to provision this secret is via [`templates.sealedSecrets`](https://github.com/KvalitetsIT/helm-templates-chart)
 in the [KvalitetsIT templates chart](https://github.com/KvalitetsIT/helm-templates-chart).
