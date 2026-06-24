@@ -577,8 +577,7 @@ oauth2:
   # @section -- OAuth2
   provisionClient: false
   # -- Keycloak ClientRepresentation fields passed to the KeycloakClient spec.definition.
-  # clientId and redirectUris are always auto-derived. Setting publicClient: true skips
-  # clientSecretRef on the KeycloakClient and omits OAUTH2_PROXY_CLIENT_SECRET from the required secret keys.
+  # clientId and redirectUris are always auto-derived. Setting publicClient: true skips clientSecretRef on the KeycloakClient.
   # @section -- OAuth2
   clientDefinition:
     enabled: true
