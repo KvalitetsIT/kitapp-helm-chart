@@ -554,11 +554,11 @@ oauth2:
   # @section -- OAuth2
   alphaConfig: {}
   # -- Name of a pre-existing Secret containing oauth2-proxy credentials. Required when oauth2.enabled=true.
-  # The secret must contain OAUTH2_PROXY_COOKIE_SECRET and, unless publicClient=true,
-  # OAUTH2_PROXY_CLIENT_ID and OAUTH2_PROXY_CLIENT_SECRET.
-  # When provisionClient=true, the Keycloak operator reads the client secret from this secret
-  # and registers it with Keycloak, but does not write into it. You must ensure the secret exists
-  # before deploying. The recommended way to provision this secret is via templates.sealedSecrets in
+  # You must create this secret before deploying. Required keys:
+  # OAUTH2_PROXY_COOKIE_SECRET, OAUTH2_PROXY_CLIENT_ID, and (unless publicClient=true) OAUTH2_PROXY_CLIENT_SECRET.
+  # When provisionClient=true, the Keycloak operator reads OAUTH2_PROXY_CLIENT_SECRET from this secret
+  # to register the client - it does not write back to it.
+  # The recommended way to provision this secret is via templates.sealedSecrets in
   # the KvalitetsIT templates chart (https://github.com/KvalitetsIT/helm-templates-chart).
   # @default -- ""
   # @section -- OAuth2
