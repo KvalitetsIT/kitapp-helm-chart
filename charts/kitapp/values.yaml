@@ -555,9 +555,12 @@ oauth2:
   alphaConfig: {}
   # -- Name of a pre-existing Secret containing oauth2-proxy credentials. Required when oauth2.enabled=true.
   # You must create this secret before deploying. Required keys:
-  # OAUTH2_PROXY_COOKIE_SECRET, OAUTH2_PROXY_CLIENT_ID, and (unless publicClient=true) OAUTH2_PROXY_CLIENT_SECRET.
-  # When provisionClient=true, the Keycloak operator reads OAUTH2_PROXY_CLIENT_SECRET from this secret
-  # to register the client - it does not write back to it.
+  # OAUTH2_PROXY_COOKIE_SECRET, and (unless publicClient=true) OAUTH2_PROXY_CLIENT_SECRET.
+  # OAUTH2_PROXY_CLIENT_ID is not read by the chart or the sidecar - client_id is always taken from
+  # oauth2.clientId (baked into the rendered oauth2-proxy config). It only needs to be present in
+  # this secret when provisionClient=true, where the Keycloak operator reads both
+  # OAUTH2_PROXY_CLIENT_ID and OAUTH2_PROXY_CLIENT_SECRET from this secret to register the client
+  # - it does not write back to it.
   # The recommended way to provision this secret is via templates.sealedSecrets in
   # the KvalitetsIT templates chart (https://github.com/KvalitetsIT/helm-templates-chart).
   # @default -- ""
