@@ -787,9 +787,11 @@ Enable `audit` to inject a Vector native sidecar that receives audit events from
 over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
 POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod.
 
-The sidecar runs Vector 0.57+, which does not interpolate `${VAR}` in config files. Custom
-`vector-audit-rules` ConfigMaps must read the injected `POD_NAME`, `POD_NAMESPACE`, `NODE_NAME` and
-`APP_LABEL` variables with VRL instead, e.g. `get_env_var("POD_NAME") ?? "unknown"`.
+The default sidecar image is Vector 0.59. Since 0.57, Vector no longer substitutes `${VAR}` in
+config files; the reference is left as literal text, with no error. Custom `vector-audit-rules`
+ConfigMaps must read the injected `POD_NAME`, `POD_NAMESPACE`, `NODE_NAME` and `APP_LABEL`
+variables with VRL instead, e.g. `get_env_var("POD_NAME") ?? "unknown"`. See the helm-tenant-chart
+CHANGELOG for other Vector changes that affect custom ConfigMaps.
 
 #### Event schema
 
