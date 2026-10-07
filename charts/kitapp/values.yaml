@@ -632,9 +632,9 @@ audit:
     # @section -- Audit
     repository: timberio/vector
     # -- Vector container image tag.
-    # @default -- 0.55.0-distroless-libc
+    # @default -- 0.59.0-distroless-libc
     # @section -- Audit
-    tag: 0.55.0-distroless-libc
+    tag: 0.59.0-distroless-libc
     # -- Image pull policy.
     # @default -- IfNotPresent
     # @section -- Audit
