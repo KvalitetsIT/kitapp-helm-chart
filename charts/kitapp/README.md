@@ -173,7 +173,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | audit | object | see values.yaml | Audit log sidecar settings. When enabled, injects a Vector sidecar container that mounts the `vector-audit-rules` ConfigMap deployed by the project chart (helm-tenant-chart). Vector runs with --watch-config and reloads automatically when the ConfigMap changes - no pod restart needed. |
 | audit.enabled | bool | false | Enable the Vector audit log sidecar. Requires the `vector-audit-rules` ConfigMap to exist in the namespace, deployed via projectDefaults.auditlog in the tenant chart. |
 | audit.image.repository | string | timberio/vector | Vector container image repository. |
-| audit.image.tag | string | 0.55.0-distroless-libc | Vector container image tag. |
+| audit.image.tag | string | 0.59.0-distroless-libc | Vector container image tag. |
 | audit.image.pullPolicy | string | IfNotPresent | Image pull policy. |
 | audit.resources | object | see values.yaml | Resource requests and limits for the Vector audit sidecar container. |
 | audit.resources.requests.cpu | string | 50m | CPU request for the Vector audit sidecar. |
@@ -786,6 +786,12 @@ Both are shown combined in [`ci/oauth2-minimal-values.yaml`](ci/oauth2-minimal-v
 Enable `audit` to inject a Vector native sidecar that receives audit events from the application
 over HTTP and forwards them to a Vector Aggregator (e.g. the `loki-audit` chart). The application
 POSTs structured JSON to `127.0.0.1:<httpPort>` inside the pod.
+
+The default sidecar image is Vector 0.59. Since 0.57, Vector no longer substitutes `${VAR}` in
+config files; the reference is left as literal text, with no error. Custom `vector-audit-rules`
+ConfigMaps must read the injected `POD_NAME`, `POD_NAMESPACE`, `NODE_NAME` and `APP_LABEL`
+variables with VRL instead, e.g. `get_env_var("POD_NAME") ?? "unknown"`. See the helm-tenant-chart
+CHANGELOG for other Vector changes that affect custom ConfigMaps.
 
 #### Event schema
 
