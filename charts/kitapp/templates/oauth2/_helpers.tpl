@@ -15,8 +15,8 @@
 {{- end -}}
 
 {{- define "kitapp.oauth2.clientDefinition" -}}
-{{- $def := .Values.oauth2.clientDefinition | deepCopy -}}
-{{- $_ := set $def "clientId" (include "kitapp.oauth2.clientId" .) -}}
+{{- /* clientId lives on spec.clientId (operator >= v0.10). The operator only tolerates it in definition when it matches. */ -}}
+{{- $def := omit .Values.oauth2.clientDefinition "clientId" -}}
 {{- if and (not $def.redirectUris) .Values.route.hostnames -}}
   {{- $uris := list -}}
   {{- range .Values.route.hostnames -}}{{- $uris = append $uris (printf "https://%s/*" .) -}}{{- end -}}

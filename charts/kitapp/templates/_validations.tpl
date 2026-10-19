@@ -126,6 +126,10 @@
   {{- if and .Values.oauth2.enabled .Values.oauth2.provisionClient (not (.Capabilities.APIVersions.Has "keycloak.hostzero.com/v1beta1")) -}}
     {{- fail "oauth2.provisionClient=true requires the KeycloakClient CRD (keycloak.hostzero.com/v1beta1) - install the Hostzero Keycloak operator or set provisionClient=false" -}}
   {{- end -}}
+  {{- /* The operator rejects this at reconcile time (v0.11+), which ArgoCD reports as Synced but never Ready. Fail at render instead. */ -}}
+  {{- if and .Values.oauth2.enabled .Values.oauth2.provisionClient .Values.oauth2.clientDefinition.protocolMappers -}}
+    {{- fail "oauth2.clientDefinition.protocolMappers is not supported by the Keycloak operator (v0.11+) - declare each mapper as a KeycloakProtocolMapper resource instead" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "kitapp.validate.envNames" -}}
