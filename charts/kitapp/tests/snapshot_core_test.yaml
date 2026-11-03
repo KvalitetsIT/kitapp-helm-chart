@@ -1,0 +1,64 @@
+suite: snapshot core
+tests:
+  - it: minimal values
+    values:
+      - ../ci/minimal-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: default values
+    values:
+      - ../ci/default-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: advanced values
+    values:
+      - ../ci/advanced-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: image tag and digest
+    values:
+      - ../ci/tag-and-digest-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: image digest only
+    values:
+      - ../ci/digest-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: autoscaling
+    values:
+      - ../ci/autoscaling-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: metrics
+    values:
+      - ../ci/metrics-values.yaml
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    asserts:
+      - matchSnapshot: {}
+
+  - it: security
+    values:
+      - ../ci/security-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: persistence
+    values:
+      - ../ci/persistence-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: audit
+    values:
+      - ../ci/audit-values.yaml
+    asserts:
+      - matchSnapshot: {}

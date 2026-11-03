@@ -1,0 +1,19 @@
+suite: snapshot gateway
+tests:
+  - it: httproute
+    values:
+      - ../ci/gateway-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: tlsroute
+    values:
+      - ../ci/tlsroute-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: authorization policies
+    values:
+      - ../ci/authpolicy-values.yaml
+    asserts:
+      - matchSnapshot: {}

@@ -1,0 +1,31 @@
+suite: snapshot oauth2
+# keycloakclient-values.yaml and keycloakclient-public-client-values.yaml are excluded because
+# they generate random cookie/client secrets on every render. They are covered by the integration
+# tests in ci/ via chart-testing on KinD.
+tests:
+  - it: oauth2 minimal
+    values:
+      - ../ci/oauth2-minimal-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: oauth2 advanced
+    values:
+      - ../ci/oauth2-advanced-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: oauth2 alpha config
+    values:
+      - ../ci/oauth2-alpha-values.yaml
+    asserts:
+      - matchSnapshot: {}
+
+  - it: keycloak provision external secret
+    values:
+      - ../ci/keycloakclient-provision-external-secret-values.yaml
+    capabilities:
+      apiVersions:
+        - keycloak.hostzero.com/v1beta1
+    asserts:
+      - matchSnapshot: {}

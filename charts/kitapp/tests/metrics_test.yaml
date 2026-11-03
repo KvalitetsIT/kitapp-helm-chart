@@ -1,0 +1,33 @@
+suite: test service monitor
+templates:
+  - templates/metrics/servicemonitor.yaml
+set:
+  image.repository: ghcr.io/example/app
+  image.tag: v1.0.0
+
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ServiceMonitor when metrics is enabled
+    values:
+      - ../ci/metrics-values.yaml
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+
+  - it: should scrape the configured metrics path
+    values:
+      - ../ci/metrics-values.yaml
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    asserts:
+      - equal:
+          path: spec.endpoints[0].path
+          value: /metrics

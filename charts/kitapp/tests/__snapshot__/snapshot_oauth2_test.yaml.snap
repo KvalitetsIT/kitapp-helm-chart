@@ -1,0 +1,932 @@
+keycloak provision external secret:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations:
+            checksum/oauth2-config: c61fd2a5ffbfbff84a1f9ab1b6cc71e1de4eb3e1552118e1edcc2477922c6e16
+            oauth2-proxy.kitkube.dk/configKey: oauth2-proxy.cfg
+            oauth2-proxy.kitkube.dk/configmap: RELEASE-NAME-oauth2
+            oauth2-proxy.kitkube.dk/secret: my-app-oauth2-proxy-envs
+            oauth2-proxy.kitkube.dk/sidecar.limits.cpu: 200m
+            oauth2-proxy.kitkube.dk/sidecar.limits.memory: 256Mi
+            oauth2-proxy.kitkube.dk/sidecar.requests.cpu: 50m
+            oauth2-proxy.kitkube.dk/sidecar.requests.memory: 64Mi
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+            oauth2-proxy.kitkube.dk/inject: "true"
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      hostnames:
+        - app.example.com
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: ListenerSet
+          name: RELEASE-NAME
+      rules:
+        - backendRefs: []
+          matches:
+            - path:
+                type: PathPrefix
+                value: /metrics
+        - backendRefs:
+            - group: ""
+              kind: Service
+              name: RELEASE-NAME
+              port: 4180
+              weight: 1
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+  3: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: ListenerSet
+    metadata:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod-istio
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      listeners:
+        - allowedRoutes:
+            namespaces:
+              from: Same
+          hostname: app.example.com
+          name: https
+          port: 443
+          protocol: HTTPS
+          tls:
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: app.example.com
+                namespace: NAMESPACE
+            mode: Terminate
+      parentRef:
+        group: gateway.networking.k8s.io
+        kind: Gateway
+        name: ingressgateway
+        namespace: istio-ingress
+  4: |
+    apiVersion: v1
+    data:
+      oauth2-proxy.cfg: |
+        http_address = "0.0.0.0:4180"
+        reverse_proxy = true
+
+        upstreams = ["http://127.0.0.1:8080/"]
+
+        standard_logging = true
+        request_logging = true
+        auth_logging = true
+        errors_to_info_log = true
+
+        provider = "keycloak-oidc"
+        client_id = "RELEASE-NAME"
+        oidc_issuer_url = "https://keycloak.example.com/realms/my-realm"
+        scope = "openid profile email"
+        insecure_oidc_allow_unverified_email = true
+        code_challenge_method = "S256"
+
+        skip_provider_button = true
+        skip_auth_preflight = true
+        skip_jwt_bearer_tokens = true
+
+        email_domains = ["*"]
+
+        pass_authorization_header = true
+        pass_access_token = true
+        pass_user_headers = true
+        set_xauthrequest = true
+        redirect_url = "https://app.example.com/oauth2/callback"
+        cookie_domains = ["app.example.com"]
+        whitelist_domains = ["app.example.com"]
+
+        cookie_name = "RELEASE-NAME"
+        cookie_secure = true
+        cookie_httponly = true
+        cookie_samesite = "lax"
+
+        session_store_type = "cookie"
+    kind: ConfigMap
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME-oauth2
+      namespace: NAMESPACE
+  5: |
+    apiVersion: keycloak.hostzero.com/v1beta1
+    kind: KeycloakClient
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      clientId: RELEASE-NAME
+      clientSecretRef:
+        clientIdKey: OAUTH2_PROXY_CLIENT_ID
+        clientSecretKey: OAUTH2_PROXY_CLIENT_SECRET
+        create: true
+        name: my-app-oauth2-proxy-envs
+      clusterRealmRef:
+        name: my-realm
+      definition:
+        attributes:
+          post.logout.redirect.uris: +
+        clientId: RELEASE-NAME
+        defaultClientScopes:
+          - profile
+          - email
+        directAccessGrantsEnabled: false
+        enabled: true
+        publicClient: false
+        redirectUris:
+          - https://app.example.com/*
+        serviceAccountsEnabled: false
+        standardFlowEnabled: true
+        webOrigins:
+          - +
+  6: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+        - name: oauth2-proxy
+          port: 4180
+          protocol: TCP
+          targetPort: 4180
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+oauth2 advanced:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations:
+            checksum/oauth2-config: a914648b7f8e113eaec4e4fef8d2293c25edb7bbe2bc6c34657b5744eafe6824
+            oauth2-proxy.kitkube.dk/configKey: oauth2-proxy.cfg
+            oauth2-proxy.kitkube.dk/configmap: RELEASE-NAME-oauth2
+            oauth2-proxy.kitkube.dk/image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
+            oauth2-proxy.kitkube.dk/provider.ca.configmap: oidc-provider-ca
+            oauth2-proxy.kitkube.dk/provider.ca.key: ca.crt
+            oauth2-proxy.kitkube.dk/secret: my-app-oauth2-proxy-envs
+            oauth2-proxy.kitkube.dk/sidecar.limits.cpu: 200m
+            oauth2-proxy.kitkube.dk/sidecar.limits.memory: 256Mi
+            oauth2-proxy.kitkube.dk/sidecar.requests.cpu: 50m
+            oauth2-proxy.kitkube.dk/sidecar.requests.memory: 64Mi
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+            oauth2-proxy.kitkube.dk/inject: "true"
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      hostnames:
+        - my-app.example.com
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: ListenerSet
+          name: RELEASE-NAME
+      rules:
+        - backendRefs: []
+          matches:
+            - path:
+                type: PathPrefix
+                value: /metrics
+        - backendRefs:
+            - group: ""
+              kind: Service
+              name: RELEASE-NAME
+              port: 4180
+              weight: 1
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+  3: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: ListenerSet
+    metadata:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod-istio
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      listeners:
+        - allowedRoutes:
+            namespaces:
+              from: Same
+          hostname: my-app.example.com
+          name: https
+          port: 443
+          protocol: HTTPS
+          tls:
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: my-app.example.com
+                namespace: NAMESPACE
+            mode: Terminate
+      parentRef:
+        group: gateway.networking.k8s.io
+        kind: Gateway
+        name: ingressgateway
+        namespace: istio-ingress
+  4: |
+    apiVersion: v1
+    data:
+      oauth2-proxy.cfg: |
+        http_address = "0.0.0.0:4180"
+        reverse_proxy = true
+
+        upstreams = ["http://127.0.0.1:8080/"]
+
+        standard_logging = true
+        request_logging = true
+        auth_logging = true
+        errors_to_info_log = true
+
+        provider = "keycloak-oidc"
+        client_id = "my-app"
+        oidc_issuer_url = "https://keycloak.example.com/realms/my-realm"
+        scope = "openid profile email"
+        insecure_oidc_allow_unverified_email = true
+        code_challenge_method = "S256"
+
+        skip_provider_button = true
+        skip_auth_preflight = true
+        skip_jwt_bearer_tokens = true
+
+        email_domains = ["example.com"]
+        allowed_groups = ["admins"]
+        skip_auth_routes = ["^/healthz$"]
+
+        pass_authorization_header = true
+        pass_access_token = true
+        pass_user_headers = true
+        set_xauthrequest = true
+        redirect_url = "https://my-app.example.com/oauth2/callback"
+        cookie_domains = ["my-app.example.com"]
+        whitelist_domains = ["my-app.example.com"]
+
+        cookie_name = "my-app"
+        cookie_secure = true
+        cookie_httponly = true
+        cookie_samesite = "lax"
+
+        session_store_type = "cookie"
+    kind: ConfigMap
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME-oauth2
+      namespace: NAMESPACE
+  5: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+        - name: oauth2-proxy
+          port: 4180
+          protocol: TCP
+          targetPort: 4180
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+oauth2 alpha config:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations:
+            checksum/oauth2-config: 1776c75abded648d1c1d2a452cb9f3ae4329d7d4a687bf5b5c0e5d784f118506
+            oauth2-proxy.kitkube.dk/configKey: oauth2-proxy.cfg
+            oauth2-proxy.kitkube.dk/configmap: RELEASE-NAME-oauth2
+            oauth2-proxy.kitkube.dk/image: ghcr.io/oauth2-proxy/oauth2-proxy:v7.15.0
+            oauth2-proxy.kitkube.dk/secret: my-app-oauth2-proxy-envs
+            oauth2-proxy.kitkube.dk/sidecar.limits.cpu: 200m
+            oauth2-proxy.kitkube.dk/sidecar.limits.memory: 256Mi
+            oauth2-proxy.kitkube.dk/sidecar.requests.cpu: 50m
+            oauth2-proxy.kitkube.dk/sidecar.requests.memory: 64Mi
+            oauth2-proxy.kitkube.dk/useAlphaConfig: "true"
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+            oauth2-proxy.kitkube.dk/inject: "true"
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      hostnames:
+        - my-app.example.com
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: ListenerSet
+          name: RELEASE-NAME
+      rules:
+        - backendRefs: []
+          matches:
+            - path:
+                type: PathPrefix
+                value: /metrics
+        - backendRefs:
+            - group: ""
+              kind: Service
+              name: RELEASE-NAME
+              port: 4180
+              weight: 1
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+  3: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: ListenerSet
+    metadata:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod-istio
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      listeners:
+        - allowedRoutes:
+            namespaces:
+              from: Same
+          hostname: my-app.example.com
+          name: https
+          port: 443
+          protocol: HTTPS
+          tls:
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: my-app.example.com
+                namespace: NAMESPACE
+            mode: Terminate
+      parentRef:
+        group: gateway.networking.k8s.io
+        kind: Gateway
+        name: ingressgateway
+        namespace: istio-ingress
+  4: |
+    apiVersion: v1
+    data:
+      oauth2-proxy-alpha.yaml: |
+        injectRequestHeaders:
+        - name: X-Forwarded-User
+          values:
+          - claimSource:
+              claim: user
+        - name: X-Forwarded-Email
+          values:
+          - claimSource:
+              claim: email
+        - name: X-Forwarded-Preferred-Username
+          values:
+          - claimSource:
+              claim: preferred_username
+        - name: Authorization
+          values:
+          - claimSource:
+              claim: id_token
+              prefix: 'Bearer '
+        - name: X-Forwarded-Access-Token
+          values:
+          - claimSource:
+              claim: access_token
+        providers:
+        - clientID: my-app
+          clientSecret: ${OAUTH2_PROXY_CLIENT_SECRET}
+          id: default
+          oidcConfig:
+            insecureAllowUnverifiedEmail: true
+            issuerURL: https://keycloak.example.com/realms/my-realm
+          provider: keycloak-oidc
+          scope: openid profile email
+        server:
+          bindAddress: 0.0.0.0:4180
+        upstreamConfig:
+          proxyRawPath: true
+          upstreams:
+          - id: app
+            path: /
+            uri: http://127.0.0.1:8080
+      oauth2-proxy.cfg: |
+        reverse_proxy = true
+
+        standard_logging = true
+        request_logging = true
+        auth_logging = true
+        errors_to_info_log = true
+
+        skip_provider_button = true
+        skip_auth_preflight = true
+        skip_jwt_bearer_tokens = true
+
+        email_domains = ["*"]
+        redirect_url = "https://my-app.example.com/oauth2/callback"
+        cookie_domains = ["my-app.example.com"]
+        whitelist_domains = ["my-app.example.com"]
+
+        cookie_name = "my-app"
+        cookie_secure = true
+        cookie_httponly = true
+        cookie_samesite = "lax"
+
+        session_store_type = "cookie"
+    kind: ConfigMap
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME-oauth2
+      namespace: NAMESPACE
+  5: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+        - name: oauth2-proxy
+          port: 4180
+          protocol: TCP
+          targetPort: 4180
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP
+oauth2 minimal:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      replicas: 2
+      revisionHistoryLimit: 5
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: RELEASE-NAME
+      strategy:
+        type: RollingUpdate
+      template:
+        metadata:
+          annotations:
+            checksum/oauth2-config: 9faffb051f53438bab7d66c0616f6adc6af84c0159eb178c8bc0627bec5ee2c2
+            oauth2-proxy.kitkube.dk/configKey: oauth2-proxy.cfg
+            oauth2-proxy.kitkube.dk/configmap: RELEASE-NAME-oauth2
+            oauth2-proxy.kitkube.dk/secret: my-app-oauth2-proxy-envs
+            oauth2-proxy.kitkube.dk/sidecar.limits.cpu: 200m
+            oauth2-proxy.kitkube.dk/sidecar.limits.memory: 256Mi
+            oauth2-proxy.kitkube.dk/sidecar.requests.cpu: 50m
+            oauth2-proxy.kitkube.dk/sidecar.requests.memory: 64Mi
+          labels:
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/name: RELEASE-NAME
+            oauth2-proxy.kitkube.dk/inject: "true"
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/instance: RELEASE-NAME
+                        app.kubernetes.io/name: RELEASE-NAME
+                    topologyKey: kubernetes.io/hostname
+                  weight: 100
+          automountServiceAccountToken: false
+          containers:
+            - image: docker.io/mccutchen/go-httpbin:2.23.0
+              imagePullPolicy: IfNotPresent
+              name: RELEASE-NAME
+              ports:
+                - containerPort: 8080
+                  name: http
+                  protocol: TCP
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          serviceAccountName: default
+  2: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      hostnames:
+        - my-app.example.com
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: ListenerSet
+          name: RELEASE-NAME
+      rules:
+        - backendRefs: []
+          matches:
+            - path:
+                type: PathPrefix
+                value: /metrics
+        - backendRefs:
+            - group: ""
+              kind: Service
+              name: RELEASE-NAME
+              port: 4180
+              weight: 1
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+  3: |
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: ListenerSet
+    metadata:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod-istio
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      listeners:
+        - allowedRoutes:
+            namespaces:
+              from: Same
+          hostname: my-app.example.com
+          name: https
+          port: 443
+          protocol: HTTPS
+          tls:
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: my-app.example.com
+                namespace: NAMESPACE
+            mode: Terminate
+      parentRef:
+        group: gateway.networking.k8s.io
+        kind: Gateway
+        name: ingressgateway
+        namespace: istio-ingress
+  4: |
+    apiVersion: v1
+    data:
+      oauth2-proxy.cfg: |
+        http_address = "0.0.0.0:4180"
+        reverse_proxy = true
+
+        upstreams = ["http://127.0.0.1:8080/"]
+
+        standard_logging = true
+        request_logging = true
+        auth_logging = true
+        errors_to_info_log = true
+
+        provider = "keycloak-oidc"
+        client_id = "my-app"
+        oidc_issuer_url = "https://keycloak.example.com/realms/my-realm"
+        scope = "openid profile email"
+        insecure_oidc_allow_unverified_email = true
+        code_challenge_method = "S256"
+
+        skip_provider_button = true
+        skip_auth_preflight = true
+        skip_jwt_bearer_tokens = true
+
+        email_domains = ["*"]
+
+        pass_authorization_header = true
+        pass_access_token = true
+        pass_user_headers = true
+        set_xauthrequest = true
+        redirect_url = "https://my-app.example.com/oauth2/callback"
+        cookie_domains = ["my-app.example.com"]
+        whitelist_domains = ["my-app.example.com"]
+
+        cookie_name = "my-app"
+        cookie_secure = true
+        cookie_httponly = true
+        cookie_samesite = "lax"
+
+        session_store_type = "cookie"
+    kind: ConfigMap
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+      name: RELEASE-NAME-oauth2
+      namespace: NAMESPACE
+  5: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: RELEASE-NAME
+        helm.sh/chart: kitapp-0.0.1-rc.15
+        istio.io/ingress-use-waypoint: "true"
+        istio.io/use-waypoint: waypoint
+      name: RELEASE-NAME
+      namespace: NAMESPACE
+    spec:
+      ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: http
+        - name: oauth2-proxy
+          port: 4180
+          protocol: TCP
+          targetPort: 4180
+      selector:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: RELEASE-NAME
+      type: ClusterIP

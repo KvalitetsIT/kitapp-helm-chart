@@ -1,0 +1,63 @@
+suite: test validations
+templates:
+  - templates/validate.yaml
+
+tests:
+  - it: should fail when image.repository is missing
+    set:
+      image.repository: ""
+      image.tag: v1.0.0
+    asserts:
+      - failedTemplate:
+          errorMessage: values.image.repository is required
+
+  - it: should fail when neither image.tag nor image.digest is set
+    set:
+      image.repository: ghcr.io/example/app
+      image.tag: ""
+      image.digest: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: one of values.image.tag or values.image.digest is required
+
+  - it: should fail when applicationPort.name is missing
+    set:
+      image.repository: ghcr.io/example/app
+      image.tag: v1.0.0
+      applicationPort.name: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: values.applicationPort.name is required
+
+  - it: should fail when autoscaling has no metrics configured
+    set:
+      image.repository: ghcr.io/example/app
+      image.tag: v1.0.0
+      autoscaling.enabled: true
+      autoscaling.targetCPUUtilizationPercentage: null
+      autoscaling.targetMemoryUtilizationPercentage: null
+    asserts:
+      - failedTemplate:
+          errorPattern: set at least one of values.autoscaling.targetCPUUtilizationPercentage
+
+  - it: should fail when oauth2 realm is missing
+    set:
+      image.repository: ghcr.io/example/app
+      image.tag: v1.0.0
+      oauth2.enabled: true
+      oauth2.issuerUrl: https://keycloak.example.com
+      oauth2.existingSecret: my-secret
+    asserts:
+      - failedTemplate:
+          errorMessage: values.oauth2.realm is required when oauth2.enabled=true
+
+  - it: should fail when oauth2 has neither existingSecret nor provisionClient
+    set:
+      image.repository: ghcr.io/example/app
+      image.tag: v1.0.0
+      oauth2.enabled: true
+      oauth2.realm: my-realm
+      oauth2.issuerUrl: https://keycloak.example.com
+    asserts:
+      - failedTemplate:
+          errorMessage: values.oauth2.existingSecret is required when oauth2.provisionClient=false
