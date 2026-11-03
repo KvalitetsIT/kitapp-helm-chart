@@ -44,6 +44,9 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "kitapp.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- if not (kindIs "invalid" .Values.terminationGracePeriodSeconds) }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -118,6 +121,10 @@ spec:
           {{- end }}
           {{- with .Values.startupProbe }}
           startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- with $allVolumes }}
