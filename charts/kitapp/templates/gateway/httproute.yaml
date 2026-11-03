@@ -30,7 +30,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /metrics
+            value: {{ .Values.metrics.path | quote }}
       backendRefs: []
     {{- end }}
     {{- with .Values.route.rules }}
