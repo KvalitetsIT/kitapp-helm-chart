@@ -65,6 +65,8 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | livenessProbe | object | {} | Kubernetes liveness probe. |
 | readinessProbe | object | {} | Kubernetes readiness probe. |
 | startupProbe | object | {} | Kubernetes startup probe. |
+| lifecycle | object | {} | Kubernetes lifecycle hooks for the application container (preStop, postStart). |
+| terminationGracePeriodSeconds | int | null | Pod termination grace period in seconds. If empty, the Kubernetes default (30) is used. Must be longer than any preStop hook, or the container is killed before the hook finishes. |
 | containerSecurityContext | object | see values.yaml | Security context applied to the application container. |
 
 ### Service

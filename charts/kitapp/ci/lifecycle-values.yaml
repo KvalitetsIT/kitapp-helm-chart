@@ -1,0 +1,13 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "2.23.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+terminationGracePeriodSeconds: 30
+lifecycle:
+  preStop:
+    sleep:
+      seconds: 10
