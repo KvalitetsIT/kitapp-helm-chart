@@ -81,6 +81,12 @@ nodeSelector: {}
 # @section -- Deployment
 tolerations: []
 
+# -- Extra /etc/hosts entries for the pod, passed through as-is (list of `ip` + `hostnames`).
+# Applies to all containers in the pod, including injected sidecars.
+# @default -- []
+# @section -- Deployment
+hostAliases: []
+
 # -- Kubernetes affinity rules for pod scheduling.
 # Defaults to preferred pod anti-affinity across nodes for replicas from the same release.
 # @default -- see values.yaml

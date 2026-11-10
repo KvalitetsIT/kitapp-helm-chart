@@ -38,6 +38,7 @@ Small generic Helm chart for deploying a Kubernetes application as a Deployment.
 | podAnnotations | object | {} | Extra pod annotations. |
 | nodeSelector | object | {} | Node selector labels for pod scheduling. |
 | tolerations | list | [] | Pod tolerations for scheduling onto tainted nodes. |
+| hostAliases | list | [] | Extra /etc/hosts entries for the pod, passed through as-is (list of `ip` + `hostnames`). Applies to all containers in the pod, including injected sidecars. |
 | affinity | object | see values.yaml | Kubernetes affinity rules for pod scheduling. Defaults to preferred pod anti-affinity across nodes for replicas from the same release. |
 | serviceAccount | object | see values.yaml | Service account settings. |
 | serviceAccount.create | bool | false | Create a dedicated ServiceAccount. |
