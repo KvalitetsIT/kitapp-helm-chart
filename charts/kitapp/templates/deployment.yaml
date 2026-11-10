@@ -63,6 +63,10 @@ spec:
       affinity:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if (.Values.audit).enabled }}
       initContainers:
         {{- include "kitapp.audit.sidecar" . | nindent 8 }}
