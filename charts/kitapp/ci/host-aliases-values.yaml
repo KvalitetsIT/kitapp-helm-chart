@@ -1,0 +1,16 @@
+image:
+  repository: docker.io/mccutchen/go-httpbin
+  tag: "2.23.0"
+
+applicationPort:
+  name: http
+  port: 8080
+
+hostAliases:
+  - ip: 10.0.0.10
+    hostnames:
+      - internal-api.example.com
+  - ip: 10.0.0.11
+    hostnames:
+      - internal-db.example.com
+      - internal-db
